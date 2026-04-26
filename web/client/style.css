@@ -57,6 +57,9 @@ body {
   letter-spacing: -0.02em;
   border-bottom: 1px solid var(--border);
   user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .sidebar-lists { padding: 14px 8px 8px; flex: 1; }
@@ -138,6 +141,19 @@ body {
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
+
+
+.kbd-hint {
+  font-size: 0.73rem;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-bg);
+  padding: 3px 9px;
+  border-radius: var(--r-sm);
+  pointer-events: none;
+  user-select: none;
+}
+
 
 .spacer { flex: 1; }
 
@@ -672,6 +688,7 @@ body {
   font-weight: 600;
   color: var(--muted);
   margin-bottom: 14px;
+  text-align: center;
 }
 .modal-field { margin-bottom: 10px; }
 .modal-field label {
@@ -696,31 +713,28 @@ body {
 }
 .modal-field input:focus,
 .modal-field select:focus { border-color: var(--accent); }
-.modal-actions {
+.modal-bottom {
   display: flex;
+  align-items: flex-end;
   gap: 8px;
-  justify-content: flex-end;
-  margin-top: 16px;
+  margin-top: 10px;
 }
-.modal-actions button {
+.modal-field-due { flex: 1; margin-bottom: 0; }
+.modal-bottom .submit {
+  flex: 0 0 auto;
   padding: 7px 16px;
   border-radius: var(--r-sm);
   font: inherit;
-  font-size: 0.87rem;
-  cursor: pointer;
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--text);
-  transition: background 0.13s;
-}
-.modal-actions button:hover { background: var(--border); }
-.modal-actions .submit {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #0f0e0c;
+  font-size: 1.1rem;
   font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  transition: opacity 0.13s;
+  align-self: flex-end;
 }
-.modal-actions .submit:hover { opacity: 0.85; background: var(--accent); }
+.modal-bottom .submit:hover { opacity: 0.85; }
 
 /* ── Toast ───────────────────────────────────────────────────── */
 

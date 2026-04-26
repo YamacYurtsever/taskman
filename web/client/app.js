@@ -550,7 +550,7 @@ function openQuickAdd() {
   const overlay = document.getElementById('quick-add-modal');
   const sel = document.getElementById('qa-list');
   const lists = state.data?.lists || [];
-  sel.replaceChildren(...lists.map(l => el('option', { value: l.name }, l.name)));
+  sel.replaceChildren(...sortByName(lists).map(l => el('option', { value: l.name }, l.name)));
   if (state.selectedList) {
     const cur = lists.find(l => l.id === state.selectedList);
     if (cur) sel.value = cur.name;
@@ -577,7 +577,6 @@ function render() {
 
 const qaOverlay = document.getElementById('quick-add-modal');
 qaOverlay.addEventListener('click', e => { if (e.target === qaOverlay) closeQuickAdd(); });
-document.getElementById('qa-cancel').addEventListener('click', closeQuickAdd);
 
 document.getElementById('qa-submit').addEventListener('click', async () => {
   const list = document.getElementById('qa-list').value;
