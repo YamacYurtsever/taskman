@@ -179,21 +179,24 @@ function renderDaysheet() {
   if (!entries.length) {
     main.append(el('div', { class: 'empty' }, `No entries for ${state.daysheet.date}`));
   } else {
-    const byList = new Map();
+    const bySect = new Map();
     for (const e of entries) {
-      if (!byList.has(e.listId)) byList.set(e.listId, { name: e.listName, items: [] });
-      byList.get(e.listId).items.push(e);
+      if (!bySect.has(e.sectionId)) bySect.set(e.sectionId, { name: e.sectionName, inGroup: e.inGroup, items: [] });
+      bySect.get(e.sectionId).items.push(e);
     }
-    for (const { name, items } of byList.values()) {
+    for (const { name, inGroup, items } of bySect.values()) {
       main.append(el('div', { class: 'sheet-list' },
         el('h3', {}, name),
-        ...items.map(e => el('div', { class: 'sheet-entry ' + e.type },
-          el('span', { class: 'time' }, e.datetime.slice(11, 16)),
-          el('span', { class: 'text' },
-            e.type === 'done' ? `Finished ${e.text}`
+        ...items.map(e => {
+          const prefix = inGroup ? `[${e.listName}] ` : '';
+          const label = e.type === 'done' ? `Finished ${e.text}`
             : e.type === 'continue' ? `Continued ${e.text}`
-            : e.text),
-        )),
+            : e.text;
+          return el('div', { class: 'sheet-entry ' + e.type },
+            el('span', { class: 'time' }, e.datetime.slice(11, 16)),
+            el('span', { class: 'text' }, prefix + label),
+          );
+        }),
       ));
     }
   }

@@ -57,18 +57,24 @@ def create_app():
             return jsonify({"error": f"invalid date '{target}'"}), 400
 
         data = db.load()
-        list_name = {l["id"]: l["name"] for l in data["lists"]}
+        list_by_id = {l["id"]: l for l in data["lists"]}
+        group_by_id = {g["id"]: g for g in data["groups"]}
         entries = sorted(
             (e for e in data["daysheet"] if e["datetime"][:10] == target),
             key=lambda e: e["datetime"],
         )
-        return jsonify({
-            "date": target,
-            "entries": [
-                {**e, "listName": list_name.get(e["listId"], "?")}
-                for e in entries
-            ],
-        })
+        enriched = []
+        for e in entries:
+            lst = list_by_id.get(e["listId"])
+            gid = lst["groupId"] if lst else None
+            enriched.append({
+                **e,
+                "listName": lst["name"] if lst else "?",
+                "sectionId": f"group:{gid}" if gid else f"list:{e['listId']}",
+                "sectionName": group_by_id[gid]["name"] if gid else (lst["name"] if lst else "?"),
+                "inGroup": bool(gid),
+            })
+        return jsonify({"date": target, "entries": enriched})
 
     def _action(fn, args):
         ok, msg = _run(fn, args)

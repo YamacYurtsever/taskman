@@ -143,25 +143,38 @@ def cmd_daysheet(args):
         print(f"No entries for {target}")
         return
 
-    list_order = []
-    by_list = {}
+    list_by_id = {l["id"]: l for l in data["lists"]}
+    group_by_id = {g["id"]: g for g in data["groups"]}
+
+    section_order = []
+    by_section = {}
     for e in entries:
-        lid = e["listId"]
-        if lid not in by_list:
-            list_order.append(lid)
-            by_list[lid] = []
-        by_list[lid].append(e)
+        lst = list_by_id.get(e["listId"])
+        gid = lst["groupId"] if lst else None
+        if gid:
+            sid = ("group", gid)
+            section_name = group_by_id[gid]["name"]
+        else:
+            sid = ("list", e["listId"])
+            section_name = lst["name"] if lst else e["listId"]
+        if sid not in by_section:
+            section_order.append(sid)
+            by_section[sid] = {"name": section_name, "entries": []}
+        by_section[sid]["entries"].append(e)
 
     print(f"Day Sheet · {target}\n")
-    for lid in list_order:
-        lst = next((l for l in data["lists"] if l["id"] == lid), None)
-        print(_bold(lst["name"] if lst else lid))
-        for e in by_list[lid]:
+    for sid in section_order:
+        section = by_section[sid]
+        is_group = sid[0] == "group"
+        print(_bold(section["name"]))
+        for e in section["entries"]:
+            lst = list_by_id.get(e["listId"])
+            prefix = f"[{lst['name']}] " if is_group and lst else ""
             if e["type"] == "done":
                 line = f"Finished {e['text']}"
             elif e["type"] == "continue":
                 line = f"Continued {e['text']}"
             else:
                 line = e["text"]
-            print(f"  {line}")
+            print(f"  {prefix}{line}")
         print()
