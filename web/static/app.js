@@ -40,13 +40,18 @@ async function api(method, path, body) {
     opts.headers = { 'Content-Type': 'application/json' };
     opts.body = JSON.stringify(body);
   }
-  const res = await fetch(path, opts);
-  const json = await res.json();
-  if (!res.ok) {
-    showToast(json.message || json.error || 'Request failed', true);
+  try {
+    const res = await fetch(path, opts);
+    const json = await res.json();
+    if (!res.ok) {
+      showToast(json.message || json.error || 'Request failed', true);
+      return null;
+    }
+    return json;
+  } catch (e) {
+    showToast('Request failed', true);
     return null;
   }
-  return json;
 }
 
 async function refresh() {
@@ -114,6 +119,9 @@ function renderTask(task, listName, today) {
     task.done
       ? el('button', { title: 'Undo', on: { click: () => action('/api/undo', { list: listName, name: task.name }) } }, '↺')
       : el('button', { title: 'Done', on: { click: () => action('/api/done', { list: listName, name: task.name }, `done: ${task.name}`) } }, '✓'),
+    !task.done
+      ? el('button', { class: 'continue-btn', title: 'Continue', on: { click: () => action('/api/continue', { list: listName, task: task.name }) } }, '»')
+      : null,
     el('button', { title: 'Delete', on: { click: () => {
       if (confirm(`Delete "${task.name}"?`)) action('/api/delete', { list: listName, name: task.name });
     } } }, '×'),
@@ -224,7 +232,7 @@ function renderDaysheet() {
       if (!bySect.has(e.sectionId)) bySect.set(e.sectionId, { name: e.sectionName, inGroup: e.inGroup, items: [] });
       bySect.get(e.sectionId).items.push(e);
     }
-    for (const { name, inGroup, items } of bySect.values()) {
+    for (const { name, inGroup, items } of [...bySect.values()].sort((a, b) => a.name.localeCompare(b.name))) {
       main.append(el('div', { class: 'sheet-list' },
         el('h3', {}, name),
         ...items.map(e => {
@@ -232,9 +240,13 @@ function renderDaysheet() {
           const label = e.type === 'done' ? `Finished ${e.text}`
             : e.type === 'continue' ? `Continued ${e.text}`
             : e.text;
+          const deleteBtn = el('button', { class: 'entry-delete', title: 'Delete', on: { click: () => {
+            action('/api/daysheet/delete', { id: e.id });
+          }}}, '✕');
           return el('div', { class: 'sheet-entry ' + e.type },
             el('span', { class: 'time' }, e.datetime.slice(11, 16)),
             el('span', { class: 'text' }, prefix + label),
+            deleteBtn,
           );
         }),
       ));
@@ -252,24 +264,11 @@ function renderDaysheet() {
     logText.value = '';
   };
 
-  const contList = el('select', {}, lists.map(l => el('option', { value: l.name }, l.name)));
-  const contTask = el('input', { type: 'text', placeholder: 'task name…' });
-  const contSubmit = () => {
-    if (!contTask.value.trim()) return;
-    action('/api/continue', { list: contList.value, task: contTask.value.trim() });
-    contTask.value = '';
-  };
-
   main.append(el('div', { class: 'sheet-form' },
     el('fieldset', {},
       el('legend', {}, 'Log'),
       logList, logText,
       el('button', { on: { click: logSubmit } }, 'Add log'),
-    ),
-    el('fieldset', {},
-      el('legend', {}, 'Continue'),
-      contList, contTask,
-      el('button', { on: { click: contSubmit } }, 'Continue task'),
     ),
   ));
 }

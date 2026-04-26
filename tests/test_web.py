@@ -136,6 +136,29 @@ class WebTest(unittest.TestCase):
         self.assertEqual(entry["type"], "log")
         self.assertEqual(entry["text"], "talked with team")
 
+    # --- POST /api/daysheet/delete ---
+
+    def test_daysheet_delete_entry(self):
+        db = make_db()
+        db["daysheet"] = [{"id": "e-1", "datetime": "2026-04-26T10:00:00", "listId": "list-1", "type": "log", "text": "talked with team"}]
+        self._patch_all(db)
+        res = self.client.post("/api/daysheet/delete", json={"id": "e-1"})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(len(self.saved["daysheet"]), 0)
+
+    def test_daysheet_delete_done_entry(self):
+        db = make_db()
+        db["daysheet"] = [{"id": "e-2", "datetime": "2026-04-26T10:00:00", "listId": "list-1", "type": "done", "text": "Write report"}]
+        self._patch_all(db)
+        res = self.client.post("/api/daysheet/delete", json={"id": "e-2"})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(len(self.saved["daysheet"]), 0)
+
+    def test_daysheet_delete_missing_returns_400(self):
+        self._patch_all(make_db())
+        res = self.client.post("/api/daysheet/delete", json={"id": "nonexistent"})
+        self.assertEqual(res.status_code, 400)
+
     # --- POST /api/continue ---
 
     def test_continue_task(self):

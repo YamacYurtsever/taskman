@@ -47,13 +47,20 @@ def _find_task(data, list_id, name):
 
 
 def cmd_add(args):
-    if len(args) < 2:
-        _err('usage: taskman add "list" "name" [date]')
-    list_name, task_name = args[0], args[1]
-    due = _parse_date(args[2]) if len(args) >= 3 else None
+    if len(args) < 1:
+        _err('usage: taskman add "list" ["name"] [date]')
+    list_name = args[0]
 
     data = db.load()
     lst = _get_or_create_list(data, list_name)
+
+    if len(args) == 1:
+        db.save(data)
+        print(f"+ [{list_name}]")
+        return
+
+    task_name = args[1]
+    due = _parse_date(args[2]) if len(args) >= 3 else None
 
     if _find_task(data, lst["id"], task_name):
         _err(f"task '{task_name}' already exists in '{list_name}'")

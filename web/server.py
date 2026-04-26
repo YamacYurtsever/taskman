@@ -112,6 +112,18 @@ def create_app():
         body = request.get_json(force=True) or {}
         return _action(cmd_log, [body.get("list", ""), body.get("text", "")])
 
+    @app.post("/api/daysheet/delete")
+    def api_daysheet_delete():
+        body = request.get_json(force=True) or {}
+        entry_id = body.get("id", "")
+        data = db.load()
+        before = len(data["daysheet"])
+        data["daysheet"] = [e for e in data["daysheet"] if e["id"] != entry_id]
+        if len(data["daysheet"]) == before:
+            return jsonify({"ok": False, "message": "entry not found"}), 400
+        db.save(data)
+        return jsonify({"ok": True, "message": ""})
+
     @app.post("/api/continue")
     def api_continue():
         body = request.get_json(force=True) or {}

@@ -66,7 +66,7 @@ class LogTest(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 cmd_log(["edit", "COMP3131", "Ghost", "New text"])
 
-    def test_log_del_removes_entry(self):
+    def test_log_delete_removes_entry(self):
         entry = {"id": "e-1", "datetime": NOW_DT, "listId": "list-1", "type": "log", "text": "Some text"}
         db = make_db(entry)
         saved = {}
@@ -74,18 +74,18 @@ class LogTest(unittest.TestCase):
              patch("taskman.db.save", side_effect=lambda d: saved.update(d)), \
              patch("taskman.commands.daysheet.date") as mock_date:
             mock_date.today.return_value.isoformat.return_value = TODAY
-            cmd_log(["del", "COMP3131", "Some text"])
+            cmd_log(["delete", "COMP3131", "Some text"])
 
         self.assertEqual(len(saved["daysheet"]), 0)
 
-    def test_log_del_not_found_errors(self):
+    def test_log_delete_not_found_errors(self):
         db = make_db()
         with patch("taskman.db.load", return_value=db), \
              patch("taskman.db.save"), \
              patch("taskman.commands.daysheet.date") as mock_date:
             mock_date.today.return_value.isoformat.return_value = TODAY
             with self.assertRaises(SystemExit):
-                cmd_log(["del", "COMP3131", "Ghost"])
+                cmd_log(["delete", "COMP3131", "Ghost"])
 
 
 class ContinueTest(unittest.TestCase):

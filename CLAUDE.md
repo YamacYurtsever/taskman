@@ -21,7 +21,7 @@ After completing each milestone item:
 
 | Command                                                  | Description                                      |
 | -------------------------------------------------------- | ------------------------------------------------ |
-| `taskman add "list" "name" [date]`                       | Add a task to a list, optionally with a due date |
+| `taskman add "list" ["name"] [date]`                     | Add a task to a list, or just create the list    |
 | `taskman done "list" "name"`                             | Mark a task as completed                         |
 | `taskman undo "list" "name"`                             | Mark a completed task as pending                 |
 | `taskman update "list" "name" "new_name" [new_date]` | Rename a task and/or update its due date         |
@@ -50,7 +50,7 @@ After completing each milestone item:
 | ------------------------------------------- | ------------------------------------------------------------ |
 | `taskman log "list" "text"`                 | Freeform entry into a list's day sheet                       |
 | `taskman log edit "list" "text" "new_text"` | Edits daysheet entry                                         |
-| `taskman log del "list" "text"`             | Deletes daysheet entry                                       |
+| `taskman log delete "list" "text"`          | Deletes daysheet entry                                       |
 | `taskman continue "list" "task"`            | Logs continued task under a list                             |
 | `taskman daysheet [date]`                   | View a day's sheet (default today)                           |
 

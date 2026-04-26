@@ -50,6 +50,18 @@ class TasksTest(unittest.TestCase):
 
         self.assertEqual(saved["tasks"][0]["due"], "2026-05-01")
 
+    def test_add_list_only(self):
+        db = make_db()
+        saved = {}
+        with patch("taskman.db.load", return_value=db), \
+             patch("taskman.db.save", side_effect=lambda d: saved.update(d)), \
+             patch("taskman.db.new_id", return_value="new-id"):
+            cmd_add(["NewList"])
+
+        list_names = [l["name"] for l in saved["lists"]]
+        self.assertIn("NewList", list_names)
+        self.assertEqual(len(saved["tasks"]), 0)
+
     def test_add_autocreates_list(self):
         db = make_db(lists=[LIST_1])
         saved = {}

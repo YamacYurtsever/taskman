@@ -140,6 +140,7 @@ main { padding: 24px; max-width: 1400px; }
   font-family: inherit;
 }
 .task button:hover { color: var(--text); }
+.task .continue-btn { font-size: 13px; }
 .task.done .name { color: var(--dim); text-decoration: line-through; }
 .empty { color: var(--dim); font-style: italic; padding: 4px 0; }
 
@@ -217,18 +218,22 @@ main { padding: 24px; max-width: 1400px; }
 .sheet-entry:first-of-type { border-top: none; }
 .sheet-entry .time { color: var(--dim); font-size: 12px; min-width: 50px; }
 .sheet-entry .text { flex: 1; }
-.sheet-entry.done .text::before { content: "✓ "; color: var(--green); }
-.sheet-entry.continue .text::before { content: "↻ "; color: var(--yellow); }
+
+.entry-delete {
+  background: none; border: none; cursor: pointer;
+  color: var(--dim); font-size: 12px; padding: 0 2px;
+}
+.entry-delete:hover { color: var(--red); }
 
 .sheet-form {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 10px 12px;
   margin-top: 16px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
 }
 .sheet-form fieldset {
   border: 1px solid var(--border);

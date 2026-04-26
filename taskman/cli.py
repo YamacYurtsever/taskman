@@ -15,7 +15,7 @@ Usage:
   taskman ls ["list" | "group"] [--today | --week]
   taskman log "list" "text"
   taskman log edit "list" "text" "new_text"
-  taskman log del "list" "text"
+  taskman log delete "list" "text"
   taskman continue "list" "task"
   taskman daysheet [date]
   taskman web [--host HOST] [--port PORT] [--debug]

@@ -57,9 +57,9 @@ def cmd_log(args):
         print(f"~ [{list_name}] {new_text}")
         return
 
-    if args[0] == "del":
+    if args[0] in ("delete", "del"):
         if len(args) < 3:
-            _err('usage: taskman log del "list" "text"')
+            _err('usage: taskman log delete "list" "text"')
         list_name, text = args[1], args[2]
         data = db.load()
         lst = _find_list(data, list_name)
@@ -161,6 +161,8 @@ def cmd_daysheet(args):
             section_order.append(sid)
             by_section[sid] = {"name": section_name, "entries": []}
         by_section[sid]["entries"].append(e)
+
+    section_order.sort(key=lambda sid: by_section[sid]["name"])
 
     print(f"Day Sheet · {target}\n")
     for sid in section_order:
