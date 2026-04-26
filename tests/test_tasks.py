@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from taskman.commands.tasks import (
-    cmd_add, cmd_del, cmd_done, cmd_move, cmd_undo, cmd_update,
+    cmd_add, cmd_delete, cmd_done, cmd_move, cmd_undo, cmd_update,
 )
 
 LIST_1 = {"id": "list-1", "name": "Work", "groupId": None}
@@ -201,7 +201,7 @@ class TasksTest(unittest.TestCase):
         saved = {}
         with patch("taskman.db.load", return_value=db), \
              patch("taskman.db.save", side_effect=lambda d: saved.update(d)):
-            cmd_del(["Work", "Write report"])
+            cmd_delete(["Work", "Write report"])
 
         self.assertEqual(len(saved["tasks"]), 0)
 
@@ -210,7 +210,7 @@ class TasksTest(unittest.TestCase):
         with patch("taskman.db.load", return_value=db), \
              patch("taskman.db.save"):
             with self.assertRaises(SystemExit):
-                cmd_del(["Work", "Ghost"])
+                cmd_delete(["Work", "Ghost"])
 
 
 if __name__ == "__main__":

@@ -163,9 +163,9 @@ def cmd_move(args):
     print(f"→ {task_name}  [{list_name}] → [{new_list_name}]")
 
 
-def cmd_del(args):
+def cmd_delete(args):
     if len(args) < 2:
-        _err('usage: taskman del "list" "name"')
+        _err('usage: taskman delete "list" "name"')
     list_name, task_name = args[0], args[1]
 
     data = db.load()
