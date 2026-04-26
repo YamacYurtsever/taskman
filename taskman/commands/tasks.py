@@ -92,9 +92,9 @@ def cmd_done(args):
     _play_sound()
 
 
-def cmd_undone(args):
+def cmd_undo(args):
     if len(args) < 2:
-        _err('usage: taskman undone "list" "name"')
+        _err('usage: taskman undo "list" "name"')
     list_name, task_name = args[0], args[1]
 
     data = db.load()

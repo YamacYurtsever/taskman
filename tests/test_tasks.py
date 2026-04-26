@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 
 from taskman.commands.tasks import (
-    cmd_add, cmd_del, cmd_done, cmd_move, cmd_undone, cmd_update,
+    cmd_add, cmd_del, cmd_done, cmd_move, cmd_undo, cmd_update,
 )
 
 LIST_1 = {"id": "list-1", "name": "Work", "groupId": None}
@@ -109,23 +109,23 @@ class TasksTest(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 cmd_done(["Work", "Done task"])
 
-    # --- undone ---
+    # --- undo ---
 
-    def test_undone_clears_done(self):
+    def test_undo_clears_done(self):
         db = make_db(TASK_DONE)
         saved = {}
         with patch("taskman.db.load", return_value=db), \
              patch("taskman.db.save", side_effect=lambda d: saved.update(d)):
-            cmd_undone(["Work", "Done task"])
+            cmd_undo(["Work", "Done task"])
 
         self.assertIsNone(saved["tasks"][0]["done"])
 
-    def test_undone_on_pending_errors(self):
+    def test_undo_on_pending_errors(self):
         db = make_db(TASK_1)
         with patch("taskman.db.load", return_value=db), \
              patch("taskman.db.save"):
             with self.assertRaises(SystemExit):
-                cmd_undone(["Work", "Write report"])
+                cmd_undo(["Work", "Write report"])
 
     # --- update ---
 

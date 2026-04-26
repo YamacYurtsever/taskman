@@ -6,7 +6,7 @@ USAGE = """taskman — minimal terminal task manager
 Usage:
   taskman add "list" "name" [date]
   taskman done "list" "name"
-  taskman undone "list" "name"
+  taskman undo "list" "name"
   taskman update "list" "old_name" "new_name" [new_date]
   taskman move "list" "name" "new_list"
   taskman del "list" "name"
@@ -36,9 +36,9 @@ def main():
     elif cmd == "done":
         from taskman.commands.tasks import cmd_done
         cmd_done(args[1:])
-    elif cmd == "undone":
-        from taskman.commands.tasks import cmd_undone
-        cmd_undone(args[1:])
+    elif cmd == "undo":
+        from taskman.commands.tasks import cmd_undo
+        cmd_undo(args[1:])
     elif cmd == "update":
         from taskman.commands.tasks import cmd_update
         cmd_update(args[1:])

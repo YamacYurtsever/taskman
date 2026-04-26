@@ -23,7 +23,7 @@ After completing each milestone item:
 | -------------------------------------------------------- | ------------------------------------------------ |
 | `taskman add "list" "name" [date]`                       | Add a task to a list, optionally with a due date |
 | `taskman done "list" "name"`                             | Mark a task as completed                         |
-| `taskman undone "list" "name"`                           | Mark a completed task as pending                 |
+| `taskman undo "list" "name"`                             | Mark a completed task as pending                 |
 | `taskman update "list" "old_name" "new_name" [new_date]` | Rename a task and/or update its due date         |
 | `taskman move "list" "name" "new_list"`                  | Move a task to a different list                  |
 | `taskman del "list" "name"`                              | Delete a task                                    |
@@ -118,7 +118,7 @@ After completing each milestone item:
 ##### Milestone 1 — Core
 
 - [x] Project setup
-- [x] Task commands: `add`, `done`, `undone`, `edit`, `move`, `del`
+- [x] Task commands: `add`, `done`, `undo`, `edit`, `move`, `del`
 - [x] List & group commands: `group`, `ungroup`
 - [x] Viewing commands: `task ls`
 - [x] Shell functions: `ta`, `td`, `tls`, `tld`, `tlw`
