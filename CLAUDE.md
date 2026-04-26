@@ -176,6 +176,9 @@ Then advise the user to hard-refresh with Cmd+Shift+R.
 - [x] Delete entry
 - [ ] Edit log entry (`taskman log edit`)
 
+###### UI
+- [x] Light/dark mode toggle (persisted to `localStorage`, toggled via button in topbar)
+
 ##### Milestone 4 — Task Descriptions
 
 - [ ] Add `description` field to task schema (`db.json`)

@@ -1,13 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg:           #f5f0e8;
-  --surface:      #faf7f2;
-  --surface-hover:#ede8de;
-  --border:       #ddd6c8;
-  --text:         #2c2620;
-  --muted:        #7a6e62;
-  --faint:        #b0a496;
+  --bg:           #f4f3f0;
+  --surface:      #faf9f7;
+  --surface-hover:#eceae6;
+  --border:       #dddad4;
+  --text:         #252320;
+  --muted:        #726d66;
+  --faint:        #a8a099;
   --accent:       oklch(48% 0.16 248);
   --accent-bg:    oklch(48% 0.16 248 / 0.1);
   --green:        oklch(48% 0.14 148);
@@ -32,6 +32,16 @@
   --fs-sm:        0.9rem;
   --fs-xs:        0.8rem;
   --animation-d:  var(--animation-d);
+}
+
+[data-theme="dark"] {
+  --bg:           #13151a;
+  --surface:      #1e2028;
+  --surface-hover:#272a35;
+  --border:       #32363f;
+  --text:         #e8eaf0;
+  --muted:        #8892a4;
+  --faint:        #555e72;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -193,6 +203,27 @@ body {
   justify-content: center;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  position: relative;
+}
+
+.theme-toggle {
+  position: absolute;
+  right: var(--sp);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--animation-d), border-color var(--animation-d);
+}
+
+.theme-toggle:hover {
+  background: var(--surface-hover);
 }
 
 .spacer {
@@ -801,6 +832,10 @@ body {
   width: 100%;
   border: none;
   border-radius: var(--r);
+}
+
+[data-theme="dark"] .calendar-frame {
+  filter: invert(1) hue-rotate(180deg);
 }
 
 /* ────────────────────────── Utility ─────────────────────────── */
