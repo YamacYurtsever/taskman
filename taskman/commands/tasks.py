@@ -164,19 +164,27 @@ def cmd_move(args):
 
 
 def cmd_delete(args):
-    if len(args) < 2:
-        _err('usage: taskman delete "list" "name"')
-    list_name, task_name = args[0], args[1]
+    if len(args) < 1:
+        _err('usage: taskman delete "list" ["name"]')
+    list_name = args[0]
 
     data = db.load()
     lst = _find_list(data, list_name)
     if not lst:
         _err(f"list '{list_name}' not found")
 
-    task = _find_task(data, lst["id"], task_name)
-    if not task:
-        _err(f"task '{task_name}' not found in '{list_name}'")
+    if len(args) == 1:
+        data["tasks"] = [t for t in data["tasks"] if t["listId"] != lst["id"]]
+        data["daysheet"] = [e for e in data["daysheet"] if e["listId"] != lst["id"]]
+        data["lists"] = [l for l in data["lists"] if l["id"] != lst["id"]]
+        db.save(data)
+        print(f"- [{list_name}]")
+    else:
+        task_name = args[1]
+        task = _find_task(data, lst["id"], task_name)
+        if not task:
+            _err(f"task '{task_name}' not found in '{list_name}'")
 
-    data["tasks"] = [t for t in data["tasks"] if t["id"] != task["id"]]
-    db.save(data)
-    print(f"- [{list_name}] {task_name}")
+        data["tasks"] = [t for t in data["tasks"] if t["id"] != task["id"]]
+        db.save(data)
+        print(f"- [{list_name}] {task_name}")

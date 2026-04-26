@@ -212,6 +212,34 @@ class TasksTest(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 cmd_delete(["Work", "Ghost"])
 
+    def test_del_list_removes_list_and_tasks(self):
+        db = make_db(TASK_1)
+        saved = {}
+        with patch("taskman.db.load", return_value=db), \
+             patch("taskman.db.save", side_effect=lambda d: saved.update(d)):
+            cmd_delete(["Work"])
+
+        list_names = [l["name"] for l in saved["lists"]]
+        self.assertNotIn("Work", list_names)
+        self.assertEqual(len(saved["tasks"]), 0)
+
+    def test_del_list_keeps_other_lists(self):
+        db = make_db(TASK_1)
+        saved = {}
+        with patch("taskman.db.load", return_value=db), \
+             patch("taskman.db.save", side_effect=lambda d: saved.update(d)):
+            cmd_delete(["Work"])
+
+        list_names = [l["name"] for l in saved["lists"]]
+        self.assertIn("Personal", list_names)
+
+    def test_del_unknown_list_errors(self):
+        db = make_db()
+        with patch("taskman.db.load", return_value=db), \
+             patch("taskman.db.save"):
+            with self.assertRaises(SystemExit):
+                cmd_delete(["NoSuchList"])
+
 
 if __name__ == "__main__":
     unittest.main()

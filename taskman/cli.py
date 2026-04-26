@@ -9,7 +9,7 @@ Usage:
   taskman undo "list" "name"
   taskman update "list" "old_name" "new_name" [new_date]
   taskman move "list" "name" "new_list"
-  taskman delete "list" "name"
+  taskman delete "list" ["name"]
   taskman group "list"+ "group_name"
   taskman ungroup "list"+
   taskman ls ["list" | "group"] [--today | --week]
