@@ -50,6 +50,12 @@ After completing each milestone item:
 | `taskman continue "list" "task"`            | Logs continued task under a list                             |
 | `taskman daysheet [date]`                   | View a day's sheet (default today)                           |
 
+##### Calendar
+
+| Command                 | Description                              |
+| ----------------------- | ---------------------------------------- |
+| `taskman cal [date]`    | List calendar events (default today)     |
+
 ##### Shell Functions
 
 | Function                   | Expands to                |
@@ -58,6 +64,7 @@ After completing each milestone item:
 | `tlsw ["list" \| "group"]` | `taskman ls --week`       |
 | `tlsd ["list" \| "group"]` | `taskman ls --day`        |
 | `tds [date]`               | `taskman daysheet [date]` |
+| `tcd [date]`               | `taskman cal [date]`      |
 
 ---
 
@@ -170,14 +177,23 @@ After completing each milestone item:
 - [ ] Web: description visible in focused list view
 - [ ] Web: add description field to quick-add modal
 
-##### Milestone 5 — Backups
+##### Milestone 5 — Google Calendar
+
+- [ ] OAuth2 authentication for Google Calendar API
+- [ ] Web: calendar view embedded in taskman showing upcoming events
+- [ ] Sidebar nav entry to access the calendar view
+- [ ] Date navigation (day/week views)
+- [ ] `taskman cal [date]` command to list upcoming events in the terminal
+- [ ] Shell function: `tcd [date]` → `taskman cal [date]`
+
+##### Milestone 6 — Backups
 
 - [ ] On each `db.save()`, write/overwrite a snapshot to `~/.taskman/backups/db.YYYY-MM-DD.json` (always reflects the latest state for that day)
 - [ ] Keep only the last 10 snapshots (days with writes), pruning older ones automatically
 - [ ] `taskman backup` command to force a snapshot immediately (useful before bulk changes)
 - [ ] `taskman restore [date]` command to restore from a snapshot (lists available dates if none given)
 
-##### Milestone 6 — iCloud Sync
+##### Milestone 7 — iCloud Sync
 
 - [ ] Config file (`~/.taskman/config.json`) with configurable `db_path`
 - [ ] Default `db_path` to `~/Library/Mobile Documents/com~apple~CloudDocs/taskman/db.json` when iCloud Drive is detected
