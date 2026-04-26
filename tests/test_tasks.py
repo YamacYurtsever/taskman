@@ -269,6 +269,39 @@ class TasksTest(unittest.TestCase):
         work = next(l for l in saved["lists"] if l["name"] == "Work")
         self.assertEqual(work["groupId"], "new-id")
 
+    def test_move_list_ungroup(self):
+        group = {"id": "group-1", "name": "MyGroup"}
+        lst = {**LIST_1, "groupId": "group-1"}
+        data = {
+            "groups": [group],
+            "lists": [lst, LIST_2],
+            "tasks": [],
+            "daysheet": [],
+        }
+        saved = {}
+        with patch("taskman.db.load", return_value=data), \
+             patch("taskman.db.save", side_effect=lambda d: saved.update(d)):
+            cmd_move(["Work", ""])
+
+        work = next(l for l in saved["lists"] if l["name"] == "Work")
+        self.assertIsNone(work["groupId"])
+
+    def test_move_list_ungroup_removes_empty_group(self):
+        group = {"id": "group-1", "name": "MyGroup"}
+        lst = {**LIST_1, "groupId": "group-1"}
+        data = {
+            "groups": [group],
+            "lists": [lst, LIST_2],
+            "tasks": [],
+            "daysheet": [],
+        }
+        saved = {}
+        with patch("taskman.db.load", return_value=data), \
+             patch("taskman.db.save", side_effect=lambda d: saved.update(d)):
+            cmd_move(["Work", ""])
+
+        self.assertEqual(len(saved["groups"]), 0)
+
     def test_move_list_unknown_list_errors(self):
         db = make_db()
         with patch("taskman.db.load", return_value=db), \

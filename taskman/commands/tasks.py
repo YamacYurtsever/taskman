@@ -197,6 +197,14 @@ def cmd_move(args):
         lst = _find_list(data, list_name)
         if not lst:
             _err(f"list '{list_name}' not found")
+        if group_name == "":
+            old_group_id = lst["groupId"]
+            lst["groupId"] = None
+            if old_group_id and not any(l["groupId"] == old_group_id for l in data["lists"]):
+                data["groups"] = [g for g in data["groups"] if g["id"] != old_group_id]
+            db.save(data)
+            print(f"↑ [{list_name}] ungrouped")
+            return
         group = _get_or_create_group(data, group_name)
         lst["groupId"] = group["id"]
         db.save(data)

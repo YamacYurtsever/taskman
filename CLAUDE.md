@@ -26,7 +26,9 @@ After completing each milestone item:
 | `taskman undo "list" "name"`                             | Mark a completed task as pending                 |
 | `taskman edit ("list"\|"group") "new_name"`          | Rename a list or group                           |
 | `taskman edit "list" "name" "new_name" [new_date]`   | Rename a task and/or update its due date         |
-| `taskman move ("list" "group" \| "list" "name" "new_list")`                  | Move a list to a group or a task to a list                  |
+| `taskman move "list" "group"`                            | Assign list to a group (creates group if new)    |
+| `taskman move "list" ""`                                 | Remove list from its group                       |
+| `taskman move "list" "name" "new_list"`                  | Move a task to another list                      |
 | `taskman delete ("group" \| "list" ["name"])`                         | Delete group (ungroup), list, or task    |
 
 ##### Lists & Groups
