@@ -18,6 +18,7 @@ Usage:
   taskman log del "list" "text"
   taskman continue "list" "task"
   taskman daysheet [date]
+  taskman web [--host HOST] [--port PORT] [--debug]
 """
 
 
@@ -66,6 +67,10 @@ def main():
     elif cmd == "daysheet":
         from taskman.commands.daysheet import cmd_daysheet
         cmd_daysheet(args[1:])
+    elif cmd == "web":
+        from web.server import main as web_main
+        sys.argv = ["taskman web"] + args[1:]
+        web_main()
     else:
         print(f"taskman: unknown command '{cmd}'", file=sys.stderr)
         print(USAGE)

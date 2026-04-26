@@ -10,7 +10,6 @@ dependencies = ["flask>=3"]
 
 [project.scripts]
 taskman = "taskman.cli:main"
-taskman-web = "web.server:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
