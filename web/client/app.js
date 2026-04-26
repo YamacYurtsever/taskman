@@ -10,6 +10,7 @@ const state = {
   data: null,
   daysheet: null,
   daysheetDate: todayStr(),
+  calendarUrl: '',
   showDone: new Set(),
   expandedCards: new Set(),
 };
@@ -60,9 +61,12 @@ const MSG = {
   daysheet:   'Daysheet',
   tasks:      'Tasks',
   others:     'Others',
+  calendar:   'Calendar',
+  noCalUrl:   'No calendars configured. Add a "calendars" array and "calendarTimezone" to ~/.taskman/config.json.',
 };
 
 const API = {
+  config:         '/api/config',
   state:          '/api/state',
   daysheet:       '/api/daysheet',
   add:            '/api/add',
@@ -141,18 +145,17 @@ function pendingFor(listId) {
   const { tasks, today } = state.data;
   const todayD = new Date(today);
   const pending = tasks.filter(t => t.listId === listId && !t.done);
+  const byDueThenName = (a, b) => a.due.localeCompare(b.due) || a.name.localeCompare(b.name);
   if (state.filter === 'day') {
-    return pending.filter(t => t.due && new Date(t.due) <= todayD)
-                  .sort((a, b) => a.due.localeCompare(b.due));
+    return pending.filter(t => t.due && new Date(t.due) <= todayD).sort(byDueThenName);
   }
   if (state.filter === 'week') {
     const cut = new Date(todayD); cut.setDate(cut.getDate() + 7);
-    return pending.filter(t => t.due && new Date(t.due) <= cut)
-                  .sort((a, b) => a.due.localeCompare(b.due));
+    return pending.filter(t => t.due && new Date(t.due) <= cut).sort(byDueThenName);
   }
   return [
-    ...pending.filter(t => t.due).sort((a, b) => a.due.localeCompare(b.due)),
-    ...pending.filter(t => !t.due),
+    ...pending.filter(t => t.due).sort(byDueThenName),
+    ...pending.filter(t => !t.due).sort((a, b) => a.name.localeCompare(b.name)),
   ];
 }
 
@@ -180,51 +183,58 @@ function renderSidebar() {
   const nav = document.getElementById('list-nav');
   nav.replaceChildren();
   if (!state.data) return;
-  const { groups, lists, tasks } = state.data;
+  const { groups, lists } = state.data;
 
-  function listBtn(list, indent) {
+  function listBtn(list) {
     const count = pendingFor(list.id).length;
     const active = state.view === 'tasks' && state.selectedList === list.id;
-    const btn = el('button', {
-      class: 'list-nav-item nav-sub' + (active ? ' active' : ''),
-      style: indent ? 'padding-left:28px' : '',
+    return el('button', {
+      class: 'list-nav-item nav-list' + (active ? ' active' : ''),
       on: { click: () => { state.selectedList = list.id; state.selectedGroup = null; state.view = 'tasks'; render(); renderSidebar(); } },
     }, list.name, count ? el('span', { class: 'lni-count' }, count) : null);
-    return btn;
   }
 
-  // Daysheet entry (top-level)
+  // Top-level: Calendar
+  const calActive = state.view === 'calendar';
+  nav.append(el('button', {
+    class: 'list-nav-item nav-top' + (calActive ? ' active' : ''),
+    on: { click: () => { state.view = 'calendar'; state.selectedList = null; state.selectedGroup = null; render(); } },
+  }, MSG.calendar));
+
+  // Top-level: Daysheet
   const dsActive = state.view === 'daysheet';
   nav.append(el('button', {
     class: 'list-nav-item nav-top' + (dsActive ? ' active' : ''),
     on: { click: () => { state.view = 'daysheet'; state.selectedList = null; state.selectedGroup = null; refresh(); } },
   }, MSG.daysheet));
 
-  // Tasks entry (top-level, click = All lists)
+  // Tasks section
   const tasksActive = state.view === 'tasks' && state.selectedList === null && state.selectedGroup === null;
-  nav.append(el('button', {
+  const tasksHeader = el('button', {
     class: 'list-nav-item nav-top' + (tasksActive ? ' active' : ''),
     on: { click: () => { state.selectedList = null; state.selectedGroup = null; state.view = 'tasks'; render(); renderSidebar(); } },
-  }, MSG.tasks));
+  }, MSG.tasks);
 
+  const tasksSectionBody = el('div', { class: 'nav-section-body' });
   const seen = new Set();
-  const sortedGroups = sortByName(groups);
-  for (const g of sortedGroups) {
+
+  for (const g of sortByName(groups)) {
     const gl = sortByName(lists.filter(l => l.groupId === g.id));
     if (!gl.length) continue;
     const grpActive = state.view === 'tasks' && state.selectedGroup === g.id;
-    nav.append(el('button', {
-      class: 'list-nav-item nav-group' + (grpActive ? ' active' : ''),
+    const groupHeader = el('button', {
+      class: 'list-nav-item nav-group-header' + (grpActive ? ' active' : ''),
       on: { click: () => { state.selectedGroup = g.id; state.selectedList = null; state.view = 'tasks'; render(); renderSidebar(); } },
-    }, g.name));
-    gl.forEach(l => nav.append(listBtn(l, true)));
+    }, g.name);
+    const groupLists = el('div', { class: 'nav-group-lists' }, ...gl.map(listBtn));
+    tasksSectionBody.append(el('div', { class: 'nav-group' }, groupHeader, groupLists));
     gl.forEach(l => seen.add(l.id));
   }
 
   const ungrouped = sortByName(lists.filter(l => !seen.has(l.id)));
-  ungrouped.forEach(l => nav.append(listBtn(l, false)));
+  ungrouped.forEach(l => tasksSectionBody.append(listBtn(l)));
 
-  // New List button + inline input
+  // New List input
   const inputRow = el('div', { class: 'new-list-input hidden' });
   const input = el('input', { type: 'text', placeholder: MSG.listName, autocomplete: 'off' });
   const submit = async () => {
@@ -240,12 +250,13 @@ function renderSidebar() {
   });
   input.addEventListener('blur', () => { if (!input.value.trim()) inputRow.classList.add('hidden'); });
   inputRow.append(input);
-  nav.append(inputRow);
-
-  nav.append(el('button', {
+  tasksSectionBody.append(inputRow);
+  tasksSectionBody.append(el('button', {
     class: 'new-list-btn',
     on: { click: () => { inputRow.classList.remove('hidden'); input.focus(); } },
   }, MSG.newList));
+
+  nav.append(el('div', { class: 'nav-section' }, tasksHeader, tasksSectionBody));
 }
 
 // ────────────────────────── Task row ──────────────────────────
@@ -441,6 +452,16 @@ function renderFocusedView(listId) {
   );
 }
 
+// ──────────────────────── Calendar view ───────────────────────
+
+function renderCalendarView() {
+  const main = document.getElementById('main');
+  main.replaceChildren();
+  if (!state.calendarUrl) {
+    main.append(el('div', { class: 'empty' }, MSG.noCalUrl));
+  }
+}
+
 // ─────────────────────── Daysheet view ────────────────────────
 
 function renderDaysheetView() {
@@ -559,6 +580,12 @@ function renderTopbar() {
 function render() {
   renderTopbar();
   renderSidebar();
+  const isCalendar = state.view === 'calendar';
+  const frame = document.getElementById('calendar-frame');
+  const main = document.getElementById('main');
+  frame.style.display = isCalendar && state.calendarUrl ? 'block' : 'none';
+  main.style.display = isCalendar && state.calendarUrl ? 'none' : '';
+  if (isCalendar) { renderCalendarView(); return; }
   if (state.view === 'daysheet') { renderDaysheetView(); return; }
   if (!state.data) return;
   if (state.selectedList) renderFocusedView(state.selectedList);
@@ -567,4 +594,13 @@ function render() {
 
 // ──────────────────────────── Boot ────────────────────────────
 
-refresh();
+(async () => {
+  const cfg = await api('GET', API.config);
+  if (cfg) {
+    state.calendarUrl = cfg.calendarUrl || '';
+    if (state.calendarUrl) {
+      document.getElementById('calendar-frame').src = state.calendarUrl;
+    }
+  }
+  await refresh();
+})();

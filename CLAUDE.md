@@ -13,6 +13,14 @@ After completing each milestone item:
 - Check off the item in the milestones section
 - Run `git add . && git commit -m "<description>"`
 
+After changes to `web/server.py` or `taskman/config.py`, restart the web server:
+
+```bash
+launchctl unload ~/Library/LaunchAgents/com.taskman.web.plist && launchctl load ~/Library/LaunchAgents/com.taskman.web.plist
+```
+
+Then advise the user to hard-refresh with Cmd+Shift+R.
+
 ---
 
 ### Commands
@@ -179,12 +187,27 @@ After completing each milestone item:
 
 ##### Milestone 5 — Google Calendar
 
-- [ ] OAuth2 authentication for Google Calendar API
-- [ ] Web: calendar view embedded in taskman showing upcoming events
-- [ ] Sidebar nav entry to access the calendar view
-- [ ] Date navigation (day/week views)
-- [ ] `taskman cal [date]` command to list upcoming events in the terminal
-- [ ] Shell function: `tcd [date]` → `taskman cal [date]`
+- [x] Web: Google Calendar iframe embedded in taskman (week view by default)
+- [x] Sidebar nav entry (above Daysheet) to access the calendar view
+- [x] Multi-calendar support: calendars configured in `~/.taskman/config.json` as an array of `{ id, color }` objects
+- [x] Per-calendar color override via Google Calendar embed `color` param
+- [x] iframe loaded once at boot and kept in DOM — switching to Calendar view shows/hides it instantly
+- [x] Config file (`~/.taskman/config.json`) with `calendars` array and `calendarTimezone`; built-in defaults in `taskman/config.py`
+
+###### Calendar Config (`~/.taskman/config.json`)
+
+```json
+{
+  "calendars": [
+    { "id": "you@gmail.com", "color": "#B39DDB" },
+    { "id": "other-calendar-id@group.calendar.google.com", "color": "#E67C73" }
+  ],
+  "calendarTimezone": "America/Sydney"
+}
+```
+
+Google Calendar embed color codes (predefined palette):
+`#E67C73` Flamingo · `#33B679` Sage · `#B39DDB` Wisteria · `#039BE5` Peacock · `#3F51B5` Blueberry · `#7986CB` Lavender · `#8E24AA` Grape · `#F6BF26` Banana · `#F4511E` Tangerine · `#0B8043` Basil · `#D50000` Tomato · `#616161` Graphite
 
 ##### Milestone 6 — Backups
 
@@ -195,7 +218,7 @@ After completing each milestone item:
 
 ##### Milestone 7 — iCloud Sync
 
-- [ ] Config file (`~/.taskman/config.json`) with configurable `db_path`
+- [ ] Add `db_path` to existing `~/.taskman/config.json` (config file already exists, used by Calendar)
 - [ ] Default `db_path` to `~/Library/Mobile Documents/com~apple~CloudDocs/taskman/db.json` when iCloud Drive is detected
 - [ ] CLI flag / env var to override `db_path` at runtime
 - [ ] Graceful handling of iCloud file availability (file temporarily unavailable during sync)

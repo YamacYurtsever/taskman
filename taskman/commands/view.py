@@ -53,20 +53,21 @@ def filter_tasks(tasks, list_id, mode, today):
 
     pending = [t for t in tasks if t['listId'] == list_id and not t['done']]
 
+    by_due_name = lambda t: (t['due'], t['name'])
     if mode == 'day':
         return sorted(
             [t for t in pending if t['due'] and date.fromisoformat(t['due']) <= today],
-            key=lambda t: t['due'],
+            key=by_due_name,
         )
     if mode == 'week':
         cutoff = today + timedelta(days=7)
         return sorted(
             [t for t in pending if t['due'] and date.fromisoformat(t['due']) <= cutoff],
-            key=lambda t: t['due'],
+            key=by_due_name,
         )
 
-    dated = sorted([t for t in pending if t['due']], key=lambda t: t['due'])
-    dateless = [t for t in pending if not t['due']]
+    dated = sorted([t for t in pending if t['due']], key=by_due_name)
+    dateless = sorted([t for t in pending if not t['due']], key=lambda t: t['name'])
     return dated + dateless
 
 
