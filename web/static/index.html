@@ -1,20 +1,55 @@
+
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>taskman</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<header>
-  <h1>taskman</h1>
-  <nav id="tabs">
-    <button data-view="tasks" class="active">Tasks</button>
-    <button data-view="daysheet">Daysheet</button>
-  </nav>
-</header>
-<main id="main"></main>
+
+<aside id="sidebar">
+  <div class="sidebar-logo">taskman</div>
+  <div class="sidebar-lists">
+    <div id="list-nav"></div>
+  </div>
+</aside>
+
+<div id="content">
+  <div id="topbar">
+    <div id="filter-bar"></div>
+    <div class="spacer"></div>
+    <button class="quick-add-btn" id="quick-add-btn">+ New task</button>
+  </div>
+  <main id="main"></main>
+</div>
+
+<div id="quick-add-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title">New task</div>
+    <div class="modal-field">
+      <label for="qa-list">List</label>
+      <select id="qa-list"></select>
+    </div>
+    <div class="modal-field">
+      <label for="qa-name">Task name</label>
+      <input type="text" id="qa-name" placeholder="What needs doing?" autocomplete="off">
+    </div>
+    <div class="modal-field">
+      <label for="qa-due">Due date <span style="color:var(--faint)">(optional)</span></label>
+      <input type="date" id="qa-due">
+    </div>
+    <div class="modal-actions">
+      <button id="qa-cancel">Cancel</button>
+      <button class="submit" id="qa-submit">Add task</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 <script src="/static/app.js"></script>
 </body>

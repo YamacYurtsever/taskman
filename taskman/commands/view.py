@@ -49,7 +49,7 @@ def filter_tasks(tasks, list_id, mode, today):
 
     pending = [t for t in tasks if t['listId'] == list_id and not t['done']]
 
-    if mode == 'today':
+    if mode == 'day':
         return sorted(
             [t for t in pending if t['due'] and date.fromisoformat(t['due']) <= today],
             key=lambda t: t['due'],
@@ -122,8 +122,8 @@ def cmd_ls(args):
     filter_name = None
 
     for arg in args:
-        if arg == '--today':
-            mode = 'today'
+        if arg == '--day':
+            mode = 'day'
         elif arg == '--week':
             mode = 'week'
         elif arg == '--done':

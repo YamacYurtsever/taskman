@@ -40,7 +40,7 @@ After completing each milestone item:
 | Command                                  | Description                                             |
 | ---------------------------------------- | ------------------------------------------------------- |
 | `taskman ls ["list" \| "group"]`         | All pending tasks, optionally filtered by list or group |
-| `taskman ls ["list" \| "group"] --today` | Overdue + due today                                     |
+| `taskman ls ["list" \| "group"] --day`   | Overdue + due today                                     |
 | `taskman ls ["list" \| "group"] --week`  | Overdue + due within 7 days                             |
 | `taskman ls ["list" \| "group"] --done`  | Completed tasks, most recent first                      |
 
@@ -59,8 +59,8 @@ After completing each milestone item:
 | Function                   | Expands to                |
 | -------------------------- | ------------------------- |
 | `tls ["list" \| "group"]`  | `taskman ls`              |
-| `tlsd ["list" \| "group"]` | `taskman ls --today`      |
 | `tlsw ["list" \| "group"]` | `taskman ls --week`       |
+| `tlsd ["list" \| "group"]` | `taskman ls --day`        |
 | `tds [date]`               | `taskman daysheet [date]` |
 
 ---
@@ -132,7 +132,7 @@ After completing each milestone item:
 - [x] Flask server (`web/server.py`) with REST endpoints wrapping existing command functions
 - [x] Serve static frontend from `web/static/`
 - [x] View: all lists/groups with pending tasks (mirrors `taskman ls`)
-- [x] View: today and week filtered views (mirrors `--today`, `--week`)
+- [x] View: day and week filtered views (mirrors `--day`, `--week`)
 - [x] View: daysheet for today (mirrors `taskman daysheet`)
 - [x] Actions: add, done, undo, delete tasks inline
 - [x] Actions: log and continue from the daysheet view

@@ -1,38 +1,77 @@
+'use strict';
+
+// ── State ─────────────────────────────────────────────────────
+
 const state = {
   view: 'tasks',
-  taskFilter: 'all',
+  filter: 'all',
+  selectedList: null,
+  selectedGroup: null,
   data: null,
   daysheet: null,
-  daysheetDate: new Date().toISOString().slice(0, 10),
+  daysheetDate: todayStr(),
   showDone: new Set(),
 };
 
-const main = document.getElementById('main');
-const toast = document.getElementById('toast');
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
 
-function el(tag, props = {}, ...children) {
+// ── DOM helpers ───────────────────────────────────────────────
+
+function el(tag, props, ...children) {
   const node = document.createElement(tag);
-  for (const [k, v] of Object.entries(props)) {
-    if (k === 'class') node.className = v;
-    else if (k === 'on') for (const [evt, fn] of Object.entries(v)) node.addEventListener(evt, fn);
-    else if (k in node) node[k] = v;
-    else node.setAttribute(k, v);
+  if (props) {
+    for (const [k, v] of Object.entries(props)) {
+      if (k === 'class') node.className = v;
+      else if (k === 'on') Object.entries(v).forEach(([e, fn]) => node.addEventListener(e, fn));
+      else if (k in node) node[k] = v;
+      else node.setAttribute(k, v);
+    }
   }
-  for (const c of children.flat()) {
+  for (const c of children.flat(Infinity)) {
     if (c == null || c === false) continue;
-    node.append(c.nodeType ? c : document.createTextNode(c));
+    node.append(c.nodeType ? c : document.createTextNode(String(c)));
   }
   return node;
 }
 
-let toastTimer;
-function showToast(msg, isError = false) {
-  if (!msg) return;
-  toast.textContent = msg;
-  toast.className = 'show' + (isError ? ' error' : '');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => (toast.className = ''), 2200);
+function icon(d, size = 13) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('width', size); svg.setAttribute('height', size);
+  svg.setAttribute('viewBox', '0 0 16 16'); svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor'); svg.setAttribute('stroke-width', '1.8');
+  svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round');
+  svg.innerHTML = d;
+  return svg;
 }
+
+const IC = {
+  tasks:    '<rect x="2.5" y="2.5" width="11" height="11" rx="1.5"/><path d="M5.5 8l2 2L10.5 6"/>',
+  daysheet: '<path d="M4 2h8a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z"/><path d="M6 6h4M6 9h4M6 12h2"/>',
+  check:    '<path d="M3 8.5l3 3L13 5"/>',
+  undo:     '<path d="M4 7H10a3 3 0 010 6H8"/><path d="M4 4L1 7l3 3"/>',
+  delete:   '<path d="M3 3l10 10M13 3L3 13"/>',
+  continue: '<path d="M4 4l4 4-4 4"/><path d="M9 4l4 4-4 4"/>',
+  chevL:    '<path d="M10 12L6 8l4-4"/>',
+  chevR:    '<path d="M6 4l4 4-4 4"/>',
+  plus:     '<path d="M8 3v10M3 8h10"/>',
+};
+
+// ── Toast ─────────────────────────────────────────────────────
+
+const $toast = document.getElementById('toast');
+let _toastTimer;
+function toast(msg, isErr = false) {
+  if (!msg) return;
+  $toast.textContent = msg;
+  $toast.className = 'show' + (isErr ? ' error' : '');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => ($toast.className = ''), 2400);
+}
+
+// ── API ───────────────────────────────────────────────────────
 
 async function api(method, path, body) {
   const opts = { method };
@@ -43,253 +82,492 @@ async function api(method, path, body) {
   try {
     const res = await fetch(path, opts);
     const json = await res.json();
-    if (!res.ok) {
-      showToast(json.message || json.error || 'Request failed', true);
-      return null;
-    }
+    if (!res.ok) { toast(json.message || json.error || 'Request failed', true); return null; }
     return json;
-  } catch (e) {
-    showToast('Request failed', true);
-    return null;
-  }
+  } catch { toast('Request failed', true); return null; }
 }
 
 async function refresh() {
   if (state.view === 'daysheet') {
-    state.daysheet = await api('GET', `/api/daysheet?date=${state.daysheetDate}`);
-    if (!state.data) state.data = await api('GET', '/api/state');
+    const [ds, data] = await Promise.all([
+      api('GET', `/api/daysheet?date=${state.daysheetDate}`),
+      state.data ? Promise.resolve(state.data) : api('GET', '/api/state'),
+    ]);
+    state.daysheet = ds;
+    state.data = data;
   } else {
     state.data = await api('GET', '/api/state');
   }
   render();
+  renderSidebar();
 }
 
-async function action(path, body, successMsg) {
+async function act(path, body, msg) {
   const res = await api('POST', path, body);
-  if (res && res.ok) {
-    if (successMsg) showToast(successMsg);
+  if (res?.ok) {
+    if (msg) toast(msg);
     state.data = null;
     state.daysheet = null;
     await refresh();
   }
 }
 
-function filterPending(tasks, listId, mode, today) {
+function sortByName(arr) {
+  return [...arr].sort((a, b) => {
+    if (/^others?$/i.test(a.name)) return 1;
+    if (/^others?$/i.test(b.name)) return -1;
+    return a.name.localeCompare(b.name);
+  });
+}
+
+// ── Data helpers ──────────────────────────────────────────────
+
+function pendingFor(listId) {
+  const { tasks, today } = state.data;
   const todayD = new Date(today);
   const pending = tasks.filter(t => t.listId === listId && !t.done);
-  if (mode === 'today') {
+  if (state.filter === 'day') {
     return pending.filter(t => t.due && new Date(t.due) <= todayD)
                   .sort((a, b) => a.due.localeCompare(b.due));
   }
-  if (mode === 'week') {
-    const cutoff = new Date(todayD); cutoff.setDate(cutoff.getDate() + 7);
-    return pending.filter(t => t.due && new Date(t.due) <= cutoff)
+  if (state.filter === 'week') {
+    const cut = new Date(todayD); cut.setDate(cut.getDate() + 7);
+    return pending.filter(t => t.due && new Date(t.due) <= cut)
                   .sort((a, b) => a.due.localeCompare(b.due));
   }
-  const dated = pending.filter(t => t.due).sort((a, b) => a.due.localeCompare(b.due));
-  const dateless = pending.filter(t => !t.due);
-  return [...dated, ...dateless];
+  return [
+    ...pending.filter(t => t.due).sort((a, b) => a.due.localeCompare(b.due)),
+    ...pending.filter(t => !t.due),
+  ];
 }
 
-function filterDone(tasks, listId) {
-  return tasks.filter(t => t.listId === listId && t.done)
-              .sort((a, b) => b.done.localeCompare(a.done));
+function doneFor(listId) {
+  return state.data.tasks
+    .filter(t => t.listId === listId && t.done)
+    .sort((a, b) => b.done.localeCompare(a.done));
 }
 
-function formatDue(due, today) {
+function formatDue(due) {
+  const today = state.data.today;
   const dueD = new Date(due);
   const todayD = new Date(today);
   const days = Math.round((dueD - todayD) / 86400000);
-  if (days < 0) return { label: dueD.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }), overdue: true };
-  if (days === 0) return { label: 'today' };
-  if (days === 1) return { label: 'tomorrow' };
-  if (days < 7) return { label: dueD.toLocaleDateString(undefined, { weekday: 'long' }).toLowerCase() };
-  return { label: dueD.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) };
+  if (days < 0)  return { label: dueD.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }), cls: 'overdue' };
+  if (days === 0) return { label: 'today', cls: 'today-due' };
+  if (days === 1) return { label: 'tomorrow', cls: 'soon' };
+  if (days < 7)  return { label: dueD.toLocaleDateString(undefined, { weekday: 'short' }).toLowerCase(), cls: '' };
+  return { label: dueD.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }), cls: '' };
 }
 
-function renderTask(task, listName, today) {
-  const due = task.due ? formatDue(task.due, today) : null;
-  return el('div', { class: 'task' + (task.done ? ' done' : '') },
-    el('div', { class: 'name' },
-      task.name,
-      task.done
-        ? el('span', { class: 'due' }, task.done)
-        : due && el('span', { class: 'due' + (due.overdue ? ' overdue' : '') }, due.label),
-    ),
-    task.done
-      ? el('button', { title: 'Undo', on: { click: () => action('/api/undo', { list: listName, name: task.name }) } }, '↺')
-      : el('button', { title: 'Done', on: { click: () => action('/api/done', { list: listName, name: task.name }, `done: ${task.name}`) } }, '✓'),
-    !task.done
-      ? el('button', { class: 'continue-btn', title: 'Continue', on: { click: () => action('/api/continue', { list: listName, task: task.name }) } }, '»')
-      : null,
-    el('button', { title: 'Delete', on: { click: () => {
-      if (confirm(`Delete "${task.name}"?`)) action('/api/delete', { list: listName, name: task.name });
-    } } }, '×'),
-  );
-}
+// ── Sidebar ───────────────────────────────────────────────────
 
-function renderList(list, allTasks, today, mode) {
-  const pending = filterPending(allTasks, list.id, mode, today);
-  if (!pending.length) return null;
-  const done = filterDone(allTasks, list.id);
-
-  const doneSection = el('div', { class: 'done-section' });
-  const toggleBtn = el('button', { class: 'done-toggle' });
-
-  const expanded = state.showDone.has(list.id);
-  function applyExpanded(open) {
-    toggleBtn.textContent = open ? 'hide done' : `show done (${done.length})`;
-    doneSection.replaceChildren(...(open ? done.map(t => renderTask(t, list.name, today)) : []));
-  }
-  applyExpanded(expanded);
-
-  toggleBtn.addEventListener('click', () => {
-    const next = !state.showDone.has(list.id);
-    next ? state.showDone.add(list.id) : state.showDone.delete(list.id);
-    applyExpanded(next);
-  });
-
-  const addInput = el('input', { type: 'text', placeholder: 'add task…' });
-  const dueInput = el('input', { type: 'date' });
-  const submit = () => {
-    const name = addInput.value.trim();
-    if (!name) return;
-    action('/api/add', { list: list.name, name, due: dueInput.value || null });
-    addInput.value = '';
-    dueInput.value = '';
-  };
-
-  return el('div', { class: 'list' },
-    el('h3', {}, list.name, el('span', { class: 'count' }, String(pending.length))),
-    pending.length
-      ? pending.map(t => renderTask(t, list.name, today))
-      : el('div', { class: 'empty' }, 'no tasks'),
-    el('div', { class: 'add-task' }, addInput, dueInput,
-      el('button', { on: { click: submit } }, '+')),
-    done.length ? toggleBtn : null,
-    doneSection,
-  );
-}
-
-function renderListsView(mode) {
+function renderSidebar() {
+  const nav = document.getElementById('list-nav');
+  nav.replaceChildren();
   if (!state.data) return;
-  const { groups, lists, tasks, today } = state.data;
-  main.replaceChildren();
+  const { groups, lists, tasks } = state.data;
 
-  const filterBar = el('div', { class: 'filter-bar' },
-    ...['all', 'week', 'today'].map(f => {
-      const btn = el('button', { class: f === mode ? 'active' : '' }, f[0].toUpperCase() + f.slice(1));
-      btn.addEventListener('click', () => {
-        state.taskFilter = f;
-        render();
-      });
-      return btn;
-    }),
+  function listBtn(list, indent) {
+    const count = tasks.filter(t => t.listId === list.id && !t.done).length;
+    const active = state.view === 'tasks' && state.selectedList === list.id;
+    const btn = el('button', {
+      class: 'list-nav-item nav-sub' + (active ? ' active' : ''),
+      style: indent ? 'padding-left:28px' : 'padding-left:18px',
+      on: { click: () => { state.selectedList = list.id; state.selectedGroup = null; state.view = 'tasks'; render(); renderSidebar(); } },
+    }, list.name, count ? el('span', { class: 'lni-count' }, count) : null);
+    return btn;
+  }
+
+  // Daysheet entry (top-level)
+  const dsActive = state.view === 'daysheet';
+  nav.append(el('button', {
+    class: 'list-nav-item nav-top' + (dsActive ? ' active' : ''),
+    on: { click: () => { state.view = 'daysheet'; state.selectedList = null; state.selectedGroup = null; refresh(); } },
+  }, 'Daysheet'));
+
+  // Tasks entry (top-level, click = All lists)
+  const tasksActive = state.view === 'tasks' && state.selectedList === null && state.selectedGroup === null;
+  nav.append(el('button', {
+    class: 'list-nav-item nav-top' + (tasksActive ? ' active' : ''),
+    on: { click: () => { state.selectedList = null; state.selectedGroup = null; state.view = 'tasks'; render(); renderSidebar(); } },
+  }, 'Tasks'));
+
+  const seen = new Set();
+  const sortedGroups = sortByName(groups);
+  for (const g of sortedGroups) {
+    const gl = sortByName(lists.filter(l => l.groupId === g.id));
+    if (!gl.length) continue;
+    const grpActive = state.view === 'tasks' && state.selectedGroup === g.id;
+    nav.append(el('button', {
+      class: 'list-nav-item nav-group' + (grpActive ? ' active' : ''),
+      on: { click: () => { state.selectedGroup = g.id; state.selectedList = null; state.view = 'tasks'; render(); renderSidebar(); } },
+    }, g.name));
+    gl.forEach(l => nav.append(listBtn(l, true)));
+    gl.forEach(l => seen.add(l.id));
+  }
+
+  const ungrouped = sortByName(lists.filter(l => !seen.has(l.id)));
+  ungrouped.forEach(l => nav.append(listBtn(l, false)));
+}
+
+// ── Task row ──────────────────────────────────────────────────
+
+function taskRow(task, listName) {
+  const due = task.due ? formatDue(task.due) : null;
+
+  const checkEl = el('div', {
+    class: 'task-check',
+    title: task.done ? 'Mark pending' : 'Mark done',
+    on: {
+      click: () => task.done
+        ? act('/api/undo', { list: listName, name: task.name })
+        : act('/api/done', { list: listName, name: task.name }, `✓ ${task.name}`),
+    },
+  },
+    el('svg', { class: 'task-check-svg', width: '9', height: '9', viewBox: '0 0 16 16',
+      fill: 'none', stroke: '#0e1016', 'stroke-width': '2.5',
+      'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
+      el('path', { d: 'M3 8.5l3 3L13 5' })),
   );
-  main.append(filterBar);
 
-  if (!lists.length) {
-    main.append(el('div', { class: 'empty' }, 'no lists yet — add a task to get started'));
+  const dueEl = due ? el('span', { class: 'task-due' + (due.cls ? ' ' + due.cls : '') }, due.label) : null;
+
+  const actions = el('div', { class: 'task-actions' });
+  if (!task.done) {
+    actions.append(
+      el('button', { class: 'task-btn', title: 'Log continue',
+        on: { click: () => act('/api/continue', { list: listName, task: task.name }) } },
+        icon(IC.continue, 15)),
+    );
+  } else {
+    actions.append(
+      el('button', { class: 'task-btn', title: 'Undo',
+        on: { click: () => act('/api/undo', { list: listName, name: task.name }) } },
+        icon(IC.undo)),
+    );
+  }
+  actions.append(
+    el('button', { class: 'task-btn del', title: 'Delete',
+      on: { click: () => { if (confirm(`Delete "${task.name}"?`)) act('/api/delete', { list: listName, name: task.name }); } } },
+      icon(IC.delete)),
+  );
+
+  return el('div', { class: 'task-row' + (task.done ? ' done' : '') },
+    checkEl,
+    el('span', { class: 'task-name' }, task.name),
+    dueEl,
+    actions,
+  );
+}
+
+// ── Inline add row ────────────────────────────────────────────
+
+function inlineAdd(listName, onAdd) {
+  const nameIn = el('input', { type: 'text', placeholder: 'Add task…' });
+  const dueIn  = el('input', { type: 'date' });
+  const submit = () => {
+    const name = nameIn.value.trim();
+    if (!name) return;
+    onAdd(listName, name, dueIn.value || null);
+    nameIn.value = ''; dueIn.value = '';
+  };
+  nameIn.addEventListener('keydown', e => e.key === 'Enter' && submit());
+  return { nameIn, dueIn, submit };
+}
+
+// ── Cards view (all lists) ────────────────────────────────────
+
+function renderCard(list) {
+  const pending = pendingFor(list.id);
+  if (!pending.length) return null;
+
+  const body = el('div', { class: 'card-body' },
+    ...pending.map(t => taskRow(t, list.name)),
+  );
+
+  const { nameIn, dueIn, submit } = inlineAdd(list.name, (l, n, d) => act('/api/add', { list: l, name: n, due: d }));
+
+  return el('div', { class: 'card' },
+    el('div', { class: 'card-header',
+      on: { click: () => { state.selectedList = list.id; render(); renderSidebar(); } } },
+      el('span', { class: 'card-title' }, list.name),
+      el('span', { class: 'card-count' }, pending.length),
+    ),
+    body,
+    el('div', { class: 'card-add' },
+      nameIn, dueIn,
+      el('button', { class: 'card-add-btn', on: { click: submit } }, icon(IC.plus, 14)),
+    ),
+  );
+}
+
+function renderCardsView() {
+  const main = document.getElementById('main');
+  main.replaceChildren();
+  const { groups, lists } = state.data;
+
+  if (state.selectedGroup) {
+    const g = groups.find(x => x.id === state.selectedGroup);
+    if (!g) { state.selectedGroup = null; renderCardsView(); return; }
+    const gl = lists.filter(l => l.groupId === g.id);
+    const cards = gl.map(renderCard).filter(Boolean);
+    main.append(el('div', { class: 'section-label' }, g.name));
+    if (cards.length) {
+      main.append(el('div', { class: 'cards-grid' }, ...cards));
+    } else {
+      main.append(el('div', { class: 'empty' }, 'No tasks to show.'));
+    }
     return;
   }
 
   const seen = new Set();
   for (const g of groups) {
-    const groupLists = lists.filter(l => l.groupId === g.id);
-    if (!groupLists.length) continue;
-    const rendered = groupLists.map(l => renderList(l, tasks, today, mode)).filter(Boolean);
-    if (rendered.length) {
-      main.append(el('div', { class: 'group-title' }, g.name));
-      main.append(el('div', { class: 'lists' }, rendered));
+    const gl = lists.filter(l => l.groupId === g.id);
+    if (!gl.length) continue;
+    const cards = gl.map(renderCard).filter(Boolean);
+    if (cards.length) {
+      main.append(el('div', { class: 'section-label' }, g.name));
+      main.append(el('div', { class: 'cards-grid' }, ...cards));
     }
-    groupLists.forEach(l => seen.add(l.id));
+    gl.forEach(l => seen.add(l.id));
   }
-  const ungrouped = lists.filter(l => !seen.has(l.id));
-  if (ungrouped.length) {
-    const rendered = ungrouped.map(l => renderList(l, tasks, today, mode)).filter(Boolean);
-    if (rendered.length) {
-      if (groups.some(g => lists.some(l => l.groupId === g.id))) {
-        main.append(el('div', { class: 'group-title' }, 'ungrouped'));
-      }
-      main.append(el('div', { class: 'lists' }, rendered));
+
+  const ungrp = lists.filter(l => !seen.has(l.id));
+  if (ungrp.length) {
+    const cards = ungrp.map(renderCard).filter(Boolean);
+    if (cards.length) {
+      const hasGroups = groups.some(g => lists.some(l => l.groupId === g.id));
+      if (hasGroups) main.append(el('div', { class: 'section-label' }, 'Others'));
+      main.append(el('div', { class: 'cards-grid' }, ...cards));
     }
+  }
+
+  if (!main.children.length) {
+    main.append(el('div', { class: 'empty' }, 'No tasks to show.'));
   }
 }
 
-function renderDaysheet() {
+// ── Focused view (single list) ────────────────────────────────
+
+function renderFocusedView(listId) {
+  const { lists } = state.data;
+  const list = lists.find(l => l.id === listId);
+  if (!list) { state.selectedList = null; renderCardsView(); return; }
+
+  const main = document.getElementById('main');
   main.replaceChildren();
-  const dateInput = el('input', { type: 'date', value: state.daysheetDate, on: {
-    change: e => { state.daysheetDate = e.target.value; refresh(); },
-  } });
-  main.append(el('div', { class: 'daysheet-controls' },
-    el('strong', {}, 'Day Sheet'),
-    dateInput,
-  ));
 
-  if (!state.daysheet) return;
-  const { entries } = state.daysheet;
+  const pending = pendingFor(listId);
+  const done    = doneFor(listId);
+  const showDone = state.showDone.has(listId);
 
-  if (!entries.length) {
-    main.append(el('div', { class: 'empty' }, `No entries for ${state.daysheet.date}`));
+  const doneSection = el('div', { class: 'done-section' });
+  const toggleBtn = el('button', { class: 'done-toggle' });
+  function applyToggle(open) {
+    toggleBtn.replaceChildren(icon(open ? IC.chevL : IC.chevR, 11), ` ${open ? 'hide' : 'show'} done (${done.length})`);
+    doneSection.replaceChildren(...(open ? done.map(t => taskRow(t, list.name)) : []));
+  }
+  applyToggle(showDone);
+  toggleBtn.addEventListener('click', () => {
+    const next = !state.showDone.has(listId);
+    next ? state.showDone.add(listId) : state.showDone.delete(listId);
+    applyToggle(next);
+  });
+
+  const { nameIn, dueIn, submit } = inlineAdd(list.name, (l, n, d) => act('/api/add', { list: l, name: n, due: d }));
+
+  main.append(
+    el('div', { class: 'focused-view' },
+      el('div', { class: 'focused-header' },
+        el('h1', { class: 'focused-title' }, list.name),
+        el('span', { class: 'focused-meta' }, `${pending.length} pending`),
+      ),
+      el('div', { class: 'focused-tasks' },
+        ...(pending.length
+          ? pending.map(t => taskRow(t, list.name))
+          : [el('div', { class: 'empty' }, state.filter === 'all' ? 'No pending tasks.' : 'Nothing due.')]),
+      ),
+      el('div', { class: 'focused-add' },
+        nameIn, dueIn,
+        el('button', { class: 'focused-add-btn', on: { click: submit } }, icon(IC.plus, 15)),
+      ),
+      done.length ? el('div', {}, toggleBtn, doneSection) : null,
+    ),
+  );
+}
+
+// ── Daysheet view ─────────────────────────────────────────────
+
+function renderDaysheetView() {
+  const main = document.getElementById('main');
+  main.replaceChildren();
+
+  const ds    = state.daysheet || { entries: [], date: state.daysheetDate };
+  const lists = state.data?.lists || [];
+
+  function shiftDay(delta) {
+    const d = new Date(state.daysheetDate + 'T12:00:00');
+    d.setDate(d.getDate() + delta);
+    state.daysheetDate = d.toISOString().slice(0, 10);
+    state.daysheet = null;
+    refresh();
+  }
+
+  function dateLabel(str) {
+    const today = todayStr();
+    if (str === today) return 'Today';
+    const yest = new Date(); yest.setDate(yest.getDate() - 1);
+    if (str === yest.toISOString().slice(0, 10)) return 'Yesterday';
+    return new Date(str + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+
+  const view = el('div', { class: 'daysheet-view' });
+
+  view.append(
+    el('div', { class: 'daysheet-header' },
+      el('h1', { class: 'daysheet-title' }, 'Daysheet'),
+      el('div', { class: 'date-nav' },
+        el('button', { class: 'date-nav-btn', on: { click: () => shiftDay(-1) } }, icon(IC.chevL, 11)),
+        el('span', { class: 'date-nav-label' }, dateLabel(state.daysheetDate)),
+        el('button', { class: 'date-nav-btn', on: { click: () => shiftDay(1) } }, icon(IC.chevR, 11)),
+      ),
+    ),
+  );
+
+  const timeline = el('div', { class: 'timeline' });
+
+  if (!ds.entries.length) {
+    timeline.append(el('div', { class: 'empty' }, `No entries for ${ds.date}.`));
   } else {
     const bySect = new Map();
-    for (const e of entries) {
+    for (const e of ds.entries) {
       if (!bySect.has(e.sectionId)) bySect.set(e.sectionId, { name: e.sectionName, inGroup: e.inGroup, items: [] });
       bySect.get(e.sectionId).items.push(e);
     }
-    for (const { name, inGroup, items } of [...bySect.values()].sort((a, b) => a.name.localeCompare(b.name))) {
-      main.append(el('div', { class: 'sheet-list' },
-        el('h3', {}, name),
-        ...items.map(e => {
-          const prefix = inGroup ? `[${e.listName}] ` : '';
-          const label = e.type === 'done' ? `Finished ${e.text}`
-            : e.type === 'continue' ? `Continued ${e.text}`
-            : e.text;
-          const deleteBtn = el('button', { class: 'entry-delete', title: 'Delete', on: { click: () => {
-            action('/api/daysheet/delete', { id: e.id });
-          }}}, '✕');
-          return el('div', { class: 'sheet-entry ' + e.type },
-            el('span', { class: 'time' }, e.datetime.slice(11, 16)),
-            el('span', { class: 'text' }, prefix + label),
-            deleteBtn,
-          );
-        }),
-      ));
+    const sections = sortByName([...bySect.values()]);
+    for (const { name, inGroup, items } of sections) {
+      timeline.append(
+        el('div', { class: 'timeline-group' },
+          el('div', { class: 'timeline-group-name' }, name),
+          ...items.map(e => {
+            const listTag = inGroup ? el('span', { class: 'timeline-list-tag' }, e.listName) : null;
+            const delBtn = el('button', { class: 'timeline-del', title: 'Delete',
+              on: { click: () => act('/api/daysheet/delete', { id: e.id }) } },
+              icon(IC.delete, 11));
+            return el('div', { class: 'timeline-entry' },
+              el('span', { class: 'timeline-time' }, e.datetime.slice(11, 16)),
+              el('span', { class: 'timeline-text' }, e.text, listTag),
+              delBtn,
+            );
+          }),
+        ),
+      );
     }
   }
 
-  const lists = state.data?.lists || [];
-  if (!lists.length) return;
+  view.append(timeline);
 
-  const logList = el('select', {}, lists.map(l => el('option', { value: l.name }, l.name)));
-  const logText = el('input', { type: 'text', placeholder: 'log entry…' });
-  const logSubmit = () => {
-    if (!logText.value.trim()) return;
-    action('/api/log', { list: logList.value, text: logText.value.trim() });
-    logText.value = '';
-  };
+  // Log form
+  if (lists.length) {
+    const logList = el('select', {}, ...sortByName(lists).map(l => el('option', { value: l.name }, l.name)));
+    const logText = el('input', { type: 'text', placeholder: 'Entry text…', autocomplete: 'off' });
+    const logSubmit = () => {
+      if (!logText.value.trim()) return;
+      act('/api/log', { list: logList.value, text: logText.value.trim() });
+      logText.value = '';
+    };
+    logText.addEventListener('keydown', e => e.key === 'Enter' && logSubmit());
 
-  main.append(el('div', { class: 'sheet-form' },
-    el('fieldset', {},
-      el('legend', {}, 'Log'),
-      logList, logText,
-      el('button', { on: { click: logSubmit } }, 'Add log'),
-    ),
-  ));
+    view.append(
+      el('div', { class: 'log-form' },
+        logList,
+        logText,
+        el('button', { on: { click: logSubmit } }, 'Log'),
+      ),
+    );
+  }
+
+  main.append(view);
 }
+
+// ── Topbar ────────────────────────────────────────────────────
+
+function renderTopbar() {
+  const bar = document.getElementById('filter-bar');
+  bar.replaceChildren();
+  if (state.view !== 'tasks') return;
+  bar.append(
+    el('div', { class: 'filter-pills' },
+      ...['all', 'week', 'day'].map(f =>
+        el('button', {
+          class: 'filter-pill' + (state.filter === f ? ' active' : ''),
+          on: { click: () => { state.filter = f; render(); } },
+        }, f[0].toUpperCase() + f.slice(1)),
+      ),
+    ),
+  );
+}
+
+// ── Quick-add modal ───────────────────────────────────────────
+
+function openQuickAdd() {
+  const overlay = document.getElementById('quick-add-modal');
+  const sel = document.getElementById('qa-list');
+  const lists = state.data?.lists || [];
+  sel.replaceChildren(...lists.map(l => el('option', { value: l.name }, l.name)));
+  if (state.selectedList) {
+    const cur = lists.find(l => l.id === state.selectedList);
+    if (cur) sel.value = cur.name;
+  }
+  overlay.classList.remove('hidden');
+  setTimeout(() => document.getElementById('qa-name').focus(), 30);
+}
+
+function closeQuickAdd() {
+  document.getElementById('quick-add-modal').classList.add('hidden');
+}
+
+// ── Main render ───────────────────────────────────────────────
 
 function render() {
-  if (state.view === 'daysheet') renderDaysheet();
-  else renderListsView(state.taskFilter);
+  renderTopbar();
+  if (state.view === 'daysheet') { renderDaysheetView(); return; }
+  if (!state.data) return;
+  if (state.selectedList) renderFocusedView(state.selectedList);
+  else renderCardsView();
 }
 
-document.querySelectorAll('#tabs button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('#tabs button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    state.view = btn.dataset.view;
-    refresh();
-  });
+// ── Wiring ────────────────────────────────────────────────────
+
+// Quick-add
+document.getElementById('quick-add-btn').addEventListener('click', openQuickAdd);
+
+const qaOverlay = document.getElementById('quick-add-modal');
+qaOverlay.addEventListener('click', e => { if (e.target === qaOverlay) closeQuickAdd(); });
+document.getElementById('qa-cancel').addEventListener('click', closeQuickAdd);
+
+document.getElementById('qa-submit').addEventListener('click', async () => {
+  const list = document.getElementById('qa-list').value;
+  const name = document.getElementById('qa-name').value.trim();
+  const due  = document.getElementById('qa-due').value;
+  if (!list || !name) return;
+  closeQuickAdd();
+  document.getElementById('qa-name').value = '';
+  document.getElementById('qa-due').value  = '';
+  await act('/api/add', { list, name, due: due || null }, `Added: ${name}`);
 });
+
+document.getElementById('qa-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('qa-submit').click();
+  if (e.key === 'Escape') closeQuickAdd();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openQuickAdd(); }
+  if (e.key === 'Escape') closeQuickAdd();
+});
+
+// ── Boot ──────────────────────────────────────────────────────
 
 refresh();

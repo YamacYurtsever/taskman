@@ -12,7 +12,7 @@ Usage:
   taskman delete "list" ["name"]
   taskman group "list"+ "group_name"
   taskman ungroup "list"+
-  taskman ls ["list" | "group"] [--today | --week]
+  taskman ls ["list" | "group"] [--day | --week]
   taskman log "list" "text"
   taskman log edit "list" "text" "new_text"
   taskman log delete "list" "text"

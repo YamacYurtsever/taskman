@@ -52,28 +52,28 @@ class FilterTasksTest(unittest.TestCase):
     # --- today mode ---
 
     def test_today_includes_overdue(self):
-        result = filter_tasks(self._tasks(), "list-1", "today", TODAY)
+        result = filter_tasks(self._tasks(), "list-1", "day", TODAY)
         names = [t["name"] for t in result]
         self.assertIn("Overdue task", names)
 
     def test_today_includes_due_today(self):
-        result = filter_tasks(self._tasks(), "list-1", "today", TODAY)
+        result = filter_tasks(self._tasks(), "list-1", "day", TODAY)
         names = [t["name"] for t in result]
         self.assertIn("Today task", names)
 
     def test_today_excludes_future(self):
-        result = filter_tasks(self._tasks(), "list-1", "today", TODAY)
+        result = filter_tasks(self._tasks(), "list-1", "day", TODAY)
         names = [t["name"] for t in result]
         self.assertNotIn("Tomorrow task", names)
         self.assertNotIn("Next week", names)
 
     def test_today_excludes_dateless(self):
-        result = filter_tasks(self._tasks(), "list-1", "today", TODAY)
+        result = filter_tasks(self._tasks(), "list-1", "day", TODAY)
         names = [t["name"] for t in result]
         self.assertNotIn("No due date", names)
 
     def test_today_excludes_done(self):
-        result = filter_tasks(self._tasks(), "list-1", "today", TODAY)
+        result = filter_tasks(self._tasks(), "list-1", "day", TODAY)
         names = [t["name"] for t in result]
         self.assertNotIn("Done task", names)
 

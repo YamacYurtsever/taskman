@@ -39,7 +39,7 @@ taskman delete "list"                     # Delete a list
 
 ```bash
 taskman ls [list|group]                   # All pending tasks
-taskman ls [list|group] --today           # Overdue + due today
+taskman ls [list|group] --day             # Overdue + due today
 taskman ls [list|group] --week            # Overdue + due this week
 taskman ls [list|group] --done            # Completed tasks
 ```
@@ -58,7 +58,7 @@ taskman daysheet [date]                   # View day sheet (default: today)
 
 ```bash
 tls [list|group]                          # taskman ls
-tlsd [list|group]                         # taskman ls --today
+tlsd [list|group]                         # taskman ls --day
 tlsw [list|group]                         # taskman ls --week
 tds [date]                                # taskman daysheet
 ```
