@@ -17,50 +17,46 @@ pip install -e .
 ### Tasks
 
 ```bash
-taskman add "list" "name" [date]          # Add a task (date: YYYY-MM-DD)
-taskman done "list" "name"                # Mark done
-taskman undo "list" "name"                # Mark pending
-taskman edit "list" "name" "new_name" [new_date]
-taskman move "list" "name" "new_list"     # Move task to another list
-taskman delete "list" "name"              # Delete a task
-```
-
-### Lists & Groups
-
-```bash
-taskman group "list"+ "group_name"        # Add lists to a group
-taskman ungroup "list"+                   # Remove lists from their group
-taskman move "list" "group"               # Move list to a group
-taskman delete "group"                    # Delete group (ungroup lists)
-taskman delete "list"                     # Delete a list
+taskman add "list" ["name"] [date]          # Add a task (date: YYYY-MM-DD), or just create the list
+taskman done "list" "name"                  # Mark done
+taskman undo "list" "name"                  # Mark pending
+taskman edit "list" "new_name"              # Rename a list
+taskman edit "group" "new_name"             # Rename a group
+taskman edit "list" "name" "new_name" [date]  # Rename a task and/or update due date
+taskman move "list" "group"                 # Assign list to a group (creates group if new)
+taskman move "list" ""                      # Remove list from its group
+taskman move "list" "name" "new_list"       # Move task to another list
+taskman delete "list"                       # Delete a list
+taskman delete "list" "name"               # Delete a task
+taskman delete "group"                      # Delete group (ungroups its lists)
 ```
 
 ### Viewing
 
 ```bash
-taskman ls [list|group]                   # All pending tasks
-taskman ls [list|group] --day             # Overdue + due today
-taskman ls [list|group] --week            # Overdue + due this week
-taskman ls [list|group] --done            # Completed tasks
+taskman ls [list|group]                     # All pending tasks
+taskman ls [list|group] --day               # Overdue + due today
+taskman ls [list|group] --week              # Overdue + due this week
+taskman ls [list|group] --done              # Completed tasks, most recent first
 ```
 
 ### Day Sheets
 
 ```bash
-taskman log "list" "text"                 # Add a freeform log entry
-taskman log edit "list" "text" "new"      # Edit a log entry
-taskman log del "list" "text"             # Delete a log entry
-taskman continue "list" "task"            # Log a continued task
-taskman daysheet [date]                   # View day sheet (default: today)
+taskman log "list" "text"                   # Add a freeform log entry
+taskman log edit "list" "text" "new"        # Edit a log entry
+taskman log delete "list" "text"            # Delete a log entry
+taskman continue "list" "task"              # Log a continued task (once per day)
+taskman daysheet [date]                     # View day sheet (default: today)
 ```
 
 ### Shell Aliases
 
 ```bash
-tls [list|group]                          # taskman ls
-tlsd [list|group]                         # taskman ls --day
-tlsw [list|group]                         # taskman ls --week
-tds [date]                                # taskman daysheet
+tls [list|group]                            # taskman ls
+tlsd [list|group]                           # taskman ls --day
+tlsw [list|group]                           # taskman ls --week
+tds [date]                                  # taskman daysheet
 ```
 
 ---
@@ -71,4 +67,15 @@ tds [date]                                # taskman daysheet
 taskman web
 ```
 
-Opens a local web interface mirroring the CLI views with inline task actions.
+Opens a local web interface at `http://127.0.0.1:5050` with:
+
+- Cards view of all lists and groups with pending tasks
+- Focused view per list with pending + completed tasks
+- Daysheet view with date navigation and log entry form
+- Filter pills: All / Week / Day
+- Inline task add, mark done, delete, and continue
+- Cmd+K quick-add modal
+
+```bash
+taskman web --port 8080 --debug
+```
