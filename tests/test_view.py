@@ -102,11 +102,14 @@ class FilterTasksTest(unittest.TestCase):
 
 class CmdLsTest(unittest.TestCase):
 
+    TASK_PERSONAL = {"id": "t-p", "name": "Personal task", "listId": "list-2", "due": None, "done": None}
+    TASK_SIDE     = {"id": "t-s", "name": "Side task",     "listId": "list-3", "due": None, "done": None}
+
     def _make_db(self):
         return {
             "groups": [GROUP_1],
             "lists": [LIST_1, LIST_2, LIST_3],
-            "tasks": [TASK_TODAY, TASK_DATELESS],
+            "tasks": [TASK_TODAY, TASK_DATELESS, self.TASK_PERSONAL, self.TASK_SIDE],
             "daysheet": [],
         }
 
@@ -133,6 +136,21 @@ class CmdLsTest(unittest.TestCase):
         self.assertIn("Personal", output)
         self.assertIn("Side", output)
         self.assertNotIn("Work", output)
+
+    def test_empty_list_hidden(self):
+        db = {
+            "groups": [],
+            "lists": [LIST_1, LIST_2],
+            "tasks": [TASK_DATELESS],  # only Work has a task
+            "daysheet": [],
+        }
+        printed = []
+        with patch("taskman.db.load", return_value=db), \
+             patch("builtins.print", side_effect=lambda *a, **k: printed.append(a)):
+            cmd_ls([])
+        output = " ".join(str(a) for line in printed for a in line)
+        self.assertIn("Work", output)
+        self.assertNotIn("Personal", output)
 
     def test_empty_db_prints_message(self):
         empty = {"groups": [], "lists": [], "tasks": [], "daysheet": []}

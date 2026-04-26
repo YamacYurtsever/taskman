@@ -130,6 +130,7 @@ function renderTask(task, listName, today) {
 
 function renderList(list, allTasks, today, mode) {
   const pending = filterPending(allTasks, list.id, mode, today);
+  if (!pending.length) return null;
   const done = filterDone(allTasks, list.id);
 
   const doneSection = el('div', { class: 'done-section' });
@@ -196,18 +197,22 @@ function renderListsView(mode) {
   for (const g of groups) {
     const groupLists = lists.filter(l => l.groupId === g.id);
     if (!groupLists.length) continue;
-    main.append(el('div', { class: 'group-title' }, g.name));
-    main.append(el('div', { class: 'lists' },
-      groupLists.map(l => renderList(l, tasks, today, mode))));
+    const rendered = groupLists.map(l => renderList(l, tasks, today, mode)).filter(Boolean);
+    if (rendered.length) {
+      main.append(el('div', { class: 'group-title' }, g.name));
+      main.append(el('div', { class: 'lists' }, rendered));
+    }
     groupLists.forEach(l => seen.add(l.id));
   }
   const ungrouped = lists.filter(l => !seen.has(l.id));
   if (ungrouped.length) {
-    if (groups.some(g => lists.some(l => l.groupId === g.id))) {
-      main.append(el('div', { class: 'group-title' }, 'ungrouped'));
+    const rendered = ungrouped.map(l => renderList(l, tasks, today, mode)).filter(Boolean);
+    if (rendered.length) {
+      if (groups.some(g => lists.some(l => l.groupId === g.id))) {
+        main.append(el('div', { class: 'group-title' }, 'ungrouped'));
+      }
+      main.append(el('div', { class: 'lists' }, rendered));
     }
-    main.append(el('div', { class: 'lists' },
-      ungrouped.map(l => renderList(l, tasks, today, mode))));
   }
 }
 

@@ -151,7 +151,9 @@ def cmd_ls(args):
             return
 
         pairs = [(lst, filter_tasks(data['tasks'], lst['id'], mode, today)) for lst in show_lists]
-        _render_section(pairs, today, mode)
+        pairs = [(lst, tasks) for lst, tasks in pairs if tasks]
+        if pairs:
+            _render_section(pairs, today, mode)
         return
 
     if not all_lists:
@@ -164,12 +166,16 @@ def cmd_ls(args):
         group_lists = sorted([l for l in all_lists if l['groupId'] == group['id']], key=lambda l: l['name'])
         if not group_lists:
             continue
-        print(_bold(group['name']))
         pairs = [(lst, filter_tasks(data['tasks'], lst['id'], mode, today)) for lst in group_lists]
-        _render_section(pairs, today, mode)
+        pairs = [(lst, tasks) for lst, tasks in pairs if tasks]
+        if pairs:
+            print(_bold(group['name']))
+            _render_section(pairs, today, mode)
         seen.update(l['id'] for l in group_lists)
 
     ungrouped = sorted([l for l in all_lists if l['id'] not in seen], key=lambda l: l['name'])
     if ungrouped:
         pairs = [(lst, filter_tasks(data['tasks'], lst['id'], mode, today)) for lst in ungrouped]
-        _render_section(pairs, today, mode)
+        pairs = [(lst, tasks) for lst, tasks in pairs if tasks]
+        if pairs:
+            _render_section(pairs, today, mode)
