@@ -70,6 +70,10 @@ async function action(path, body, successMsg) {
 
 function filterTasks(tasks, listId, mode, today) {
   const todayD = new Date(today);
+  if (mode === 'done') {
+    return tasks.filter(t => t.listId === listId && t.done)
+                .sort((a, b) => b.done.localeCompare(a.done));
+  }
   const pending = tasks.filter(t => t.listId === listId && !t.done);
   if (mode === 'today') {
     return pending.filter(t => t.due && new Date(t.due) <= todayD)
@@ -101,7 +105,9 @@ function renderTask(task, listName, today) {
   return el('div', { class: 'task' + (task.done ? ' done' : '') },
     el('div', { class: 'name' },
       task.name,
-      due && el('span', { class: 'due' + (due.overdue ? ' overdue' : '') }, due.label),
+      task.done
+        ? el('span', { class: 'due' }, task.done)
+        : due && el('span', { class: 'due' + (due.overdue ? ' overdue' : '') }, due.label),
     ),
     task.done
       ? el('button', { title: 'Undo', on: { click: () => action('/api/undo', { list: listName, name: task.name }) } }, '↺')
@@ -112,27 +118,27 @@ function renderTask(task, listName, today) {
   );
 }
 
-function renderList(list, tasks, today) {
-  const addInput = el('input', { type: 'text', placeholder: 'add task…' });
-  const dueInput = el('input', { type: 'date' });
-  const submit = () => {
-    const name = addInput.value.trim();
-    if (!name) return;
-    action('/api/add', { list: list.name, name, due: dueInput.value || null });
-    addInput.value = '';
-    dueInput.value = '';
-  };
-  return el('div', { class: 'list' },
+function renderList(list, tasks, today, mode) {
+  const children = [
     el('h3', {}, list.name, el('span', { class: 'count' }, String(tasks.length))),
     tasks.length
       ? tasks.map(t => renderTask(t, list.name, today))
       : el('div', { class: 'empty' }, 'no tasks'),
-    el('div', { class: 'add-task' },
-      addInput,
-      dueInput,
-      el('button', { on: { click: submit } }, '+'),
-    ),
-  );
+  ];
+  if (mode !== 'done') {
+    const addInput = el('input', { type: 'text', placeholder: 'add task…' });
+    const dueInput = el('input', { type: 'date' });
+    const submit = () => {
+      const name = addInput.value.trim();
+      if (!name) return;
+      action('/api/add', { list: list.name, name, due: dueInput.value || null });
+      addInput.value = '';
+      dueInput.value = '';
+    };
+    children.push(el('div', { class: 'add-task' }, addInput, dueInput,
+      el('button', { on: { click: submit } }, '+')));
+  }
+  return el('div', { class: 'list' }, ...children);
 }
 
 function renderListsView(mode) {
@@ -150,7 +156,7 @@ function renderListsView(mode) {
     if (!groupLists.length) continue;
     main.append(el('div', { class: 'group-title' }, g.name));
     main.append(el('div', { class: 'lists' },
-      groupLists.map(l => renderList(l, filterTasks(tasks, l.id, mode, today), today))));
+      groupLists.map(l => renderList(l, filterTasks(tasks, l.id, mode, today), today, mode))));
     groupLists.forEach(l => seen.add(l.id));
   }
   const ungrouped = lists.filter(l => !seen.has(l.id));
@@ -159,7 +165,7 @@ function renderListsView(mode) {
       main.append(el('div', { class: 'group-title' }, 'ungrouped'));
     }
     main.append(el('div', { class: 'lists' },
-      ungrouped.map(l => renderList(l, filterTasks(tasks, l.id, mode, today), today))));
+      ungrouped.map(l => renderList(l, filterTasks(tasks, l.id, mode, today), today, mode))));
   }
 }
 
