@@ -24,9 +24,9 @@ After completing each milestone item:
 | `taskman add "list" "name" [date]`                       | Add a task to a list, optionally with a due date |
 | `taskman done "list" "name"`                             | Mark a task as completed                         |
 | `taskman undo "list" "name"`                             | Mark a completed task as pending                 |
-| `taskman update "list" "old_name" "new_name" [new_date]` | Rename a task and/or update its due date         |
-| `taskman move "list" "name" "new_list"`                  | Move a task to a different list                  |
-| `taskman delete "list" "name"`                           | Delete a task                                    |
+| `taskman update "list" "name" "new_name" [new_date]` | Rename a task and/or update its due date         |
+| `taskman move ("list" "group" \| "list" "name" "new_list")`                  | Move a list to a group or a task to a list                  |
+| `taskman delete ("group" \| "list" ["name"])`                         | Delete group (ungroup), list, or task    |
 
 ##### Lists & Groups
 
@@ -49,9 +49,9 @@ After completing each milestone item:
 | Command                                     | Description                                                  |
 | ------------------------------------------- | ------------------------------------------------------------ |
 | `taskman log "list" "text"`                 | Freeform entry into a list's day sheet                       |
-| `taskman continue "list" "task"`            | Logs continued task under a list                             |
 | `taskman log edit "list" "text" "new_text"` | Edits daysheet entry                                         |
 | `taskman log del "list" "text"`             | Deletes daysheet entry                                       |
+| `taskman continue "list" "task"`            | Logs continued task under a list                             |
 | `taskman daysheet [date]`                   | View a day's sheet (default today)                           |
 
 ##### Shell Functions
@@ -94,9 +94,9 @@ After completing each milestone item:
   "daysheet": [
     {
       "id": "uuid",
-      "date": "2026-04-26",
+      "datetime": "2026-04-26T14:32:05",
       "listId": "uuid",
-      "type": "log | continue",
+      "type": "log | continue | done",
       "text": "Talked with Baba"
     }
   ]
@@ -124,8 +124,8 @@ After completing each milestone item:
 
 ##### Milestone 2 - Day Sheets
 
-- [ ] Daysheet commands `log`, `continue`, `daysheet`
-- [ ] Shell function: `tds [date]`
+- [x] Daysheet commands `log`, `continue`, `daysheet`
+- [x] Shell function: `tds [date]`
 
 ##### Milestone 3 - TUI
 

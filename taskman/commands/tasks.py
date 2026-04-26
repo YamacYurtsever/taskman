@@ -86,7 +86,20 @@ def cmd_done(args):
     if task["done"]:
         _err(f"task '{task_name}' is already done")
 
-    task["done"] = date.today().isoformat()
+    today = date.today().isoformat()
+    data["daysheet"] = [
+        e for e in data["daysheet"]
+        if not (e["listId"] == lst["id"] and e["type"] == "continue"
+                and e["text"] == task_name and e["datetime"][:10] == today)
+    ]
+    data["daysheet"].append({
+        "id": db.new_id(),
+        "datetime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+        "listId": lst["id"],
+        "type": "done",
+        "text": task_name,
+    })
+    task["done"] = today
     db.save(data)
     print(f"\033[32m✓ [{list_name}] {task_name}\033[0m")
     _play_sound()
