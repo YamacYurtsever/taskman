@@ -10,10 +10,13 @@
 <header>
   <h1>taskman</h1>
   <nav id="tabs">
-    <button data-view="all" class="active">All</button>
-    <button data-view="today">Today</button>
-    <button data-view="week">Week</button>
+    <button data-view="tasks" class="active">Tasks</button>
     <button data-view="daysheet">Daysheet</button>
+    <div id="task-filter" class="filter-toggle">
+      <button data-filter="all" class="active">All</button>
+      <button data-filter="week">Week</button>
+      <button data-filter="today">Today</button>
+    </div>
   </nav>
 </header>
 <main id="main"></main>

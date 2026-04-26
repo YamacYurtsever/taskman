@@ -1,5 +1,6 @@
 const state = {
-  view: 'all',
+  view: 'tasks',
+  taskFilter: 'all',
   data: null,
   daysheet: null,
   daysheetDate: new Date().toISOString().slice(0, 10),
@@ -261,9 +262,12 @@ function renderDaysheet() {
   ));
 }
 
+const taskFilterEl = document.getElementById('task-filter');
+
 function render() {
+  taskFilterEl.style.display = state.view === 'tasks' ? '' : 'none';
   if (state.view === 'daysheet') renderDaysheet();
-  else renderListsView(state.view);
+  else renderListsView(state.taskFilter);
 }
 
 document.querySelectorAll('#tabs button').forEach(btn => {
@@ -272,6 +276,15 @@ document.querySelectorAll('#tabs button').forEach(btn => {
     btn.classList.add('active');
     state.view = btn.dataset.view;
     refresh();
+  });
+});
+
+taskFilterEl.querySelectorAll('button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    taskFilterEl.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.taskFilter = btn.dataset.filter;
+    render();
   });
 });
 
