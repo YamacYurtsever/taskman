@@ -222,11 +222,11 @@ Google OAuth is the sole login method — no local password. The OAuth flow both
 
 ###### Frontend
 
-- [ ] `client/src/lib/types.ts` — `AuthStatusResponse`
-- [ ] `client/src/lib/api.ts` — auth/OAuth entries in `API`; `setUnauthorizedHandler` for global 401 redirect
-- [ ] `client/src/views/LoginView.tsx` + `LoginView.module.css` — "Sign in with Google" button only; calls `/api/oauth/start` and redirects to the returned URL
-- [ ] `client/src/App.tsx` — rename `App` → `AuthenticatedApp`; new `App` checks auth status and renders `LoginView` or `AuthenticatedApp`; add a single logout button in the authenticated layout
-- [ ] `client/src/hooks/useAppData.ts` — expose `logout` function
+- [x] `client/src/lib/types.ts` — `AuthStatusResponse`
+- [x] `client/src/lib/api.ts` — auth/OAuth entries in `API`; `setUnauthorizedHandler` for global 401 redirect
+- [x] `client/src/views/LoginView.tsx` + `LoginView.module.css` — "Sign in with Google" button only; calls `/api/oauth/start` and redirects to the returned URL
+- [x] `client/src/App.tsx` — rename `App` → `AuthenticatedApp`; new `App` checks auth status and renders `LoginView` or `AuthenticatedApp`; add a single logout button in the authenticated layout
+- [x] `client/src/hooks/useAppData.ts` — expose `logout` function
 
 ###### Google OAuth setup note
 
