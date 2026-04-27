@@ -8,6 +8,7 @@ from server.services.tasks import (
     done_task,
     edit_task,
     move_task,
+    set_task_description,
     undo_task,
 )
 from server.tests.utils import (
@@ -55,6 +56,7 @@ class TaskCreateTest(unittest.TestCase):
         self.assertEqual(task["listId"], "list-1")
         self.assertIsNone(task["due"])
         self.assertIsNone(task["done"])
+        self.assertEqual(task["description"], "")
 
     def test_add_task_with_due_date(self):
         with (
@@ -275,6 +277,37 @@ class TaskCompletionTest(unittest.TestCase):
             result = undo_task("List A", "Task A")
 
         assert_error(result, "not done")
+
+
+class TaskDescriptionTest(unittest.TestCase):
+
+    def test_set_description_updates_task(self):
+        with saved_db(make_db(TASK_1)) as saved:
+            result = set_task_description("List A", "Task A", "Some notes here")
+
+        assert_ok(result)
+        self.assertEqual(saved["tasks"][0]["description"], "Some notes here")
+
+    def test_set_description_allows_empty_string(self):
+        task = task_record(id="task-1", name="Task A", list_id="list-1", description="Existing notes")
+
+        with saved_db(make_db(task)) as saved:
+            result = set_task_description("List A", "Task A", "")
+
+        assert_ok(result)
+        self.assertEqual(saved["tasks"][0]["description"], "")
+
+    def test_set_description_rejects_unknown_task(self):
+        with saved_db(make_db()):
+            result = set_task_description("List A", "Ghost task", "Notes")
+
+        assert_error(result, "not found")
+
+    def test_set_description_rejects_unknown_list(self):
+        with saved_db(make_db(TASK_1)):
+            result = set_task_description("Missing List", "Task A", "Notes")
+
+        assert_error(result, "not found")
 
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@
   justify-content: center;
   border: var(--border-w) solid var(--border);
   border-radius: 50%;
+  color: var(--text-1);
   background: var(--primary);
   cursor: pointer;
   font-size: var(--fs-lg);

@@ -11,6 +11,7 @@ from server.services.tasks import (
     done_task,
     edit_task,
     move_task,
+    set_task_description,
     undo_task,
 )
 from server.services.utils import (
@@ -69,10 +70,11 @@ def create_app():
     @app.get("/api/state")
     def get_state():
         data = db.load()
+        tasks = [{**t, "description": t.get("description", "")} for t in data["tasks"]]
         return jsonify({
             "groups": data["groups"],
             "lists": data["lists"],
-            "tasks": data["tasks"],
+            "tasks": tasks,
             "today": date.today().isoformat(),
         })
 
@@ -164,6 +166,15 @@ def create_app():
         return respond(undo_task(
             body.get("list", ""),
             body.get("name", ""),
+        ))
+
+    @app.post("/api/task-description")
+    def api_task_description():
+        body = request.get_json(force=True) or {}
+        return respond(set_task_description(
+            body.get("list", ""),
+            body.get("name", ""),
+            body.get("description", ""),
         ))
 
     # ─────────────────────────── List Routes ───────────────────────────

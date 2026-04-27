@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { KeyboardEvent } from 'react';
-import { CheckIcon, ContinueIcon, DeleteIcon, EditIcon, MoveIcon } from '../icons';
+import { CheckIcon, ContinueIcon, DeleteIcon, EditIcon, MoveIcon, NoteIcon } from '../icons';
 import { API } from '../../lib/api';
 import { cx, formatDue, sortByName } from '../../lib/utils';
 import styles from './Tasks.module.css';
@@ -21,7 +21,7 @@ const SaveAction = ({ onClick }: { onClick: () => void }) => (
   </div>
 );
 
-export const TaskRow = ({ data, task, listName, act }: TaskRowProps) => {
+export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps) => {
   const [mode, setMode] = useState<'view' | 'edit' | 'move'>('view');
   const [name, setName] = useState(task.name);
   const [due, setDue] = useState(task.due || '');
@@ -46,7 +46,7 @@ export const TaskRow = ({ data, task, listName, act }: TaskRowProps) => {
 
   if (mode === 'edit') {
     return (
-      <div className={cx(styles.taskRow, styles.taskEditRow)}>
+      <div className={cx(styles.taskRow, styles.taskEditRow)} data-task-edit="">
         <div className={styles.taskLeft} />
         <div className={styles.taskEditBody}>
           <input
@@ -71,7 +71,7 @@ export const TaskRow = ({ data, task, listName, act }: TaskRowProps) => {
 
   if (mode === 'move') {
     return (
-      <div className={cx(styles.taskRow, styles.taskMoveRow)}>
+      <div className={cx(styles.taskRow, styles.taskMoveRow)} data-task-edit="">
         <select
           autoFocus
           className={styles.taskMoveSelect}
@@ -126,8 +126,11 @@ export const TaskRow = ({ data, task, listName, act }: TaskRowProps) => {
         )}
       </div>
 
-      <div className={styles.taskBody}>
-        <span className={styles.taskName}>{task.name}</span>
+      <div className={styles.taskBody} onClick={() => openDetail(task)}>
+        <div className={styles.taskNameRow}>
+          <span className={styles.taskName}>{task.name}</span>
+          {task.description && <NoteIcon className={styles.noteIcon} size={9} />}
+        </div>
         {dueInfo && (
           <span className={cx(styles.taskDue, dueInfo.cls && styles[dueInfo.cls])}>
             {dueInfo.label}

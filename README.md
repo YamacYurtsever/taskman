@@ -50,7 +50,7 @@ The client is organized by role:
   - `CalendarView.tsx` for `/calendar`
 - `client/src/components/` contains reusable UI:
   - `Sidebar/` for sidebar-specific pieces
-  - `tasks/` for reusable task UI like `TaskRow`, `TaskCard`, and `AddTaskForm`
+  - `tasks/` for reusable task UI like `TaskRow`, `TaskCard`, `TaskDetail`, and `AddTaskForm`
 - `client/src/hooks/` contains app-level hooks like `useAppData`
 - `client/src/lib/` contains shared API/types/utilities
 
@@ -59,6 +59,14 @@ Styling is split between:
 - `client/style.css` for global tokens, themes, reset, and app-wide layout
 - CSS Modules for component/view-local styles
 - `client/src/action-button.css` for the shared global `.action-btn` action button primitive
+
+---
+
+## Task Descriptions
+
+Click any task row to open a detail panel. The panel shows the task's list and due date, and provides a freeform text area for notes. Changes are auto-saved with a short debounce. Raw URLs in the description are rendered as clickable links.
+
+On wide screens the panel slides in alongside the task list. On mobile it replaces the main content. Press Escape or the ✕ button to close.
 
 ---
 

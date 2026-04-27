@@ -292,6 +292,43 @@ class ApiTest(unittest.TestCase):
         self.assert_ok(res)
         self.assertIsNone(saved["tasks"][0]["done"])
 
+    def test_task_description_updates_description(self):
+        with saved_db(make_db(TASK_1)) as saved:
+            res = self.post("/api/task-description", {
+                "list": "List A",
+                "name": "Task A",
+                "description": "My notes",
+            })
+
+        self.assert_ok(res)
+        self.assertEqual(saved["tasks"][0]["description"], "My notes")
+
+    def test_task_description_rejects_missing_task(self):
+        with saved_db(make_db()):
+            res = self.post("/api/task-description", {
+                "list": "List A",
+                "name": "Ghost task",
+                "description": "Notes",
+            })
+
+        self.assert_error(res, "not found")
+
+    def test_get_state_normalizes_description(self):
+        task_without_desc = {
+            "id": "task-1",
+            "name": "Task A",
+            "listId": "list-1",
+            "due": None,
+            "done": None,
+        }
+
+        with saved_db(make_db(task_without_desc)):
+            res = self.client.get("/api/state")
+
+        self.assertEqual(res.status_code, 200)
+        task = res.get_json()["tasks"][0]
+        self.assertEqual(task["description"], "")
+
     # ─────────────────────────── List Routes ───────────────────────────
 
     def test_add_list(self):

@@ -22,13 +22,14 @@ def list_record(id="list-1", name="List A", group_id=None):
     }
 
 
-def task_record(id="task-1", name="Task A", list_id="list-1", due=None, done=None):
+def task_record(id="task-1", name="Task A", list_id="list-1", due=None, done=None, description=""):
     return {
         "id": id,
         "name": name,
         "listId": list_id,
         "due": due,
         "done": done,
+        "description": description,
     }
 
 

@@ -58,13 +58,13 @@ taskman/
     style.css           Global tokens, themes, reset, layout, shared utilities
     src/
       App.tsx           Root component and route composition
-      App.module.css    Layout styles (content wrapper, main, calendar iframe)
+      App.module.css    Layout styles (content wrapper, main, detail panel, calendar iframe)
       main.tsx          React entry point, imports global styles
       action-button.css Shared global action-button styles (`.action-btn`)
       views/            Route-level screens: CalendarView, DaysheetView, CardsView, FocusedView
       components/       Reusable UI
         Sidebar/        Sidebar shell, nav, list/group rows, shared sidebar types
-        tasks/          TaskRow, TaskCard, AddTaskForm, shared task types/styles
+        tasks/          TaskRow, TaskCard, TaskDetail, AddTaskForm, shared task types/styles
         Topbar.tsx      Filter pills and theme toggle container
         ThemeToggle.tsx Theme switcher
         icons.tsx       Shared icon components
@@ -113,7 +113,7 @@ taskman/
 {
   "groups":   [{ "id": "uuid", "name": "UNSW" }],
   "lists":    [{ "id": "uuid", "name": "COMP3131", "groupId": "uuid | null" }],
-  "tasks":    [{ "id": "uuid", "name": "Finish Assignment 5", "listId": "uuid", "due": "2026-04-30 | null", "done": "2026-04-26 | null" }],
+  "tasks":    [{ "id": "uuid", "name": "Finish Assignment 5", "listId": "uuid", "due": "2026-04-30 | null", "done": "2026-04-26 | null", "description": "" }],
   "daysheet": [{ "id": "uuid", "datetime": "2026-04-26T14:32:05", "listId": "uuid", "type": "log | continue | done", "text": "Talked with Baba" }]
 }
 ```
@@ -185,12 +185,12 @@ Google Calendar embed colors: `#E67C73` Flamingo · `#33B679` Sage · `#B39DDB` 
 
 ##### Milestone 4 — Task Descriptions
 
-- [ ] Add `description` field to task schema (backward-compatible - fill previous ones)
-- [ ] API endpoint to read/write a task description
-- [ ] Small icon on task rows when a description exists
-- [ ] Task detail panel: name, list, due date at top; editable textarea below; debounced save; Escape closes
-- [ ] Opens as side panel when wide enough, replaces main content on mobile
-- [ ] Raw URLs in descriptions rendered as clickable links
+- [x] Add `description` field to task schema (backward-compatible - fill previous ones)
+- [x] API endpoint to read/write a task description
+- [x] Small icon on task rows when a description exists
+- [x] Task detail panel: name, list, due date at top; editable textarea below; debounced save; Escape closes
+- [x] Opens as side panel when wide enough, replaces main content on mobile
+- [x] Raw URLs in descriptions rendered as clickable links
 
 ##### Milestone 5 — Authentication
 

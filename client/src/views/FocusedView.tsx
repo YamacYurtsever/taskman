@@ -6,7 +6,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from '../components/icons';
 import { doneFor, MSG, pendingFor } from '../lib/utils';
 import styles from '../components/tasks/Tasks.module.css';
 
-export const FocusedView = ({ data, listId, filter, act }: FocusedViewProps) => {
+export const FocusedView = ({ data, listId, filter, act, openDetail }: FocusedViewProps) => {
   const [showDone, setShowDone] = useState(false);
 
   const list = data.lists.find(item => item.id === listId);
@@ -25,7 +25,7 @@ export const FocusedView = ({ data, listId, filter, act }: FocusedViewProps) => 
       <div className={styles.focusedTasks}>
         {pending.length ? (
           pending.map(task => (
-            <TaskRow key={task.id} data={data} task={task} listName={list.name} act={act} />
+            <TaskRow key={task.id} data={data} task={task} listName={list.name} act={act} openDetail={openDetail} />
           ))
         ) : (
           <div className="empty">{MSG.noTasks}</div>
@@ -44,7 +44,7 @@ export const FocusedView = ({ data, listId, filter, act }: FocusedViewProps) => 
           <div className={styles.doneSection}>
             {showDone &&
               done.map(task => (
-                <TaskRow key={task.id} data={data} task={task} listName={list.name} act={act} />
+                <TaskRow key={task.id} data={data} task={task} listName={list.name} act={act} openDetail={openDetail} />
               ))}
           </div>
         </div>

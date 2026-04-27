@@ -17,6 +17,7 @@ type Task = {
   listId: string;
   due: string | null;
   done: string | null;
+  description: string;
 };
 
 type StateResponse = {

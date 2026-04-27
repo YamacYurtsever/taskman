@@ -12,6 +12,7 @@ export const CardsView = ({
   selectGroup,
   selectList,
   act,
+  openDetail,
 }: CardsViewProps) => {
   const [expandedCards, setExpandedCards] = useState(new Set<string>());
 
@@ -38,6 +39,7 @@ export const CardsView = ({
           toggleExpanded={() => toggleExpanded(list.id)}
           openList={() => selectList(list.id)}
           act={act}
+          openDetail={openDetail}
         />
       ));
 

@@ -14,6 +14,7 @@ export const TaskCard = ({
   toggleExpanded,
   openList,
   act,
+  openDetail,
 }: TaskCardProps) => {
   const pending = pendingFor(data, list.id, filter);
   if (!pending.length) return null;
@@ -30,7 +31,7 @@ export const TaskCard = ({
 
       <div className={styles.cardBody}>
         {visible.map(task => (
-          <TaskRow key={task.id} data={data} task={task} listName={list.name} act={act} />
+          <TaskRow key={task.id} data={data} task={task} listName={list.name} act={act} openDetail={openDetail} />
         ))}
       </div>
 

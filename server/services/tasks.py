@@ -33,6 +33,7 @@ def add_task(list_name: str, task_name: str, due: str | None = None):
         "listId": lst["id"],
         "due": parse_date(due) if due else None,
         "done": None,
+        "description": "",
     })
 
     db.save(data)
@@ -124,6 +125,15 @@ def done_task(list_name: str, task_name: str):
 
     task["done"] = today()
 
+    db.save(data)
+
+
+@service
+def set_task_description(list_name: str, task_name: str, description: str):
+    data = db.load()
+    lst = require_list(data, list_name)
+    task = require_task(data, lst, task_name)
+    task["description"] = description
     db.save(data)
 
 

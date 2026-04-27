@@ -28,6 +28,7 @@ const API = {
 
   daysheetDelete: '/api/daysheet/delete',
   daysheetEdit: '/api/daysheet/edit',
+  taskDescription: '/api/task-description',
 } as const;
 
 const request = async <T>(
