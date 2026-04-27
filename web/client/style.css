@@ -170,6 +170,11 @@ body {
   background: var(--red-light);
 }
 
+.lni-action.edt:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
 .lni-action.sav:hover {
   color: var(--green);
   background: var(--green-bg);

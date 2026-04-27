@@ -230,7 +230,7 @@ function renderSidebar() {
       }}
     }, icon(IC.delete, 10));
 
-    const renameBtn = el('button', { class: 'lni-action', title: 'Rename',
+    const renameBtn = el('button', { class: 'lni-action edt', title: 'Rename',
       on: { click: e => {
         e.stopPropagation();
         const input = el('input', { type: 'text', value: list.name, autocomplete: 'off' });
@@ -304,7 +304,7 @@ function renderSidebar() {
       }}
     }, icon(IC.delete, 10));
 
-    const grpRenameBtn = el('button', { class: 'lni-action', title: 'Rename',
+    const grpRenameBtn = el('button', { class: 'lni-action edt', title: 'Rename',
       on: { click: e => {
         e.stopPropagation();
         const input = el('input', { type: 'text', value: g.name, autocomplete: 'off' });
