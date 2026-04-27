@@ -34,7 +34,7 @@ export function el(tag, props, ...children) {
   return node;
 }
 
-export function icon(d, size = 13) {
+export function icon(d, size = 12) {
   const ns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(ns, 'svg');
   svg.setAttribute('width', size); svg.setAttribute('height', size);

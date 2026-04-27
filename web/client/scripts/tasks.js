@@ -29,7 +29,7 @@ export function taskRow(task, listName) {
     ? null
     : el('button', { class: 'task-btn cnt', title: 'Log continue',
         on: { click: () => act(API.continue, { list: listName, task: task.name }) } },
-        icon(IC.continue, 11));
+        icon(IC.continue));
 
   const editBtn = el('button', { class: 'task-btn edt', title: 'Rename',
     on: { click: () => {
@@ -44,7 +44,7 @@ export function taskRow(task, listName) {
         if (e.key === 'Enter') save();
         if (e.key === 'Escape') refresh();
       });
-      const saveBtn = el('button', { class: 'task-btn sav', title: 'Save', on: { click: save } }, icon(IC.check, 11));
+      const saveBtn = el('button', { class: 'task-btn sav', title: 'Save', on: { click: save } }, icon(IC.check));
       const editRow = el('div', { class: 'task-row task-edit-row' },
         el('div', { class: 'task-left' }),
         el('div', { class: 'task-edit-body' }, nameIn, dueIn),
@@ -54,7 +54,7 @@ export function taskRow(task, listName) {
       nameIn.focus();
       nameIn.select();
     }}
-  }, icon(IC.edit, 11));
+  }, icon(IC.edit));
 
   const moveBtn = el('button', { class: 'task-btn mov', title: 'Move to list',
     on: { click: () => {
@@ -64,18 +64,18 @@ export function taskRow(task, listName) {
       );
       const saveBtn = el('button', { class: 'task-btn sav', title: 'Save',
         on: { click: () => { if (sel.value && sel.value !== listName) act(API.moveTask, { list: listName, name: task.name, newList: sel.value }); else refresh(); } },
-      }, icon(IC.check, 11));
+      }, icon(IC.check));
       row.replaceWith(el('div', { class: 'task-row task-move-row' },
         sel,
         el('div', { class: 'task-right' }, saveBtn),
       ));
       sel.focus();
     }}
-  }, icon(IC.move, 11));
+  }, icon(IC.move));
 
   const deleteBtn = el('button', { class: 'task-btn del', title: 'Delete',
     on: { click: () => { if (confirm(`Delete "${task.name}"?`)) act(API.delete, { list: listName, name: task.name }); } } },
-    icon(IC.delete, 11));
+    icon(IC.delete));
 
   row = el('div', { class: 'task-row' + (task.done ? ' done' : '') },
     el('div', { class: 'task-left' }, checkEl, continueEl),
@@ -113,7 +113,7 @@ export function renderCard(list) {
       render();
     }},
   },
-    icon(expanded ? IC.chevL : IC.chevR, 10),
+    icon(expanded ? IC.chevL : IC.chevR),
     expanded ? ` hide ${pending.length - CARD_LIMIT}` : ` ${pending.length - CARD_LIMIT} more`,
   ) : null;
 
@@ -195,7 +195,7 @@ export function renderFocusedView(listId) {
   const doneSection = el('div', { class: 'done-section' });
   const toggleBtn = el('button', { class: 'done-toggle' });
   function applyToggle(open) {
-    toggleBtn.replaceChildren(icon(open ? IC.chevL : IC.chevR, 11), ` ${open ? 'hide' : 'show'} done (${done.length})`);
+    toggleBtn.replaceChildren(icon(open ? IC.chevL : IC.chevR), ` ${open ? 'hide' : 'show'} done (${done.length})`);
     doneSection.replaceChildren(...(open ? done.map(t => taskRow(t, list.name)) : []));
   }
   applyToggle(showDone);
@@ -220,7 +220,7 @@ export function renderFocusedView(listId) {
       ),
       el('div', { class: 'focused-add' },
         nameIn, dueIn,
-        el('button', { class: 'focused-add-btn', on: { click: submit } }, icon(IC.plus, 15)),
+        el('button', { class: 'focused-add-btn', on: { click: submit } }, icon(IC.plus)),
       ),
       done.length ? el('div', { class: 'done-wrapper' }, toggleBtn, doneSection) : null,
     ),

@@ -29,9 +29,9 @@ export function renderDaysheetView() {
     el('div', { class: 'daysheet-header' },
       el('h1', { class: 'daysheet-title' }, MSG.daysheet),
       el('div', { class: 'date-nav' },
-        el('button', { class: 'date-nav-btn', on: { click: () => shiftDay(-1) } }, icon(IC.chevL, 11)),
+        el('button', { class: 'date-nav-btn', on: { click: () => shiftDay(-1) } }, icon(IC.chevL)),
         el('span', { class: 'date-nav-label' }, dateLabel(state.daysheetDate)),
-        el('button', { class: 'date-nav-btn', on: { click: () => shiftDay(1) } }, icon(IC.chevR, 11)),
+        el('button', { class: 'date-nav-btn', on: { click: () => shiftDay(1) } }, icon(IC.chevR)),
       ),
     ),
   );
@@ -55,7 +55,7 @@ export function renderDaysheetView() {
             const listTag = inGroup ? el('span', { class: 'timeline-list-tag' }, e.listName) : null;
             const delBtn = el('button', { class: 'task-btn del timeline-del', title: 'Delete',
               on: { click: () => act(API.daysheetDelete, { id: e.id }) } },
-              icon(IC.delete, 11));
+              icon(IC.delete));
 
             let entry;
             const editBtn = e.type !== 'log' ? null : el('button', { class: 'task-btn edt timeline-del', title: 'Edit',
@@ -70,7 +70,7 @@ export function renderDaysheetView() {
                   if (ev.key === 'Enter') save();
                   if (ev.key === 'Escape') refresh();
                 });
-                const saveBtn = el('button', { class: 'task-btn sav timeline-del', title: 'Save', on: { click: save } }, icon(IC.check, 11));
+                const saveBtn = el('button', { class: 'task-btn sav timeline-del', title: 'Save', on: { click: save } }, icon(IC.check));
                 const editRow = el('div', { class: 'timeline-entry timeline-edit-row' },
                   el('span', { class: 'timeline-time' }, e.datetime.slice(11, 16)),
                   editIn,
@@ -80,7 +80,7 @@ export function renderDaysheetView() {
                 editIn.focus();
                 editIn.select();
               }}
-            }, icon(IC.edit, 11));
+            }, icon(IC.edit));
 
             const prefix = e.type === 'done' ? 'Finished ' : e.type === 'continue' ? 'Continued ' : '';
             entry = el('div', { class: 'timeline-entry' },
@@ -111,7 +111,7 @@ export function renderDaysheetView() {
       el('div', { class: 'log-form' },
         logList,
         logText,
-        el('button', { class: 'log-form-btn', on: { click: logSubmit } }, icon(IC.plus, 15)),
+        el('button', { class: 'log-form-btn', on: { click: logSubmit } }, icon(IC.plus)),
       ),
     );
   }
