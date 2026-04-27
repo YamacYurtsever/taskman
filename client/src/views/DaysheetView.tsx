@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   CheckIcon,
   ChevronLeftIcon,
@@ -41,6 +41,7 @@ type LogFormProps = {
 const DaysheetView = ({ data, act, refresh }: DaysheetViewProps) => {
   const [date, setDate] = useState(todayStr());
   const [daysheet, setDaysheet] = useState<DaysheetResponse | null>(null);
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
   const fetchDaysheet = useCallback(async (date: string) => {
     setDaysheet(await api.daysheet(date));
@@ -68,6 +69,20 @@ const DaysheetView = ({ data, act, refresh }: DaysheetViewProps) => {
     setDate(dateString(next));
   };
 
+  const openDatePicker = () => {
+    const input = dateInputRef.current;
+    if (!input) return;
+
+    const pickerInput = input as HTMLInputElement & { showPicker?: () => void };
+    if (pickerInput.showPicker) {
+      pickerInput.showPicker();
+      return;
+    }
+
+    input.focus();
+    input.click();
+  };
+
   const entries = daysheet?.entries ?? [];
   const lists = data?.lists ?? [];
 
@@ -81,7 +96,19 @@ const DaysheetView = ({ data, act, refresh }: DaysheetViewProps) => {
             <ChevronLeftIcon />
           </button>
 
-          <span className={styles.dateNavLabel}>{dateLabel(date)}</span>
+          <button className={styles.dateNavLabel} onClick={openDatePicker}>
+            {dateLabel(date)}
+          </button>
+
+          <input
+            ref={dateInputRef}
+            className={styles.dateNavPicker}
+            type="date"
+            value={date}
+            onChange={e => setDate(e.target.value)}
+            tabIndex={-1}
+            aria-hidden="true"
+          />
 
           <button className={styles.dateNavBtn} onClick={() => shiftDay(1)}>
             <ChevronRightIcon />
