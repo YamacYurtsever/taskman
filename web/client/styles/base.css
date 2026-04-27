@@ -6,9 +6,9 @@
   --green:        oklch(48% 0.14 148);
   --green-bg:     oklch(48% 0.14 148 / 0.1);
   --red:          oklch(50% 0.17 22);
-  --red-light:    oklch(65% 0.17 22 / 0.1);
+  --red-bg:       oklch(65% 0.17 22 / 0.1);
   --amber:        oklch(60% 0.14 75);
-  --amber-light:  oklch(60% 0.14 75 / 0.1);
+  --amber-bg:     oklch(60% 0.14 75 / 0.1);
   --font-sans:    'Nunito', sans-serif;
   --sidebar-w:    250px;
   --topbar-h:     70px;

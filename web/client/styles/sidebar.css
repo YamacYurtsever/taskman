@@ -134,7 +134,7 @@
 }
 
 .lni-action:hover       { color: var(--muted);  background: var(--surface-hover); }
-.lni-action.lni-del:hover { color: var(--red);  background: var(--red-light); }
+.lni-action.lni-del:hover { color: var(--red);  background: var(--red-bg); }
 .lni-action.edt:hover   { color: var(--text);   background: var(--surface-hover); }
 .lni-action.sav:hover   { color: var(--green);  background: var(--green-bg); }
 .lni-action.mov:hover   { color: var(--accent); background: var(--accent-bg); }

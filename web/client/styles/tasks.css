@@ -208,8 +208,8 @@
 }
 
 .task-btn:hover     { color: var(--text);   background: var(--surface-hover); }
-.task-btn.cnt:hover { color: var(--amber);  background: var(--amber-light); }
-.task-btn.del:hover { color: var(--red);    background: var(--red-light); }
+.task-btn.cnt:hover { color: var(--amber);  background: var(--amber-bg); }
+.task-btn.del:hover { color: var(--red);    background: var(--red-bg); }
 .task-btn.sav:hover { color: var(--green);  background: var(--green-bg); }
 
 /* ── Task edit / move ── */
