@@ -326,3 +326,66 @@
   flex-direction: column;
   gap: var(--sp);
 }
+
+/* ── Inline add ── */
+
+.inlineAdd {
+  display: flex;
+  align-items: center;
+  padding: var(--sp);
+  background: var(--primary);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  transition: border-color var(--animation-d);
+  gap: var(--sp);
+}
+
+.inlineAdd:focus-within {
+  border-color: var(--accent);
+  border-width: 1.5px;
+}
+
+.inlineAdd input[type=text] {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border);
+  padding-right: var(--sp);
+  color: var(--text-1);
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  outline: none;
+}
+
+.inlineAdd input[type=text]::placeholder {
+  color: var(--text-3);
+}
+
+.inlineAdd input[type=date] {
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border);
+  padding-right: var(--sp);
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--fs-xs);
+  outline: none;
+  width: 130px;
+  color-scheme: light;
+}
+
+.inlineAddBtn {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: color var(--animation-d);
+}
+
+.inlineAddBtn:hover {
+  color: var(--accent);
+}

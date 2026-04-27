@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { API } from '../lib/api';
-import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, ContinueIcon, DeleteIcon, EditIcon, MoveIcon } from '../components/icons';
-import { InlineAdd } from '../components/InlineAdd';
+import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, ContinueIcon, DeleteIcon, EditIcon, MoveIcon, PlusIcon } from '../components/icons';
 import type { StateResponse, Task, TaskFilter, TaskList } from '../lib/types';
 import { doneFor, formatDue, MSG, pendingFor, sortByName } from '../lib/utils';
 import styles from './TasksView.module.css';
@@ -209,6 +208,27 @@ export function CardsView({ data, filter, selectedGroup, selectGroup, selectList
   return <>{sections.length ? sections : <div className="empty">{MSG.noTasks}</div>}</>;
 }
 
+function AddTaskForm({ listName, act }: { listName: string; act: Action }) {
+  const [name, setName] = useState('');
+  const [due, setDue] = useState('');
+
+  const submit = async () => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    await act(API.add, { list: listName, name: trimmed, due: due || null });
+    setName('');
+    setDue('');
+  };
+
+  return (
+    <div className={styles.inlineAdd}>
+      <input type="text" placeholder={MSG.addTask} value={name} onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} />
+      <input type="date" value={due} onChange={e => setDue(e.target.value)} />
+      <button className={styles.inlineAddBtn} onClick={submit}><PlusIcon /></button>
+    </div>
+  );
+}
+
 export function FocusedView({ data, listId, filter, act, refresh }: {
   data: StateResponse;
   listId: string;
@@ -236,7 +256,7 @@ export function FocusedView({ data, listId, filter, act, refresh }: {
           ? pending.map(t => <TaskRow key={t.id} data={data} task={t} listName={list.name} act={act} refresh={refresh} />)
           : <div className="empty">{MSG.noTasks}</div>}
       </div>
-      <InlineAdd listName={list.name} variant="focused" onAdd={(listName, name, due) => act(API.add, { list: listName, name, due })} />
+      <AddTaskForm listName={list.name} act={act} />
       {done.length > 0 && (
         <div className={styles.doneWrapper}>
           <button className={styles.doneToggle} onClick={toggleDone}>
