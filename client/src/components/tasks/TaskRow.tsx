@@ -129,7 +129,7 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
       <div className={styles.taskBody} onClick={() => openDetail(task)}>
         <div className={styles.taskNameRow}>
           <span className={styles.taskName}>{task.name}</span>
-          {task.description && <NoteIcon className={styles.noteIcon} size={9} />}
+          {task.description && <NoteIcon className={styles.noteIcon} />}
         </div>
         {dueInfo && (
           <span className={cx(styles.taskDue, dueInfo.cls && styles[dueInfo.cls])}>
