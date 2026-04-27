@@ -663,9 +663,16 @@ body {
 .task-edit-body {
   flex: 1;
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sp-sm);
+  min-width: 0;
+}
+
+.focused-view .task-edit-body {
+  flex-direction: row;
   align-items: center;
   gap: var(--sp);
-  min-width: 0;
 }
 
 .task-edit-name {
@@ -690,8 +697,11 @@ body {
   font: inherit;
   font-size: var(--fs-xs);
   outline: none;
-  width: 120px;
   color-scheme: light;
+}
+
+.focused-view .task-edit-due {
+  width: 120px;
   flex-shrink: 0;
 }
 
