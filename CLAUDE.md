@@ -174,7 +174,7 @@ Then advise the user to hard-refresh with Cmd+Shift+R.
 - [x] Add log entry
 - [x] Continue task (from task cards)
 - [x] Delete entry
-- [ ] Edit log entry (`taskman log edit`)
+- [x] Edit log entry (`taskman log edit`)
 
 ###### UI
 - [x] Light/dark mode toggle (persisted to `localStorage`, toggled via button in topbar)

@@ -136,6 +136,37 @@ class WebTest(unittest.TestCase):
         self.assertEqual(entry["type"], "log")
         self.assertEqual(entry["text"], "talked with team")
 
+    # --- POST /api/daysheet/edit ---
+
+    def test_daysheet_edit_log_entry(self):
+        data = make_db()
+        data["daysheet"] = [{"id": "e-1", "datetime": "2026-04-26T10:00:00", "listId": "list-1", "type": "log", "text": "old text"}]
+        self._patch_all(data)
+        res = self.client.post("/api/daysheet/edit", json={"id": "e-1", "text": "new text"})
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(res.get_json()["ok"])
+        self.assertEqual(self.saved["daysheet"][0]["text"], "new text")
+
+    def test_daysheet_edit_non_log_returns_400(self):
+        data = make_db()
+        data["daysheet"] = [{"id": "e-2", "datetime": "2026-04-26T10:00:00", "listId": "list-1", "type": "done", "text": "Write report"}]
+        self._patch_all(data)
+        res = self.client.post("/api/daysheet/edit", json={"id": "e-2", "text": "something"})
+        self.assertEqual(res.status_code, 400)
+        self.assertIn("only log entries", res.get_json()["message"])
+
+    def test_daysheet_edit_missing_returns_400(self):
+        self._patch_all(make_db())
+        res = self.client.post("/api/daysheet/edit", json={"id": "nonexistent", "text": "x"})
+        self.assertEqual(res.status_code, 400)
+
+    def test_daysheet_edit_empty_text_returns_400(self):
+        data = make_db()
+        data["daysheet"] = [{"id": "e-1", "datetime": "2026-04-26T10:00:00", "listId": "list-1", "type": "log", "text": "old"}]
+        self._patch_all(data)
+        res = self.client.post("/api/daysheet/edit", json={"id": "e-1", "text": ""})
+        self.assertEqual(res.status_code, 400)
+
     # --- POST /api/daysheet/delete ---
 
     def test_daysheet_delete_entry(self):

@@ -475,10 +475,11 @@ body {
 
 .task-right {
   display: flex;
+  flex-direction: column;
+  gap: var(--sp-sm);
   opacity: 0;
   transition: opacity var(--animation-d);
   flex-shrink: 0;
-  align-self: flex-start;
 }
 
 .task-row:hover .task-right,
@@ -814,6 +815,12 @@ body {
   color: var(--faint);
 }
 
+.timeline-actions {
+  display: flex;
+  gap: var(--sp-sm);
+  flex-shrink: 0;
+}
+
 .timeline-del {
   width: 20px;
   height: 20px;
@@ -823,6 +830,23 @@ body {
 
 .timeline-entry:hover .timeline-del {
   opacity: 1;
+}
+
+.timeline-edit-row .timeline-del {
+  opacity: 1;
+}
+
+.timeline-edit-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--accent);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-sm);
+  outline: none;
+  padding: 1px 0;
 }
 
 .log-form {

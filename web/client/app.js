@@ -104,6 +104,7 @@ const API = {
   edit:           '/api/edit',
   log:            '/api/log',
   daysheetDelete: '/api/daysheet/delete',
+  daysheetEdit:   '/api/daysheet/edit',
 };
 
 const IC = {
@@ -576,12 +577,40 @@ function renderDaysheetView() {
             const delBtn = el('button', { class: 'task-btn del timeline-del', title: 'Delete',
               on: { click: () => act(API.daysheetDelete, { id: e.id }) } },
               icon(IC.delete, 11));
+
+            let entry;
+            const editBtn = e.type !== 'log' ? null : el('button', { class: 'task-btn edt timeline-del', title: 'Edit',
+              on: { click: () => {
+                const editIn = el('input', { type: 'text', value: e.text, class: 'timeline-edit-input', autocomplete: 'off' });
+                const save = async () => {
+                  const newText = editIn.value.trim();
+                  if (!newText) return;
+                  await act(API.daysheetEdit, { id: e.id, text: newText });
+                };
+                editIn.addEventListener('keydown', ev => {
+                  if (ev.key === 'Enter') save();
+                  if (ev.key === 'Escape') refresh();
+                });
+                const saveBtn   = el('button', { class: 'task-btn sav timeline-del', title: 'Save',   on: { click: save            } }, icon(IC.check,  11));
+                const cancelBtn = el('button', { class: 'task-btn del timeline-del', title: 'Cancel', on: { click: () => refresh() } }, icon(IC.delete, 11));
+                const editRow = el('div', { class: 'timeline-entry timeline-edit-row' },
+                  el('span', { class: 'timeline-time' }, e.datetime.slice(11, 16)),
+                  editIn,
+                  el('div', { class: 'timeline-actions' }, saveBtn, cancelBtn),
+                );
+                entry.replaceWith(editRow);
+                editIn.focus();
+                editIn.select();
+              }}
+            }, icon(IC.edit, 11));
+
             const prefix = e.type === 'done' ? 'Finished ' : e.type === 'continue' ? 'Continued ' : '';
-            return el('div', { class: 'timeline-entry' },
+            entry = el('div', { class: 'timeline-entry' },
               el('span', { class: 'timeline-time' }, e.datetime.slice(11, 16)),
               el('span', { class: 'timeline-text' }, prefix + e.text, listTag),
-              delBtn,
+              el('div', { class: 'timeline-actions' }, editBtn, delBtn),
             );
+            return entry;
           }),
         ),
       );
