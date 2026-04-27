@@ -49,6 +49,7 @@ taskman/
     constants.py        Shared constants and DaysheetEntryType
     tests/              Pytest test suite
       test_api.py       Flask route tests
+      test_auth.py      Auth, login, OAuth, and settings route tests
       test_daysheet.py  Daysheet service tests
       test_tasks.py     Task service tests
       test_utils.py     Utility function tests
@@ -61,7 +62,7 @@ taskman/
       App.module.css    Layout styles (content wrapper, main, detail panel, calendar iframe)
       main.tsx          React entry point, imports global styles
       action-button.css Shared global action-button styles (`.action-btn`)
-      views/            Route-level screens: CalendarView, DaysheetView, CardsView, FocusedView
+      views/            Route-level screens: CalendarView, DaysheetView, CardsView, FocusedView, LoginView, SetupView, SettingsView
       components/       Reusable UI
         Sidebar/        Sidebar shell, nav, list/group rows, shared sidebar types
         tasks/          TaskRow, TaskCard, TaskDetail, AddTaskForm, shared task types/styles
@@ -104,6 +105,9 @@ taskman/
 | `/list/:listId` | Focused view for a single list |
 | `/daysheet` | Day sheet with date navigation |
 | `/calendar` | Embedded Google Calendar |
+| `/settings` | Account, Google Calendar connection, timezone (protected) |
+| `/login` | Password login (public) |
+| `/setup` | First-run credential setup (public) |
 
 ---
 
@@ -194,21 +198,49 @@ Google Calendar embed colors: `#E67C73` Flamingo · `#33B679` Sage · `#B39DDB` 
 
 ##### Milestone 5 — Authentication
 
-- [ ] User/account model supporting local single-user and future hosted deployment
-- [ ] Web auth flow: login, logout, session handling
-- [ ] All API endpoints protected when auth is enabled
-- [ ] Auth config: mode, secrets, redirect URLs (no committed secrets)
-- [ ] OAuth provider support with token refresh
-- [ ] Google OAuth: pull the user's calendars automatically, replacing the manual `config.json` calendar list
-- [ ] Account/settings UI for managing connected providers and calendar selection
-- [ ] Persistence boundaries ready for a deployed database
+###### Setup & config
+
+- [ ] `requirements.txt` — `flask-session`, `bcrypt`, `google-auth-oauthlib`, `google-api-python-client`
+- [ ] `server/constants.py` — add `SESSIONS_PATH = TASKMAN_DIR / "sessions"`
+- [ ] `server/config.py` — add `save()`; extend `DEFAULTS` with `passwordHash`, `secretKey`, `googleRefreshToken`, `googleEmail`
+- [ ] `.github/workflows/ci.yml` — install from `requirements.txt` instead of inline pip list
+
+###### Backend — session & auth
+
+- [ ] `server/api.py` — `flask-session` setup; auto-generate `secretKey` and persist to `config.json` on first run
+- [ ] `server/api.py` — `require_auth` decorator (checks `session["authenticated"]`); applied to all `/api/*` except login/setup/status/callback
+- [ ] `server/api.py` — `GET /api/auth/status` → `{authenticated, setupRequired}` (public)
+- [ ] `server/api.py` — `POST /api/setup` → hash password, store in config, set session (public; fails if already set)
+- [ ] `server/api.py` — `POST /api/login` / `POST /api/logout` (public)
+- [ ] `server/api.py` — `POST /api/change-password` (protected)
+
+###### Backend — Google OAuth & settings
+
+- [ ] `server/api.py` — `GET /api/oauth/start`, `GET /api/oauth/callback`, `POST /api/oauth/disconnect`; set `OAUTHLIB_INSECURE_TRANSPORT=1` in dev; use `access_type="offline"&prompt="consent"` so Google issues a refresh token
+- [ ] `server/api.py` — `GET /api/config` updated to fetch calendar list from Google Calendar API when refresh token present, falling back to manual `config.json` entries on error
+- [ ] `server/api.py` — `GET /api/settings` → `{googleConnected, googleEmail, calendarTimezone, oauthAvailable}`; `POST /api/settings/timezone`
+- [ ] `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` read from environment; never committed
+
+###### Backend — tests
+
+- [ ] `server/tests/utils.py` — add `saved_config` context manager (mirrors `saved_db`)
+- [ ] `server/tests/test_api.py` — seed `session["authenticated"] = True` in `setUp` so existing tests pass through `require_auth`
+- [ ] `server/tests/test_auth.py` — auth status, setup, login, logout, change-password, OAuth start/disconnect, settings GET/timezone, config calendar fallback
+
+###### Frontend
+
+- [ ] `client/src/lib/types.ts` — `AuthStatusResponse`, `SettingsResponse`
+- [ ] `client/src/lib/api.ts` — auth/OAuth/settings entries in `API`; `setUnauthorizedHandler` for global 401 redirect
+- [ ] `client/src/lib/utils.ts` — add `settings` to `MSG`
+- [ ] `client/src/views/LoginView.tsx` + `LoginView.module.css`
+- [ ] `client/src/views/SetupView.tsx` + `SetupView.module.css`
+- [ ] `client/src/views/SettingsView.tsx` + `SettingsView.module.css` — change password, Google connect/disconnect, timezone
+- [ ] `client/src/App.tsx` — rename `App` → `AuthenticatedApp`; new `App` checks auth status and renders `LoginView`, `SetupView`, or `AuthenticatedApp`; `RequireAuth` wrapper; add `/settings` route inside authenticated shell
+- [ ] `client/src/components/Sidebar/Sidebar.tsx` — Settings nav item at the bottom
+- [ ] `client/src/hooks/useAppData.ts` — expose `logout` function
+
+###### Google OAuth setup note
+
+Requires a Google Cloud project with the Calendar API enabled and an OAuth 2.0 credential. Set the authorised redirect URI to `http://127.0.0.1:5050/api/oauth/callback`. Export `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` before starting the server.
 
 ##### Milestone 6 — Deploy
-
-- [ ] Gunicorn as the production WSGI server instead of Flask dev server
-- [ ] Dockerfile — single container running Gunicorn, serving both the API and built frontend static files
-- [ ] Deploy to Fly.io — one app, one shared-CPU VM, one persistent volume
-- [ ] `DB_PATH` driven by environment variable; `db.json` stored on the Fly volume (not `~/.taskman/`)
-- [ ] Health check endpoint (`/api/health`) for Fly's built-in health monitoring
-- [ ] Automated backups: periodic copy of `db.json` to a private GitHub repo or Cloudflare R2
-- [ ] CI pipeline extended to build and deploy to Fly on release
