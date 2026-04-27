@@ -195,6 +195,12 @@ Then advise the user to hard-refresh with Cmd+Shift+R.
 ###### Light / Dark Mode
 - [x] Light/dark mode toggle (persisted to `localStorage`, toggled via button in topbar)
 
+###### Responsiveness
+
+- [ ] Sidebar collapses to a full page from a burger icon
+- [ ] Focused view and daysheet fill full width on mobile
+- [ ] Calendar iframe scales to viewport width, with day view instead of week.
+
 ##### Milestone 4 — Google Calendar
 
 - [x] Web: Google Calendar iframe embedded in taskman (week view by default)
@@ -231,23 +237,16 @@ Google Calendar embed color codes (predefined palette):
 - [ ] Web: clicking a task name in focused view mounts the task view as a side panel to the right when there is enough horizontal space, or replaces the main content area when there isn't
 - [ ] Web: raw URLs in the description are rendered as clickable links
 
-##### Milestone 6 — Responsiveness
+##### Milestone 6 — Authentication
 
-- [ ] Sidebar collapses to a full page from a burger icon
-- [ ] Focused view and daysheet fill full width on mobile
-- [ ] Calendar iframe scales to viewport width, with day view instead of week.
-
-##### Milestone 7 — Backups
-
-- [ ] On each `db.save()`, write/overwrite a snapshot to `~/.taskman/backups/db.YYYY-MM-DD.json` (always reflects the latest state for that day)
-- [ ] Keep only the last 10 snapshots (days with writes), pruning older ones automatically
-- [ ] `taskman backup` command to force a snapshot immediately (useful before bulk changes)
-- [ ] `taskman restore [date]` command to restore from a snapshot (lists available dates if none given)
-
-##### Milestone 8 — iCloud Sync
-
-- [ ] Add `db_path` to existing `~/.taskman/config.json` (config file already exists, used by Calendar)
-- [ ] Default `db_path` to `~/Library/Mobile Documents/com~apple~CloudDocs/taskman/db.json` when iCloud Drive is detected
-- [ ] CLI flag / env var to override `db_path` at runtime
-- [ ] Graceful handling of iCloud file availability (file temporarily unavailable during sync)
-- [ ] Document iCloud setup in README
+- [ ] Introduce a user/account model that can support both local personal use and future hosted deployment
+- [ ] Add web authentication flow with login, logout, and authenticated session handling
+- [ ] Protect task, list, group, daysheet, and calendar endpoints behind authentication when auth is enabled
+- [ ] Keep local single-user mode backward-compatible for CLI-first usage
+- [ ] Add configuration for auth mode, secrets, redirect URLs, and deployment-specific settings without committing secrets
+- [ ] Add OAuth provider support for external accounts and integrations
+- [ ] Store OAuth tokens securely enough for the deployment mode, with refresh support where providers allow it
+- [ ] Web: account/settings area for managing connected providers and authenticated integrations
+- [ ] Web: calendar picker can use authenticated provider data when available, while preserving manual calendar config as an advanced fallback
+- [ ] Prepare persistence boundaries so the JSON file can later be replaced by a deployed database
+- [ ] Document local auth setup, OAuth provider setup, and deployment-oriented configuration in README
