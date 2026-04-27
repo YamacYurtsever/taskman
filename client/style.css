@@ -24,6 +24,7 @@
   --card-max-w:   250px;
   --focused-w:    500px;
   --daysheet-w:   500px;
+  --panel-w:      500px;
   --nav-indent:   15px;
   --main-padding: 20px;
   --date-input-w: 130px;
@@ -57,7 +58,7 @@
   --outline-offset:    2px;
   --scrollbar-w:       5px;
 
-  /* Default theme fallback (important) */
+  /* Default theme */
   --bg:           #f6f3ee;
   --primary:      #fbfaf8;
   --primary-bg:   #f5f0e7;

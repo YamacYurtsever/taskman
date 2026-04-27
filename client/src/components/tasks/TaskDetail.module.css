@@ -10,7 +10,7 @@
 }
 
 .panel {
-  width: 340px;
+  width: var(--panel-w);
   flex-shrink: 0;
   border-left: var(--border-w) solid var(--border);
   overflow-y: auto;
@@ -131,6 +131,12 @@
 
 .link:hover {
   opacity: 0.8;
+}
+
+@media (max-width: 1400px) {
+  .panel {
+    width: calc(var(--panel-w) * 2 / 3);
+  }
 }
 
 @media (max-width: 1024px) {
