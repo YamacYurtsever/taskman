@@ -437,12 +437,11 @@ function taskRow(task, listName) {
 
   const moveBtn = el('button', { class: 'task-btn mov', title: 'Move to list',
     on: { click: () => {
-      const otherLists = sortByName(state.data.lists.filter(l => l.name !== listName));
+      const allLists = sortByName(state.data.lists);
       const sel = el('select', { class: 'task-move-select' },
-        el('option', { value: '', disabled: true, selected: true }, 'Move to…'),
-        ...otherLists.map(l => el('option', { value: l.name }, l.name)),
+        ...allLists.map(l => el('option', { value: l.name, selected: l.name === listName }, l.name)),
       );
-      const saveBtn   = el('button', { class: 'task-btn sav', title: 'Save',   on: { click: () => { if (sel.value) act(API.moveTask, { list: listName, name: task.name, newList: sel.value }); } } }, icon(IC.check,  11));
+      const saveBtn   = el('button', { class: 'task-btn sav', title: 'Save',   on: { click: () => { if (sel.value && sel.value !== listName) act(API.moveTask, { list: listName, name: task.name, newList: sel.value }); else refresh(); } } }, icon(IC.check,  11));
       row.replaceWith(el('div', { class: 'task-row task-move-row' },
         sel,
         el('div', { class: 'task-right' }, saveBtn),
