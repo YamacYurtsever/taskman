@@ -210,7 +210,7 @@ Google Calendar embed color codes (predefined palette):
 - [ ] CLI: `taskman ls "list"` focused view shows a hint symbol next to tasks that have a description
 - [ ] Web: small icon on task row (cards + focused view) when a description exists
 - [ ] Web: clicking a task name in focused view opens a side panel to the right with an auto-focused editable textarea; updates saved debounced as you type; Escape closes it
-- [ ] Web: side panel falls back to a modal overlay on small screens
+- [ ] Web: side panel falls back to a full-page task view on small screens, with task info (name, list, due date) at the top and the description textarea below
 - [ ] Web: raw URLs in the description are rendered as clickable links
 
 ##### Milestone 6 — Mobile Responsiveness
