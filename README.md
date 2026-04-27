@@ -72,7 +72,6 @@ Opens a local web interface at `http://127.0.0.1:5050` with:
 - Google Calendar embed (week view, multi-calendar support)
 - Filter pills: All / Week / Day
 - Inline task add, mark done, delete, rename, move, and continue
-- Cmd+K quick-add modal
 - Light/dark mode
 
 ```bash

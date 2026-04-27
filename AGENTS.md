@@ -4,7 +4,7 @@ A minimal terminal task manager built for personal daily use. Tasks are organize
 
 ---
 
-### Claude Workflow
+### Agent Workflow
 
 After completing each milestone item:
 
@@ -23,7 +23,19 @@ Then advise the user to hard-refresh with Cmd+Shift+R.
 
 ---
 
-### Commands
+### Current Implementation Notes
+
+- The CLI entry point is `taskman/cli.py`.
+- Command behavior lives in `taskman/commands/`.
+- JSON persistence is centralized in `taskman/db.py`, currently using `~/.taskman/db.json`.
+- The web app is a Flask server in `web/server.py` plus static HTML/CSS/JS in `web/client/`.
+- The web server mostly wraps CLI command functions for simple actions, but some list/group/task edit endpoints mutate the JSON data directly.
+- There is no schema migration layer yet. Any new task fields must be backward-compatible with existing JSON records.
+- There is no JavaScript build step or frontend package manager.
+
+---
+
+### Implemented CLI Commands
 
 ##### Tasks
 
@@ -58,12 +70,6 @@ Then advise the user to hard-refresh with Cmd+Shift+R.
 | `taskman continue "list" "task"`            | Logs continued task under a list                             |
 | `taskman daysheet [date]`                   | View a day's sheet (default today)                           |
 
-##### Calendar
-
-| Command                 | Description                              |
-| ----------------------- | ---------------------------------------- |
-| `taskman cal [date]`    | List calendar events (default today)     |
-
 ##### Shell Functions
 
 | Function                   | Expands to                |
@@ -72,7 +78,6 @@ Then advise the user to hard-refresh with Cmd+Shift+R.
 | `tlsw ["list" \| "group"]` | `taskman ls --week`       |
 | `tlsd ["list" \| "group"]` | `taskman ls --day`        |
 | `tds [date]`               | `taskman daysheet [date]` |
-| `tcd [date]`               | `taskman cal [date]`      |
 
 ---
 
@@ -121,6 +126,7 @@ Then advise the user to hard-refresh with Cmd+Shift+R.
 - **Backend:** Python, Flask
 - **Frontend:** Vanilla HTML / CSS / JavaScript (no build step)
 - **Storage:** JSON flat file (`~/.taskman/db.json`)
+- **Tests:** `python -m pytest tests/ -v`
 
 ---
 
@@ -130,15 +136,15 @@ Then advise the user to hard-refresh with Cmd+Shift+R.
 
 - [x] Project setup
 - [x] Task commands: `add`, `done`, `undo`, `edit`, `move`, `delete`
-- [x] Viewing commands: `task ls`
+- [x] Viewing commands: `taskman ls`
 - [x] Daysheet commands `log`, `continue`, `daysheet`
 - [x] Shell functions: `tls`, `tlsd`, `tlsw`, `tds`
-- [x] Completion sound and visual feedback on `task done`
+- [x] Completion sound and visual feedback on `taskman done`
 
 ##### Milestone 2 — Web Frontend
 
 ###### Infrastructure
-- [x] Flask server (`web/server.py`) with REST endpoints wrapping CLI command functions
+- [x] Flask server (`web/server.py`) with REST endpoints for task/list/group/daysheet operations
 - [x] Serve static frontend from `web/client/`
 - [x] Live updates without full page reload
 
@@ -150,7 +156,7 @@ Then advise the user to hard-refresh with Cmd+Shift+R.
 - [x] Sidebar: Daysheet + Tasks nav, groups, lists, alphabetical with Others last
 
 ###### Tasks
-- [x] Add task (inline per card, inline in focused view, quick-add modal Cmd+K)
+- [x] Add task
 - [x] Mark done / undo (checkbox)
 - [x] Delete task
 - [x] Continue task (logs to daysheet)
@@ -201,8 +207,10 @@ Google Calendar embed color codes (predefined palette):
 ##### Milestone 4 — Task Descriptions
 
 - [ ] Add `description` field to task schema (`db.json`)
+- [ ] Backfill missing `description` fields for existing tasks
 - [ ] CLI: `taskman describe "list" "task" ["description"]` — prints description if no text given, sets it otherwise
 - [ ] CLI: `taskman ls "list"` focused view shows a hint symbol next to tasks that have a description
+- [ ] Web API: endpoint to read/update a task description
 - [ ] Web: small icon on task row (cards + focused view) when a description exists
 - [ ] Web: one task view component showing task info (name, list, due date) at the top and an editable description textarea below; updates saved debounced as you type; Escape closes it
 - [ ] Web: clicking a task name in focused view mounts the task view as a side panel to the right when there is enough horizontal space, or replaces the main content area when there isn't
