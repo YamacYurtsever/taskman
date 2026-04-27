@@ -1,0 +1,69 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg:           #f4f3f0;
+  --surface:      #faf9f7;
+  --surface-hover:#eceae6;
+  --border:       #dddad4;
+  --text:         #252320;
+  --muted:        #726d66;
+  --faint:        #a8a099;
+  --accent:       oklch(48% 0.16 248);
+  --accent-bg:    oklch(48% 0.16 248 / 0.1);
+  --green:        oklch(48% 0.14 148);
+  --green-bg:     oklch(48% 0.14 148 / 0.1);
+  --red:          oklch(50% 0.17 22);
+  --red-light:    oklch(65% 0.17 22 / 0.1);
+  --amber:        oklch(60% 0.14 75);
+  --amber-light:  oklch(60% 0.14 75 / 0.1);
+  --font-sans:    'Nunito', sans-serif;
+  --sidebar-w:    250px;
+  --topbar-h:     70px;
+  --card-max-w:   250px;
+  --focused-w:    500px;
+  --daysheet-w:   500px;
+  --sp:           10px;
+  --sp-sm:        5px;
+  --nav-indent:   12px;
+  --r:            10px;
+  --r-sm:         3px;
+  --btn-sz:       15px;
+  --fs-title:     1.4rem;
+  --fs-sm:        0.9rem;
+  --fs-xs:        0.8rem;
+  --animation-d:  var(--animation-d);
+  --logo-w:       25px;
+}
+
+[data-theme="dark"] {
+  --bg:           #13151a;
+  --surface:      #1e2028;
+  --surface-hover:#272a35;
+  --border:       #32363f;
+  --text:         #e8eaf0;
+  --muted:        #8892a4;
+  --faint:        #555e72;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 18px; }
+
+body {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.5;
+  background: var(--bg);
+  color: var(--text);
+  height: 100dvh;
+  display: flex;
+  overflow: hidden;
+}
+
+.empty { color: var(--faint); font-size: var(--fs-sm); }
+.spacer { flex: 1; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--faint); }

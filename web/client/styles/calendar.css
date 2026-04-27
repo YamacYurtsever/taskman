@@ -1,0 +1,10 @@
+.calendar-frame {
+  flex: 1;
+  width: 100%;
+  border: none;
+  border-radius: var(--r);
+}
+
+[data-theme="dark"] .calendar-frame {
+  filter: invert(1) hue-rotate(180deg);
+}

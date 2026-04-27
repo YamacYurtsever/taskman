@@ -1,0 +1,278 @@
+.section-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.section-label-link {
+  cursor: pointer;
+}
+
+.section-label-link:hover {
+  color: var(--accent);
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-max-w), 1fr));
+  gap: var(--sp);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 2px 12px rgba(0, 0, 0, 0.06);
+  padding: var(--sp);
+  gap: var(--sp);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-sm);
+  cursor: pointer;
+  transition: background var(--animation-d);
+  background: var(--surface);
+  border-radius: var(--r);
+}
+
+.card-header:hover {
+  background: var(--surface-hover);
+}
+
+.card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.card-count {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp);
+}
+
+.card-overflow-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+  width: 100%;
+  padding: var(--sp-sm);
+  background: none;
+  border: none;
+  color: var(--faint);
+  font: inherit;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition: color var(--animation-d);
+}
+
+.card-overflow-toggle:hover {
+  color: var(--muted);
+}
+
+/* ── Task rows ── */
+
+.task-row {
+  display: flex;
+  align-items: flex-start;
+  background-color: var(--surface);
+  gap: var(--sp);
+  padding: 7px;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+}
+
+.task-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-sm);
+}
+
+.task-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-sm);
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.task-check {
+  width: var(--btn-sz);
+  height: var(--btn-sz);
+  border: 1.5px solid var(--faint);
+  border-radius: var(--r-sm);
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color var(--animation-d), background var(--animation-d);
+}
+
+.task-check:hover {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.task-row.done .task-check {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.task-check-svg {
+  display: none;
+}
+
+.task-row.done .task-check-svg {
+  display: block;
+}
+
+.task-name {
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  line-height: 1;
+  word-break: break-word;
+}
+
+.task-row.done .task-name {
+  color: var(--faint);
+  text-decoration: line-through;
+  text-decoration-color: var(--faint);
+  text-decoration-thickness: 1px;
+}
+
+.task-due {
+  font-size: 0.75rem;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.task-due.overdue {
+  color: var(--red);
+}
+
+.task-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--sp-sm);
+  opacity: 0;
+  transition: opacity var(--animation-d);
+  flex-shrink: 0;
+}
+
+.task-edit-actions {
+  display: flex;
+  flex-direction: row;
+  gap: var(--sp-sm);
+}
+
+.task-row:hover .task-right,
+.task-row:focus-within .task-right,
+.task-row:hover .task-left .task-btn,
+.task-row:focus-within .task-left .task {
+  opacity: 1;
+}
+
+.task-left .task-btn {
+  opacity: 0;
+  transition: opacity var(--animation-d);
+}
+
+.task-btn {
+  width: var(--btn-sz);
+  height: var(--btn-sz);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: color var(--animation-d), background var(--animation-d);
+}
+
+.task-btn:hover     { color: var(--text);   background: var(--surface-hover); }
+.task-btn.cnt:hover { color: var(--amber);  background: var(--amber-light); }
+.task-btn.del:hover { color: var(--red);    background: var(--red-light); }
+.task-btn.sav:hover { color: var(--green);  background: var(--green-bg); }
+
+/* ── Task edit / move ── */
+
+.task-edit-row .task-right,
+.task-move-row .task-right {
+  opacity: 1;
+}
+
+.task-edit-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sp-sm);
+  min-width: 0;
+}
+
+.focused-view .task-edit-body {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--sp);
+}
+
+.task-edit-name {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--accent);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  outline: none;
+  padding: 1px 0;
+}
+
+.task-edit-due {
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--border);
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--fs-xs);
+  outline: none;
+  color-scheme: light;
+}
+
+.focused-view .task-edit-due {
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.task-move-select {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--accent);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-sm);
+  outline: none;
+  cursor: pointer;
+}

@@ -1,0 +1,123 @@
+.focused-view {
+  width: 100%;
+  max-width: var(--focused-w);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp);
+}
+
+.focused-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--sp);
+}
+
+.focused-title {
+  font-size: var(--fs-title);
+  font-weight: bold;
+}
+
+.focused-meta {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.focused-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp);
+}
+
+.focused-add {
+  display: flex;
+  align-items: center;
+  padding: var(--sp);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  transition: border-color var(--animation-d);
+  gap: var(--sp);
+}
+
+.focused-add:focus-within {
+  border-color: var(--accent);
+  border-width: 1.5px;
+}
+
+.focused-add input[type=text] {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border);
+  padding-right: var(--sp);
+  color: var(--text);
+  font: inherit;
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  outline: none;
+}
+
+.focused-add input[type=text]::placeholder {
+  color: var(--faint);
+}
+
+.focused-add input[type=date] {
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--border);
+  padding-right: var(--sp);
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--fs-xs);
+  outline: none;
+  width: 130px;
+  color-scheme: light;
+}
+
+.focused-add-btn,
+.log-form-btn {
+  background: none;
+  border: none;
+  color: var(--faint);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: color var(--animation-d);
+}
+
+.focused-add-btn:hover,
+.log-form-btn:hover {
+  color: var(--accent);
+}
+
+.done-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp);
+}
+
+.done-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+  background: none;
+  border: none;
+  color: var(--faint);
+  font: inherit;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition: color var(--animation-d);
+}
+
+.done-toggle:hover {
+  color: var(--muted);
+}
+
+.done-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp);
+}
