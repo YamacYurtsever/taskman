@@ -14,7 +14,7 @@ from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 
 from server import config, db
-from server.constants import DATE_FORMAT, FRONTEND_URL, SESSIONS_PATH, DaysheetEntryType
+from server.constants import CALENDAR_PRESET_COLORS, DATE_FORMAT, FRONTEND_URL, SESSIONS_PATH, DaysheetEntryType
 from server.services.daysheet import add_log, continue_task
 from server.services.tasks import (
     add_task,
@@ -216,7 +216,9 @@ def create_app(test_config=None):
                 pass
 
         if not parts and user_calendars:
-            parts = [f"src={c['id']}" for c in user_calendars]
+            for i, cal in enumerate(user_calendars[:5]):
+                parts.append(f"src={cal['id']}")
+                parts.append(f"color={CALENDAR_PRESET_COLORS[i].replace('#', '%23')}")
 
         calendar_url = (
             f"https://calendar.google.com/calendar/embed?{'&'.join(parts)}&ctz={tz}&mode=WEEK"

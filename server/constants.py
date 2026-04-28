@@ -4,6 +4,8 @@ from pathlib import Path
 
 # ─────────────────────────── Paths ───────────────────────────
 
+FRONTEND_URL = "http://127.0.0.1:5173"
+
 TASKMAN_DIR = Path.home() / ".taskman"
 CONFIG_PATH = TASKMAN_DIR / "config.json"
 DB_PATH = TASKMAN_DIR / "db.json"
@@ -38,3 +40,5 @@ class DaysheetEntryType(str, Enum):
 # ─────────────────────────── Misc ───────────────────────────
 
 COMPLETION_SOUND = "/System/Library/Sounds/Glass.aiff"
+
+CALENDAR_PRESET_COLORS = ["#B39DDB", "#039BE5", "#E67C73", "#33B679", "#F6BF26"]
