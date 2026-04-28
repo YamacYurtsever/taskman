@@ -307,7 +307,16 @@ Production deployment:
 - [x] `cd client && npm run build`
 - [ ] Manual production smoke test on desktop and iPhone Safari: login, task CRUD, daysheet add/edit/delete, calendar load, logout, hard refresh on a nested route, and home-screen launch behavior
 
+##### Milestone 8 — Task Duplication
+
+- [x] API endpoint and service logic to duplicate a task within the same list
+- [x] Duplicate button on task rows beside the existing move/edit actions
+- [x] Duplicates preserve due date and description while resetting completion state
+- [x] Backend tests for duplication service and API route
+
 ##### Future
 
-- Sounds
+- Sound Effects
 - Batch Addition
+- Daysheet analytics
+- Turn a task description into an actionable checklist (AI)

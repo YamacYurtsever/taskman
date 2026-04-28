@@ -15,6 +15,18 @@ from server.services.utils import (
 )
 
 
+def _copied_task_name(data, list_id: str, task_name: str) -> str:
+    base_name = f"{task_name} Copied"
+    candidate = base_name
+    copy_index = 2
+
+    while find_task(data, list_id, candidate):
+        candidate = f"{base_name} {copy_index}"
+        copy_index += 1
+
+    return candidate
+
+
 # ─────────────────────────── Create / Edit ───────────────────────────
 
 @service
@@ -93,6 +105,24 @@ def move_task(list_name: str, task_name: str, new_list_name: str, email: str | N
         raise ServiceError(f"task '{task_name}' already exists in '{new_list_name}'")
 
     task["listId"] = new_lst["id"]
+
+    db.save(data, email)
+
+
+@service
+def duplicate_task(list_name: str, task_name: str, email: str | None = None, tz_name: str = "UTC"):
+    data = db.load(email)
+    lst = require_list(data, list_name)
+    task = require_task(data, lst, task_name)
+
+    data["tasks"] = [*data["tasks"], {
+        "id": db.new_id(),
+        "name": _copied_task_name(data, lst["id"], task_name),
+        "listId": lst["id"],
+        "due": task.get("due"),
+        "doneAt": None,
+        "description": task.get("description", ""),
+    }]
 
     db.save(data, email)
 

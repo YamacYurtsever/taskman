@@ -14,7 +14,8 @@
 
 .action-btn:hover,
 .action-btn.mov:hover,
-.action-btn.edt:hover {
+.action-btn.edt:hover,
+.action-btn.dup:hover {
   color: var(--text-1);
   background: var(--primary-bg);
 }

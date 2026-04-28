@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { KeyboardEvent } from 'react';
-import { CheckIcon, ContinueIcon, DeleteIcon, EditIcon, MoveIcon, NoteIcon } from '../icons';
+import { CheckIcon, ContinueIcon, DeleteIcon, DuplicateIcon, EditIcon, MoveIcon, NoteIcon } from '../icons';
 import { API } from '../../lib/api';
 import { cx, formatDue, sortByName } from '../../lib/utils';
 import styles from './Tasks.module.css';
@@ -145,6 +145,13 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
           </button>
           <button className="action-btn edt" title="Rename" onClick={() => setMode('edit')}>
             <EditIcon />
+          </button>
+          <button
+            className="action-btn dup"
+            title="Duplicate"
+            onClick={() => act(API.duplicate, { list: listName, name: task.name })}
+          >
+            <DuplicateIcon />
           </button>
         </div>
         <button

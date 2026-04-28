@@ -273,6 +273,36 @@ class ApiTest(unittest.TestCase):
 
         self.assert_error(res, "not found")
 
+    def test_duplicate_task(self):
+        task = task_record(due="2026-05-01", description="Existing notes")
+
+        with (
+            saved_db(make_db(task)) as saved,
+            patch("server.db.new_id", return_value="task-2"),
+        ):
+            res = self.post("/api/duplicate", {
+                "list": "List A",
+                "name": "Task A",
+            })
+
+        self.assert_ok(res)
+
+        duplicated = saved["tasks"][1]
+        self.assertEqual(duplicated["id"], "task-2")
+        self.assertEqual(duplicated["name"], "Task A Copied")
+        self.assertEqual(duplicated["due"], "2026-05-01")
+        self.assertIsNone(duplicated["doneAt"])
+        self.assertEqual(duplicated["description"], "Existing notes")
+
+    def test_duplicate_task_rejects_missing_task(self):
+        with saved_db(make_db()):
+            res = self.post("/api/duplicate", {
+                "list": "List A",
+                "name": "Ghost task",
+            })
+
+        self.assert_error(res, "not found")
+
     def test_move_task(self):
         with saved_db(make_db(TASK_1)) as saved:
             res = self.post("/api/move-task", {

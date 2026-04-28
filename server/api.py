@@ -20,6 +20,7 @@ from server.services.daysheet import add_log, continue_task
 from server.services.tasks import (
     add_task,
     delete_task,
+    duplicate_task,
     done_task,
     edit_task,
     move_task,
@@ -275,6 +276,19 @@ def create_app(test_config=None):
         _, tz_name = user_config_and_timezone(email)
         body = request.get_json(force=True) or {}
         return respond(delete_task(
+            body.get("list", ""),
+            body.get("name", ""),
+            email=email,
+            tz_name=tz_name,
+        ))
+
+    @app.post("/api/duplicate")
+    @require_auth
+    def api_duplicate():
+        email = session["email"]
+        _, tz_name = user_config_and_timezone(email)
+        body = request.get_json(force=True) or {}
+        return respond(duplicate_task(
             body.get("list", ""),
             body.get("name", ""),
             email=email,

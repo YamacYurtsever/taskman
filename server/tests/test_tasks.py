@@ -5,6 +5,7 @@ from server.constants import DaysheetEntryType
 from server.services.tasks import (
     add_task,
     delete_task,
+    duplicate_task,
     done_task,
     edit_task,
     move_task,
@@ -199,6 +200,49 @@ class TaskMoveDeleteTest(unittest.TestCase):
     def test_delete_task_rejects_unknown_task(self):
         with saved_db(make_db()):
             result = delete_task("List A", "Ghost task")
+
+        assert_error(result, "not found")
+
+    def test_duplicate_task_copies_task_in_same_list(self):
+        task = task_record(
+            id="task-1",
+            name="Task A",
+            list_id="list-1",
+            due="2026-05-01",
+            description="Existing notes",
+        )
+
+        with (
+            saved_db(make_db(task)) as saved,
+            patch("server.db.new_id", return_value="task-2"),
+        ):
+            result = duplicate_task("List A", "Task A")
+
+        assert_ok(result)
+
+        duplicated = saved["tasks"][1]
+        self.assertEqual(duplicated["id"], "task-2")
+        self.assertEqual(duplicated["name"], "Task A Copied")
+        self.assertEqual(duplicated["listId"], "list-1")
+        self.assertEqual(duplicated["due"], "2026-05-01")
+        self.assertIsNone(duplicated["doneAt"])
+        self.assertEqual(duplicated["description"], "Existing notes")
+
+    def test_duplicate_task_uses_incrementing_copy_name(self):
+        copy = task_record(id="task-2", name="Task A Copied", list_id="list-1")
+
+        with (
+            saved_db(make_db(TASK_1, copy)) as saved,
+            patch("server.db.new_id", return_value="task-3"),
+        ):
+            result = duplicate_task("List A", "Task A")
+
+        assert_ok(result)
+        self.assertEqual(saved["tasks"][2]["name"], "Task A Copied 2")
+
+    def test_duplicate_task_rejects_unknown_task(self):
+        with saved_db(make_db()):
+            result = duplicate_task("List A", "Ghost task")
 
         assert_error(result, "not found")
 

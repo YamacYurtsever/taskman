@@ -63,6 +63,13 @@ const EditIcon = (props: IconProps) => (
   </Icon>
 );
 
+const DuplicateIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <rect x="5" y="5" width="8" height="8" rx="1.5" />
+    <path d="M3 10V4.5A1.5 1.5 0 014.5 3H10" />
+  </Icon>
+);
+
 const MoveIcon = (props: IconProps) => (
   <Icon {...props}>
     <path d="M3 8h10M9 4l4 4-4 4" />
@@ -110,6 +117,7 @@ export {
   ChevronRightIcon,
   PlusIcon,
   EditIcon,
+  DuplicateIcon,
   MoveIcon,
   MenuIcon,
   NoteIcon,
