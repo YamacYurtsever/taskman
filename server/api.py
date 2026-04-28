@@ -2,16 +2,19 @@ import functools
 import os
 import secrets
 from datetime import datetime
+from pathlib import Path
 
 from dotenv import load_dotenv
 load_dotenv()
 
 from cachelib.file import FileSystemCache
-from flask import Flask, jsonify, redirect, request, session
+from flask import Flask, jsonify, redirect, request, send_from_directory, session
 from flask_session import Session
 
 from server import config, db
-from server.constants import DATE_FORMAT, FRONTEND_URL, SESSIONS_PATH, DaysheetEntryType
+from server.constants import DATE_FORMAT, SESSIONS_PATH, DaysheetEntryType
+
+DIST_DIR = Path(__file__).resolve().parent.parent / "client" / "dist"
 from server.services import auth
 from server.services.daysheet import add_log, continue_task
 from server.services.tasks import (
@@ -57,6 +60,15 @@ def create_app(test_config=None):
     app = Flask(__name__)
 
     if test_config is None:
+        is_production = bool(os.environ.get("TASKMAN_BASE_URL"))
+
+        if is_production:
+            missing = [v for v in ("GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET") if not os.environ.get(v)]
+            if missing:
+                raise RuntimeError(f"Missing required environment variables: {', '.join(missing)}")
+        else:
+            os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
+
         cfg = config.load()
         if not cfg.get("secretKey"):
             cfg["secretKey"] = secrets.token_hex(32)
@@ -66,8 +78,10 @@ def create_app(test_config=None):
             "SECRET_KEY": cfg["secretKey"],
             "SESSION_TYPE": "cachelib",
             "SESSION_CACHELIB": FileSystemCache(str(SESSIONS_PATH)),
+            "SESSION_COOKIE_HTTPONLY": True,
+            "SESSION_COOKIE_SAMESITE": "Lax",
+            "SESSION_COOKIE_SECURE": is_production,
         })
-        os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
     else:
         app.config.update(test_config)
 
@@ -120,7 +134,7 @@ def create_app(test_config=None):
             auth.persist_user_auth(result["email"], result["refresh_token"])
             session["authenticated"] = True
             session["email"] = result["email"]
-            frontend_url = session.pop("frontend_url", FRONTEND_URL)
+            frontend_url = session.pop("frontend_url", auth.default_frontend_url())
             session.pop("oauth_state", None)
             return redirect(frontend_url)
 
@@ -571,5 +585,17 @@ def create_app(test_config=None):
 
         db.save(data, email)
         return ok()
+
+    # ─────────────────────────── SPA Fallback ───────────────────────────
+
+    dist_dir = DIST_DIR
+    if dist_dir.exists():
+        @app.get("/", defaults={"path": ""})
+        @app.get("/<path:path>")
+        def spa(path):
+            candidate = dist_dir / path
+            if path and candidate.is_file():
+                return send_from_directory(dist_dir, path)
+            return send_from_directory(dist_dir, "index.html")
 
     return app

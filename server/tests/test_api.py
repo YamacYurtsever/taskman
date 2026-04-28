@@ -1,4 +1,6 @@
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from server import create_app
@@ -608,6 +610,49 @@ class ApiTest(unittest.TestCase):
             res = self.post("/api/daysheet/delete", {"id": "missing-entry"})
 
         self.assert_error(res, "entry not found")
+
+
+class SpaFallbackTest(unittest.TestCase):
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        dist = Path(self.tmp.name)
+        (dist / "index.html").write_text("<html>app</html>")
+        assets = dist / "assets"
+        assets.mkdir()
+        (assets / "main.js").write_text("console.log('hi')")
+
+        with patch("server.api.DIST_DIR", dist):
+            self.app = create_app(TEST_CONFIG)
+        self.client = self.app.test_client()
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_root_serves_index_html(self):
+        res = self.client.get("/")
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b"app", res.data)
+
+    def test_spa_route_falls_back_to_index_html(self):
+        res = self.client.get("/tasks")
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b"app", res.data)
+
+    def test_nested_spa_route_falls_back_to_index_html(self):
+        res = self.client.get("/list/some-uuid")
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b"app", res.data)
+
+    def test_existing_asset_is_served_directly(self):
+        res = self.client.get("/assets/main.js")
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b"console.log", res.data)
+
+    def test_api_routes_not_shadowed_by_spa(self):
+        res = self.client.get("/api/auth/status")
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("authenticated", res.get_json())
 
 
 if __name__ == "__main__":

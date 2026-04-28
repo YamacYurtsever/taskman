@@ -352,5 +352,74 @@ class ConfigCalendarFetchTest(unittest.TestCase):
         self.assertEqual(res.get_json()["userCalendars"], [])
 
 
+class OAuthUrlGenerationTest(unittest.TestCase):
+
+    def test_redirect_uri_uses_taskman_base_url(self):
+        from server.services.auth import _redirect_uri
+        with patch.dict(os.environ, {"TASKMAN_BASE_URL": "https://taskman.example.com"}):
+            self.assertEqual(_redirect_uri(), "https://taskman.example.com/api/oauth/callback")
+
+    def test_redirect_uri_falls_back_to_dev(self):
+        from server.services.auth import _redirect_uri
+        env = {k: v for k, v in os.environ.items() if k != "TASKMAN_BASE_URL"}
+        with patch.dict(os.environ, env, clear=True):
+            self.assertIn("127.0.0.1:5050", _redirect_uri())
+
+    def test_redirect_uri_strips_trailing_slash(self):
+        from server.services.auth import _redirect_uri
+        with patch.dict(os.environ, {"TASKMAN_BASE_URL": "https://taskman.example.com/"}):
+            self.assertEqual(_redirect_uri(), "https://taskman.example.com/api/oauth/callback")
+
+    def test_frontend_url_uses_taskman_base_url_regardless_of_origin(self):
+        from server.services.auth import _frontend_url
+        with patch.dict(os.environ, {"TASKMAN_BASE_URL": "https://taskman.example.com"}):
+            self.assertEqual(_frontend_url("http://some-origin.com"), "https://taskman.example.com")
+
+    def test_frontend_url_uses_origin_in_dev(self):
+        from server.services.auth import _frontend_url
+        env = {k: v for k, v in os.environ.items() if k != "TASKMAN_BASE_URL"}
+        with patch.dict(os.environ, env, clear=True):
+            self.assertEqual(_frontend_url("http://127.0.0.1:5173"), "http://127.0.0.1:5173")
+
+    def test_frontend_url_falls_back_to_constant_when_no_origin_in_dev(self):
+        from server.services.auth import _frontend_url
+        env = {k: v for k, v in os.environ.items() if k != "TASKMAN_BASE_URL"}
+        with patch.dict(os.environ, env, clear=True):
+            self.assertEqual(_frontend_url(None), FRONTEND_URL)
+
+
+class ProductionConfigTest(unittest.TestCase):
+
+    def test_production_session_cookie_secure_is_true(self):
+        with patch.dict(os.environ, {
+            "TASKMAN_BASE_URL": "https://taskman.example.com",
+            "GOOGLE_CLIENT_ID": "cid",
+            "GOOGLE_CLIENT_SECRET": "csec",
+        }):
+            with patch("server.config.load", return_value={"secretKey": "s"}), \
+                 patch("server.config.save"), \
+                 patch("pathlib.Path.mkdir"):
+                app = create_app()
+        self.assertTrue(app.config.get("SESSION_COOKIE_SECURE"))
+
+    def test_dev_session_cookie_secure_is_false(self):
+        env = {k: v for k, v in os.environ.items() if k != "TASKMAN_BASE_URL"}
+        with patch.dict(os.environ, env, clear=True):
+            with patch("server.config.load", return_value={"secretKey": "s"}), \
+                 patch("server.config.save"), \
+                 patch("pathlib.Path.mkdir"):
+                app = create_app()
+        self.assertFalse(app.config.get("SESSION_COOKIE_SECURE"))
+
+    def test_production_raises_on_missing_oauth_env_vars(self):
+        env = {k: v for k, v in os.environ.items()
+               if k not in ("GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET")}
+        env["TASKMAN_BASE_URL"] = "https://taskman.example.com"
+        with patch.dict(os.environ, env, clear=True):
+            with self.assertRaises(RuntimeError) as ctx:
+                create_app()
+        self.assertIn("GOOGLE_CLIENT_ID", str(ctx.exception))
+
+
 if __name__ == "__main__":
     unittest.main()

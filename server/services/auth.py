@@ -13,7 +13,24 @@ SCOPES = [
     "https://www.googleapis.com/auth/userinfo.email",
     "https://www.googleapis.com/auth/calendar.readonly",
 ]
-REDIRECT_URI = "http://127.0.0.1:5050/api/oauth/callback"
+
+_DEV_API_BASE = "http://127.0.0.1:5050"
+
+
+def _redirect_uri() -> str:
+    base = os.environ.get("TASKMAN_BASE_URL", _DEV_API_BASE)
+    return base.rstrip("/") + "/api/oauth/callback"
+
+
+def _frontend_url(origin: str | None) -> str:
+    base = os.environ.get("TASKMAN_BASE_URL")
+    if base:
+        return base.rstrip("/")
+    return origin or FRONTEND_URL
+
+
+def default_frontend_url() -> str:
+    return _frontend_url(None)
 
 
 def is_authenticated(session_data) -> bool:
@@ -32,13 +49,14 @@ def google_client_config() -> dict:
         "client_secret": client_secret,
         "auth_uri": "https://accounts.google.com/o/oauth2/auth",
         "token_uri": "https://oauth2.googleapis.com/token",
-        "redirect_uris": [REDIRECT_URI],
+        "redirect_uris": [_redirect_uri()],
     }}
 
 
 def begin_oauth(origin: str | None) -> dict:
+    redirect = _redirect_uri()
     flow = Flow.from_client_config(google_client_config(), scopes=SCOPES)
-    flow.redirect_uri = REDIRECT_URI
+    flow.redirect_uri = redirect
 
     url, state = flow.authorization_url(
         access_type="offline",
@@ -49,7 +67,7 @@ def begin_oauth(origin: str | None) -> dict:
         "url": url,
         "state": state,
         "code_verifier": flow.code_verifier,
-        "frontend_url": origin or FRONTEND_URL,
+        "frontend_url": _frontend_url(origin),
     }
 
 
@@ -63,7 +81,7 @@ def complete_oauth(request_url: str, expected_state: str | None, received_state:
         state=expected_state,
         code_verifier=code_verifier,
     )
-    flow.redirect_uri = REDIRECT_URI
+    flow.redirect_uri = _redirect_uri()
     flow.fetch_token(authorization_response=request_url)
 
     credentials = flow.credentials
