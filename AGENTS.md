@@ -156,7 +156,7 @@ taskman/
 - [x] Filter pills: All / Week / Day
 - [x] Sidebar: Calendar + Daysheet + Tasks nav, groups, lists, alphabetical with Others last
 - [x] Sidebar collapses to a full-page overlay from a burger icon on mobile
-- [x] Add / mark done / undo / delete / rename / move tasks
+- [x] Add / duplicate / mark done / undo / delete / rename / move tasks
 - [x] Create / rename / delete lists and groups
 - [x] Move list to group / ungroup
 - [x] Add / edit / delete daysheet log entries
@@ -306,13 +306,6 @@ Production deployment:
 - [x] `cd client && npm run lint`
 - [x] `cd client && npm run build`
 - [ ] Manual production smoke test on desktop and iPhone Safari: login, task CRUD, daysheet add/edit/delete, calendar load, logout, hard refresh on a nested route, and home-screen launch behavior
-
-##### Milestone 8 — Task Duplication
-
-- [x] API endpoint and service logic to duplicate a task within the same list
-- [x] Duplicate button on task rows beside the existing move/edit actions
-- [x] Duplicates preserve due date and description while resetting completion state
-- [x] Backend tests for duplication service and API route
 
 ##### Future
 
