@@ -299,3 +299,23 @@ Target a small Ubuntu VPS on DigitalOcean as the first production deployment. Se
 - [ ] `cd client && npm run lint`
 - [ ] `cd client && npm run build`
 - [ ] Manual production smoke test on desktop and iPhone Safari: login, task CRUD, daysheet add/edit/delete, calendar load, logout, hard refresh on a nested route, and home-screen launch behavior
+
+##### Milestone 8 — Sound
+
+Add a small, intentional sound layer that makes the app feel calm and meditative rather than noisy. Keep the palette minimal, soft, and user-controlled.
+
+###### Frontend
+
+- [ ] Add a global sound toggle in the UI and persist the preference
+- [ ] Add gentle sound cues for a few high-signal actions only, such as task completion, undo, add, and daysheet save
+- [ ] Keep sounds low-volume, short, and non-intrusive; no autoplay and no sound on every click
+- [ ] Make audio unlock work reliably on Safari/iPhone with a first-gesture initialization path
+- [ ] Add a minimal sound asset loading strategy that works cleanly with the existing Vite build
+
+###### Backend
+
+- [ ] No backend changes required unless sound preferences are later stored server-side
+
+###### Tests
+
+- [ ] Add frontend tests for sound preference persistence and action-to-sound wiring where practical
