@@ -1,6 +1,6 @@
 # Taskman
 
-A minimal web-based task manager built for personal daily use. Tasks are organized into lists, and lists can be optionally grouped. Each task has a name, a parent list, and an optional due date. Data is stored in a flat JSON file at `~/.taskman/db.json`.
+A minimal web-based task manager built for personal daily use. Tasks are organized into lists, and lists can be optionally grouped. Each task has a name, a parent list, and an optional due date. Each authenticated user has their own JSON data file at `~/.taskman/users/<email>/db.json`.
 
 ---
 
@@ -44,8 +44,8 @@ taskman/
       daysheet.py       Log and continue entry operations
       tasks.py          Task CRUD operations
       utils.py          Service decorator, errors, date helpers, find/require helpers, DB mutations
-    db.py               JSON persistence (~/.taskman/db.json)
-    config.py           Config loader (~/.taskman/config.json)
+    db.py               JSON persistence (~/.taskman/users/<email>/db.json)
+    config.py           Shared + per-user config loader (~/.taskman/config.json, ~/.taskman/users/<email>/config.json)
     constants.py        Shared constants and DaysheetEntryType
     tests/              Pytest test suite
       test_api.py       Flask route tests
@@ -86,8 +86,10 @@ taskman/
 - Service functions use typed parameters, raise `ServiceError` for validation/domain errors, and are wrapped with `service()` from `server/services/utils.py` to return `(ok: bool, message: str)`.
 - API routes use `respond()` for service results and `ok()` / `fail()` for direct route mutations.
 - There is no schema migration layer. Any new task fields must be backward-compatible with existing JSON records.
-- `server/db.py` creates `~/.taskman/db.json` from `EMPTY_DB` if missing and resets to `EMPTY_DB` if the JSON is corrupt.
-- `server/config.py` creates `~/.taskman/config.json` from defaults if missing, then overlays stored values onto defaults.
+- `server/db.py` creates `~/.taskman/users/<email>/db.json` from `EMPTY_DB` if missing and resets to `EMPTY_DB` if the JSON is corrupt.
+- `server/config.py` stores shared server config in `~/.taskman/config.json` and per-user config in `~/.taskman/users/<email>/config.json`.
+- Task completion is stored as `doneAt` UTC timestamps, and daysheet entries store UTC timestamps in `datetime`.
+- Backend date logic uses the authenticated user's `calendarTimezone`; the frontend syncs the browser timezone into user config.
 - The Flask server currently exposes API routes only; it does not serve the frontend bundle.
 - The frontend is built with Vite. In dev mode, Vite proxies `/api` to the Flask server on port 5050.
 - Routing uses React Router (`BrowserRouter`).
@@ -127,7 +129,7 @@ taskman/
 - **Backend:** Python, Flask
 - **Frontend:** Vite + React + TypeScript, React Router
 - **Styling:** CSS Modules + global `client/style.css` + shared `client/src/action-button.css`
-- **Storage:** JSON flat file (`~/.taskman/db.json`)
+- **Storage:** JSON flat files (`~/.taskman/users/<email>/db.json`, `~/.taskman/users/<email>/config.json`)
 - **Tests:** `python -m pytest server/ -v`
 - **Frontend lint:** `cd client && npm run lint`
 - **Frontend build:** `cd client && npm run build`
@@ -242,6 +244,7 @@ Each authenticated Google user sees only their own data.
 - [x] `server/config.py` — keep a single shared `config.json` for server-level settings (`secretKey`, OAuth credentials); move per-user state (`googleRefreshToken`, `googleEmail`, calendars) into the per-user DB or a per-user config file
 - [x] `server/api.py` — pass authenticated user's email into all `db.load()` / `db.save()` calls; store `email` in session on OAuth callback
 - [x] `server/api.py` — `GET /api/config` fetches calendar list using the requesting user's own refresh token
+- [x] `server/api.py` / `server/services/*` — use the authenticated user's `calendarTimezone` for server-side "today" and timestamp handling
 
 ###### Backend — tests
 
@@ -253,32 +256,3 @@ Each authenticated Google user sees only their own data.
 - [x] No frontend changes required — API contract is unchanged
 
 ##### Milestone 7 — Deploy
-
-##### Extra Milestone — Timezone Correctness (UTC Model)
-
-Store absolute event times in UTC and treat timezone as a per-user rendering and grouping concern. This milestone adopts Option B: replace local-only completion dates with UTC completion timestamps.
-
-###### Backend
-
-- [x] `server/api.py` — add a protected timezone update route so the client can persist the browser timezone into the authenticated user's config
-- [x] `server/config.py` — keep `calendarTimezone` as the canonical per-user timezone used by backend date/time logic
-- [x] `server/services/utils.py` — replace server-local `today()` / `now()` helpers with UTC/timezone-aware helpers based on `zoneinfo`
-- [x] `server/services/daysheet.py` — write new daysheet entry timestamps in UTC ISO format and compare entry days by converting UTC timestamps into the user's timezone
-- [x] `server/services/tasks.py` — stop writing local `done` dates; write UTC completion timestamps instead and derive local completion dates from the user's timezone
-- [x] `server/api.py` — update daysheet reads to group and filter by the user's local day derived from stored UTC timestamps rather than raw string slicing
-- [x] `server/api.py` / `server/services/*` — load the authenticated user's timezone once at the route boundary and pass it into service calls that create or compare dates
-
-###### Data model
-
-- [x] `~/.taskman/users/<email>/db.json` — store `daysheet[].datetime` as UTC timestamps
-- [x] `~/.taskman/users/<email>/db.json` — store task completion as `doneAt: <UTC timestamp> | null`
-
-###### Backend — tests
-
-- [x] Add unit tests for UTC timestamp writes, timezone-aware "today" comparisons, and local-day grouping in daysheet reads
-- [x] Add unit tests covering UTC timestamp parsing and `doneAt` behavior
-
-###### Frontend
-
-- [x] `client/src/*` — read browser timezone with `Intl.DateTimeFormat().resolvedOptions().timeZone` and persist it to the backend when it changes
-- [x] `client/src/lib/types.ts` / consumers — update task types and UI assumptions from `done` to `doneAt`

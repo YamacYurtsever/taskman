@@ -1,6 +1,6 @@
 # Taskman
 
-A minimal web-based task manager for personal daily use. Tasks live in lists, lists can be grouped, and everything is stored in a flat JSON file at `~/.taskman/db.json`.
+A minimal web-based task manager for personal daily use. Tasks live in lists, lists can be grouped, and each authenticated user has their own JSON data under `~/.taskman/users/<email>/`.
 
 ---
 
@@ -40,6 +40,12 @@ cd client && npm run dev
 
 The Flask server only exposes `/api` routes. It does not serve the frontend bundle.
 
+User storage paths:
+
+- tasks, lists, groups, daysheet: `~/.taskman/users/<email>/db.json`
+- per-user config: `~/.taskman/users/<email>/config.json`
+- shared server config: `~/.taskman/config.json`
+
 ---
 
 ## Authentication
@@ -51,6 +57,8 @@ To set up:
 1. Create a Google Cloud project and enable the **Google Calendar API** and **Google+ API** (for userinfo).
 2. Create an OAuth 2.0 credential (Web application) and add `http://127.0.0.1:5050/api/oauth/callback` as an authorised redirect URI.
 3. Copy the client ID and secret into `.env` as shown above.
+
+Each signed-in Google account gets isolated storage keyed by email.
 
 ---
 
@@ -90,7 +98,9 @@ On wide screens the panel slides in alongside the task list. On mobile it replac
 
 After signing in, your Google calendars are auto-discovered and shown in the embedded calendar view. The first three calendars are assigned preset colors automatically.
 
-To override colors or restrict which calendars appear, add a `calendars` key to `~/.taskman/config.json`:
+Taskman also stores a per-user `calendarTimezone`. The client syncs the browser timezone into this field, and the backend uses it for calendar rendering, "today", task completion dates, and daysheet grouping.
+
+To override colors or restrict which calendars appear, edit the user's `~/.taskman/users/<email>/config.json`:
 
 ```json
 {
@@ -103,3 +113,37 @@ To override colors or restrict which calendars appear, add a `calendars` key to 
 ```
 
 Available embed colors: `#E67C73` Flamingo · `#33B679` Sage · `#B39DDB` Wisteria · `#039BE5` Peacock · `#3F51B5` Blueberry · `#7986CB` Lavender · `#8E24AA` Grape · `#F6BF26` Banana · `#F4511E` Tangerine · `#0B8043` Basil · `#D50000` Tomato · `#616161` Graphite
+
+## Data Model
+
+Task data is stored per user with UTC timestamps:
+
+- task completion uses `doneAt`
+- daysheet entries use UTC `datetime`
+- due dates remain `YYYY-MM-DD`
+
+Example:
+
+```json
+{
+  "tasks": [
+    {
+      "id": "uuid",
+      "name": "Finish Assignment 5",
+      "listId": "uuid",
+      "due": "2026-04-30",
+      "doneAt": "2026-04-26T04:32:05Z",
+      "description": ""
+    }
+  ],
+  "daysheet": [
+    {
+      "id": "uuid",
+      "datetime": "2026-04-26T04:32:05Z",
+      "listId": "uuid",
+      "type": "log",
+      "text": "Talked with Baba"
+    }
+  ]
+}
+```
