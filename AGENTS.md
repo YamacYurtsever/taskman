@@ -232,4 +232,24 @@ Google OAuth is the sole login method — no local password. The OAuth flow both
 
 Requires a Google Cloud project with the Calendar API enabled and an OAuth 2.0 credential. Set the authorised redirect URI to `http://127.0.0.1:5050/api/oauth/callback`. Export `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` before starting the server.
 
-##### Milestone 6 — Deploy
+##### Milestone 6 — Ownership & Multi-user
+
+Each authenticated Google user sees only their own data. Currently all data is shared in a single flat JSON file.
+
+###### Backend
+
+- [ ] `server/db.py` — scope `DB_PATH` per user (e.g. `~/.taskman/users/<email>/db.json`); derive path from `session["email"]` passed into `db.load()` / `db.save()`
+- [ ] `server/config.py` — keep a single shared `config.json` for server-level settings (`secretKey`, OAuth credentials); move per-user state (`googleRefreshToken`, `googleEmail`, calendars) into the per-user DB or a per-user config file
+- [ ] `server/api.py` — pass authenticated user's email into all `db.load()` / `db.save()` calls; store `email` in session on OAuth callback
+- [ ] `server/api.py` — `GET /api/config` fetches calendar list using the requesting user's own refresh token
+
+###### Backend — tests
+
+- [ ] Update `saved_db` / `saved_config` fixtures and all route tests to account for per-user DB paths
+- [ ] Add multi-user isolation tests (two users cannot read each other's data)
+
+###### Frontend
+
+- [ ] No frontend changes required — API contract is unchanged
+
+##### Milestone 7 — Deploy

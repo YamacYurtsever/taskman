@@ -1,6 +1,5 @@
 .themeToggle {
-  position: absolute;
-  right: var(--sp);
+  position: static;
   width: var(--theme-w);
   height: var(--theme-w);
   display: flex;

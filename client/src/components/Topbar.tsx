@@ -49,12 +49,14 @@ const Topbar = ({ filter, setFilter, showMenuButton, onMenuClick, onLogout }: To
         </div>
       )}
 
-      {onLogout && (
-        <button className={styles.logoutBtn} title="Sign out" onClick={onLogout}>
-          <SignOutIcon size={14} />
-        </button>
-      )}
-      <ThemeToggle />
+      <div className={styles.rightControls}>
+        <ThemeToggle />
+        {onLogout && (
+          <button className={styles.logoutBtn} title="Sign out" onClick={onLogout}>
+            <SignOutIcon size={14} />
+          </button>
+        )}
+      </div>
     </div>
   );
 };

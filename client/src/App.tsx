@@ -211,7 +211,12 @@ const App = () => {
   }, []);
 
   if (authenticated === null) return null;
-  if (!authenticated) return <LoginView />;
+  if (!authenticated) return (
+    <Routes>
+      <Route path="/login" element={<LoginView />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
+  );
   return <AuthenticatedApp onLogout={() => setAuthenticated(false)} />;
 };
 

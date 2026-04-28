@@ -65,9 +65,15 @@
   outline-offset: var(--outline-offset);
 }
 
-.logoutBtn {
+.rightControls {
   position: absolute;
-  right: calc(var(--sp) + var(--theme-w) + var(--sp-sm));
+  right: var(--sp);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+}
+
+.logoutBtn {
   width: var(--theme-w);
   height: var(--theme-w);
   display: flex;

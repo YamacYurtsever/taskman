@@ -41,4 +41,4 @@ class DaysheetEntryType(str, Enum):
 
 COMPLETION_SOUND = "/System/Library/Sounds/Glass.aiff"
 
-CALENDAR_PRESET_COLORS = ["#B39DDB", "#039BE5", "#E67C73", "#33B679", "#F6BF26"]
+CALENDAR_PRESET_COLORS = ["#33B679", "#E67C73", "#B39DDB"]
