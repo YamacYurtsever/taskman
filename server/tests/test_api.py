@@ -68,6 +68,20 @@ class ApiTest(unittest.TestCase):
         self.assertIn("calendar-id", res.get_json()["calendarUrl"])
         self.assertIn("Australia/Sydney", res.get_json()["calendarUrl"])
 
+    def test_get_config_treats_null_calendar_values_as_unset(self):
+        cfg = {
+            "calendars": None,
+            "calendarTimezone": None,
+            "googleRefreshToken": None,
+        }
+
+        with patch("server.config.load", return_value=cfg):
+            res = self.client.get("/api/config")
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.get_json()["calendarTimezone"], "UTC")
+        self.assertEqual(res.get_json()["calendarUrl"], "")
+
     def test_set_timezone_updates_user_config(self):
         cfg = {"calendarTimezone": "UTC"}
 

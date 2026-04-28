@@ -86,7 +86,7 @@ def create_app(test_config=None):
 
     def user_config_and_timezone(email: str):
         cfg = config.load(email)
-        tz_name = require_timezone(cfg.get("calendarTimezone", "UTC"))
+        tz_name = require_timezone(cfg.get("calendarTimezone") or "UTC")
         return cfg, tz_name
 
 
@@ -139,17 +139,17 @@ def create_app(test_config=None):
     @require_auth
     def get_config():
         email = session["email"]
-        cfg = config.load(email)
+        cfg, tz_name = user_config_and_timezone(email)
         user_calendars = auth.fetch_user_calendars(cfg.get("googleRefreshToken"))
         calendar_url = auth.build_calendar_url(
-            cfg.get("calendars", []),
-            cfg.get("calendarTimezone", "UTC"),
+            cfg.get("calendars") or [],
+            tz_name,
             user_calendars,
         )
 
         return jsonify({
             "calendarUrl": calendar_url,
-            "calendarTimezone": cfg.get("calendarTimezone", "UTC"),
+            "calendarTimezone": tz_name,
             "userCalendars": user_calendars,
         })
 
