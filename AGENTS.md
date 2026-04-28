@@ -280,6 +280,7 @@ Target a small Ubuntu VPS on DigitalOcean as the first production deployment. Se
 - [ ] Document Google OAuth production setup for the public DigitalOcean-hosted domain: authorised origin(s), authorised redirect URI, and the need to update them when the public domain changes
 - [ ] Document Let’s Encrypt setup and HTTPS renewal on the VPS
 - [ ] Document persistence and backup expectations for `~/.taskman/` on the VPS so deploys do not overwrite user DB/config/session data
+- [ ] Keep deployment removable by documenting a future `TASKMAN_DIR` override or export/import path so the same data can be moved back to a local machine without rewriting the schema
 
 ###### Backend — tests
 
