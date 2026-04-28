@@ -1,8 +1,13 @@
 # Taskman
 
-A minimal web-based task manager for personal daily use. Tasks live in lists, lists can be grouped, and each authenticated user has their own JSON data under `~/.taskman/users/<email>/`.
+Taskman is a private daily workspace that brings together tasks, daysheet logging, and calendar planning in one clean, focused interface.
+
+Have clarity. Build momentum. Get results.
+
+Built for personal clarity and steady momentum, Taskman helps you organize work into lists, track due dates, log progress throughout the day, and keep your schedule close at hand without the clutter of bloated productivity tools. Each authenticated user has isolated JSON data under `~/.taskman/users/<email>/`.
 
 Live deployment: [https://taskman.website](https://taskman.website)
+Production deployment notes in [deploy/README.md](deploy/README.md).
 
 [![Watch the Taskman demo video](Thumbnail.png)](https://youtu.be/GQA1hNfkblE)
 
