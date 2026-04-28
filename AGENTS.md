@@ -256,3 +256,40 @@ Each authenticated Google user sees only their own data.
 - [x] No frontend changes required — API contract is unchanged
 
 ##### Milestone 7 — Deploy
+
+Assume a simple production deployment on a single domain, with the built frontend and Flask API served together behind a reverse proxy. The main goals are: no hardcoded localhost URLs, secure session cookies in production, and a documented repeatable deploy flow.
+
+###### Backend
+
+- [ ] `server/constants.py` / `server/services/auth.py` — replace hardcoded `FRONTEND_URL` and OAuth `REDIRECT_URI` with environment-driven production URLs (for example `TASKMAN_BASE_URL`) while keeping local development defaults
+- [ ] `server/api.py` — serve the built `client/dist` bundle in production with an SPA fallback route, while preserving Vite dev mode for local development
+- [ ] `server/api.py` — tighten production session config (`SESSION_COOKIE_SECURE`, `SESSION_COOKIE_SAMESITE`, `SESSION_COOKIE_HTTPONLY`) and only enable `OAUTHLIB_INSECURE_TRANSPORT=1` in local development
+- [ ] `server/api.py` — add a lightweight health endpoint (for example `GET /api/health`) for deploy checks and uptime monitoring
+- [ ] `server/config.py` / startup path — fail clearly when required production env vars are missing instead of surfacing vague OAuth/runtime failures
+
+###### Frontend
+
+- [ ] `client/src/lib/api.ts` / Vite config — keep `/api` same-origin in production and retain the existing dev proxy behavior locally
+- [ ] `client` build output — verify direct navigation to `/tasks`, `/daysheet`, `/calendar`, and `/list/:listId` works through the production SPA fallback
+
+###### Ops / deploy assets
+
+- [ ] Add a production WSGI entrypoint and document the Gunicorn command used to run the Flask app
+- [ ] Add deploy assets under a repo-owned location (for example `deploy/`) for a `systemd` service and an `nginx` site config that proxies to Gunicorn and serves HTTPS
+- [ ] Document required production environment variables (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `TASKMAN_BASE_URL`, and any Flask environment settings) and where they are loaded from
+- [ ] Document Google OAuth production setup: authorised origin(s), authorised redirect URI, and the need to update them when the public domain changes
+- [ ] Document persistence and backup expectations for `~/.taskman/` so deploys do not overwrite user DB/config/session data
+
+###### Backend — tests
+
+- [ ] Add tests for environment-driven frontend/callback URL generation
+- [ ] Add tests for production frontend serving / SPA fallback behavior
+- [ ] Add tests for the health endpoint and production session config branches
+
+###### Deploy verification
+
+- [ ] `python -m pytest server/ -v`
+- [ ] `python -m vulture server --min-confidence 80`
+- [ ] `cd client && npm run lint`
+- [ ] `cd client && npm run build`
+- [ ] Manual production smoke test: login, task CRUD, daysheet add/edit/delete, calendar load, logout, hard refresh on a nested route
