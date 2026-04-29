@@ -10,6 +10,7 @@ from server.services.utils import (
     require_name,
     require_task,
     service,
+    storage_datetime_for_local_date,
     today_in_timezone,
     utc_now,
 )
@@ -18,13 +19,21 @@ from server.services.utils import (
 # ─────────────────────────── Logs ───────────────────────────
 
 @service
-def add_log(list_name: str, text: str, email: str | None = None, tz_name: str = "UTC"):
+def add_log(
+    list_name: str,
+    text: str,
+    entry_day: str | None = None,
+    email: str | None = None,
+    tz_name: str = "UTC",
+):
     text = require_name(text, "text")
 
     data = db.load(email)
     lst = require_list(data, list_name)
 
-    add_daysheet_entry(data, lst["id"], DaysheetEntryType.LOG, text, utc_now())
+    target_day = entry_day or today_in_timezone(tz_name)
+    timestamp = storage_datetime_for_local_date(target_day, tz_name)
+    add_daysheet_entry(data, lst["id"], DaysheetEntryType.LOG, text, timestamp)
 
     db.save(data, email)
 

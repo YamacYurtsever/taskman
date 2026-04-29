@@ -12,6 +12,7 @@ from server.services.utils import (
     local_date_from_storage,
     remove_daysheet_entries,
     service,
+    storage_datetime_for_local_date,
     today_in_timezone,
 )
 from server.tests.utils import (
@@ -140,4 +141,10 @@ class ServiceUtilsTest(unittest.TestCase):
         self.assertEqual(
             local_date_from_storage("2026-04-26T14:00:00Z", "Australia/Sydney"),
             "2026-04-27",
+        )
+
+    def test_storage_datetime_for_local_date_converts_selected_local_day(self):
+        self.assertEqual(
+            storage_datetime_for_local_date("2026-04-26", "Australia/Sydney"),
+            "2026-04-26T13:59:00Z",
         )

@@ -82,6 +82,20 @@ def local_time_from_storage(value: str, tz_name: str) -> str:
     return local_datetime_from_storage(value, tz_name).strftime("%H:%M")
 
 
+def storage_datetime_for_local_date(value: str, tz_name: str) -> str:
+    tz = ZoneInfo(require_timezone(tz_name))
+    local_date = datetime.strptime(parse_date(value), DATE_FORMAT).date()
+    local_datetime = datetime(
+        local_date.year,
+        local_date.month,
+        local_date.day,
+        23,
+        59,
+        tzinfo=tz,
+    )
+    return local_datetime.astimezone(timezone.utc).strftime(UTC_DATETIME_FORMAT)
+
+
 # ─────────────────────────── Find Helpers ───────────────────────────
 
 def find_list(data, name):

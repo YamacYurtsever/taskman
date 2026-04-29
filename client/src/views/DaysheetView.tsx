@@ -34,6 +34,7 @@ type TimelineEntryProps = {
 };
 
 type LogFormProps = {
+  date: string;
   lists: StateResponse['lists'];
   act: Action;
 };
@@ -125,7 +126,7 @@ const DaysheetView = ({ data, act, refresh }: DaysheetViewProps) => {
 
       <Timeline entries={entries} act={localAct} refresh={localRefresh} />
 
-      {lists.length > 0 && <LogForm lists={lists} act={localAct} />}
+      {lists.length > 0 && <LogForm date={date} lists={lists} act={localAct} />}
     </div>
   );
 };
@@ -231,7 +232,7 @@ const TimelineEntry = ({ entry, inGroup, act, refresh }: TimelineEntryProps) => 
   );
 };
 
-const LogForm = ({ lists, act }: LogFormProps) => {
+const LogForm = ({ date, lists, act }: LogFormProps) => {
   const sorted = sortByName(lists);
   const [listName, setListName] = useState(sorted[0]?.name ?? '');
   const [text, setText] = useState('');
@@ -240,7 +241,7 @@ const LogForm = ({ lists, act }: LogFormProps) => {
     const trimmed = text.trim();
     if (!trimmed) return;
 
-    act(API.log, { list: listName, text: trimmed });
+    act(API.log, { list: listName, text: trimmed, date });
     setText('');
   };
 

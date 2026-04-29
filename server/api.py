@@ -539,6 +539,7 @@ def create_app(test_config=None):
         return respond(add_log(
             body.get("list", ""),
             body.get("text", ""),
+            body.get("date"),
             email=email,
             tz_name=tz_name,
         ))

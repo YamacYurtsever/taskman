@@ -557,12 +557,12 @@ class ApiTest(unittest.TestCase):
     def test_add_log_entry(self):
         with (
             saved_db(make_db(TASK_1)) as saved,
-            patch("server.services.daysheet.utc_now", return_value=NOW_DT),
             patch("server.db.new_id", return_value="entry-1"),
         ):
             res = self.post("/api/log", {
                 "list": "List A",
                 "text": "Talked with team",
+                "date": TODAY,
             })
 
         self.assert_ok(res)
@@ -570,13 +570,26 @@ class ApiTest(unittest.TestCase):
         entry = saved["daysheet"][0]
         self.assertEqual(entry["type"], DaysheetEntryType.LOG)
         self.assertEqual(entry["text"], "Talked with team")
-        self.assertEqual(entry["datetime"], NOW_DT)
+        self.assertEqual(entry["datetime"], "2026-04-26T23:59:00Z")
+
+    def test_add_log_entry_uses_selected_daysheet_date(self):
+        with (
+            saved_db(make_db(TASK_1)) as saved,
+            patch("server.db.new_id", return_value="entry-1"),
+        ):
+            res = self.post("/api/log", {
+                "list": "List A",
+                "text": "Planned ahead",
+                "date": "2026-04-30",
+            })
+
+        self.assert_ok(res)
+        self.assertEqual(saved["daysheet"][0]["datetime"], "2026-04-30T23:59:00Z")
 
     def test_continue_task(self):
         with (
             saved_db(make_db(TASK_1)) as saved,
             patch("server.services.daysheet.today_in_timezone", return_value=TODAY),
-            patch("server.services.daysheet.utc_now", return_value=NOW_DT),
             patch("server.db.new_id", return_value="entry-1"),
         ):
             res = self.post("/api/continue", {
