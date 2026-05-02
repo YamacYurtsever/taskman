@@ -34,3 +34,8 @@
   color: var(--green);
   background: var(--green-bg);
 }
+
+.action-btn.pin:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+}

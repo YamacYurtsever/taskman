@@ -90,6 +90,24 @@ const NoteIcon = (props: IconProps) => (
   </Icon>
 );
 
+const PinIcon = (props: IconProps) => (
+  <Icon fill="currentColor" stroke="none" opacity={0.5} {...props}>
+    <path
+      fillRule="evenodd"
+      d="M4.25 3A1.25 1.25 0 0 1 5.5 1.75h5A1.25 1.25 0 0 1 11.75 3v.45a1.25 1.25 0 0 1-.48.98L10.2 5.27v1.1l1.93 1.93a.75.75 0 0 1-.33 1.26l-3.05.76v3.93a.75.75 0 0 1-1.5 0v-3.93l-3.05-.76a.75.75 0 0 1-.33-1.26L5.8 6.37v-1.1L4.73 4.43a1.25 1.25 0 0 1-.48-.98z"
+    />
+  </Icon>
+);
+
+const PinFilledIcon = (props: IconProps) => (
+  <Icon fill="currentColor" stroke="none" {...props}>
+    <path
+      fillRule="evenodd"
+      d="M4.25 3A1.25 1.25 0 0 1 5.5 1.75h5A1.25 1.25 0 0 1 11.75 3v.45a1.25 1.25 0 0 1-.48.98L10.2 5.27v1.1l1.93 1.93a.75.75 0 0 1-.33 1.26l-3.05.76v3.93a.75.75 0 0 1-1.5 0v-3.93l-3.05-.76a.75.75 0 0 1-.33-1.26L5.8 6.37v-1.1L4.73 4.43a1.25 1.25 0 0 1-.48-.98z"
+    />
+  </Icon>
+);
+
 const SignOutIcon = (props: IconProps) => (
   <Icon {...props}>
     <path d="M6 3H4a1 1 0 00-1 1v8a1 1 0 001 1h2" />
@@ -121,6 +139,8 @@ export {
   MoveIcon,
   MenuIcon,
   NoteIcon,
+  PinIcon,
+  PinFilledIcon,
   SignOutIcon,
   GoogleLogoIcon,
 };

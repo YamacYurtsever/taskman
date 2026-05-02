@@ -341,9 +341,23 @@
   font-weight: 700;
 }
 
+.focusedMetaRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+}
+
 .focusedMeta {
   font-size: var(--fs-sm);
   color: var(--text-2);
+}
+
+.pinBtnActive {
+  color: var(--accent);
+}
+
+.focusedMetaRow :global(.action-btn.pin) svg {
+  transform: rotate(-10deg);
 }
 
 .focusedTasks {

@@ -8,7 +8,7 @@ import {
   PlusIcon,
 } from '../components/icons';
 import { API, api } from '../lib/api';
-import type { DaysheetEntry, DaysheetResponse, StateResponse } from '../lib/types';
+import type { DaysheetEntry, DaysheetResponse, PinnedSection, StateResponse } from '../lib/types';
 import { MSG, sortByName, todayStr } from '../lib/utils';
 import styles from './DaysheetView.module.css';
 
@@ -22,6 +22,7 @@ type DaysheetViewProps = {
 
 type TimelineProps = {
   entries: DaysheetEntry[];
+  pinnedSections: PinnedSection[];
   act: Action;
   refresh: () => Promise<void>;
 };
@@ -92,6 +93,7 @@ const DaysheetView = ({ data, act, refresh }: DaysheetViewProps) => {
   };
 
   const entries = daysheet?.entries ?? [];
+  const pinnedSections = daysheet?.pinnedSections ?? [];
   const lists = data?.lists ?? [];
 
   return (
@@ -124,15 +126,17 @@ const DaysheetView = ({ data, act, refresh }: DaysheetViewProps) => {
         </div>
       </div>
 
-      <Timeline entries={entries} act={localAct} refresh={localRefresh} />
+      <Timeline entries={entries} pinnedSections={pinnedSections} act={localAct} refresh={localRefresh} />
 
       {lists.length > 0 && <LogForm date={date} lists={lists} act={localAct} />}
     </div>
   );
 };
 
-const Timeline = ({ entries, act, refresh }: TimelineProps) => {
-  if (!entries.length) {
+const Timeline = ({ entries, pinnedSections, act, refresh }: TimelineProps) => {
+  const sections = groupEntries(entries, pinnedSections);
+
+  if (!sections.length) {
     return (
       <div className={styles.timeline}>
         <div className="empty">{MSG.noEntries}</div>
@@ -142,7 +146,7 @@ const Timeline = ({ entries, act, refresh }: TimelineProps) => {
 
   return (
     <div className={styles.timeline}>
-      {groupEntries(entries).map(section => (
+      {sections.map(section => (
         <div key={section.id} className={styles.timelineGroup}>
           <div className={styles.timelineGroupName}>{section.name}</div>
 
@@ -301,7 +305,7 @@ const entryPrefix = (type: DaysheetEntry['type']) => {
   return '';
 };
 
-const groupEntries = (entries: DaysheetEntry[]) => {
+const groupEntries = (entries: DaysheetEntry[], pinnedSections: PinnedSection[]) => {
   const sections = new Map<
     string,
     { id: string; name: string; inGroup: boolean; items: DaysheetEntry[] }
@@ -318,6 +322,17 @@ const groupEntries = (entries: DaysheetEntry[]) => {
     }
 
     sections.get(entry.sectionId)?.items.push(entry);
+  }
+
+  for (const ps of pinnedSections) {
+    if (!sections.has(ps.sectionId)) {
+      sections.set(ps.sectionId, {
+        id: ps.sectionId,
+        name: ps.sectionName,
+        inGroup: ps.inGroup,
+        items: [],
+      });
+    }
   }
 
   return sortByName([...sections.values()]);

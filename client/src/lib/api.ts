@@ -37,6 +37,7 @@ const API = {
   daysheetDelete: '/api/daysheet/delete',
   daysheetEdit: '/api/daysheet/edit',
   taskDescription: '/api/task-description',
+  pinList: '/api/pin-list',
 } as const;
 
 let unauthorizedHandler: (() => void) | null = null;

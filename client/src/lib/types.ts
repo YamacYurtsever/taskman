@@ -9,6 +9,7 @@ type TaskList = {
   id: string;
   name: string;
   groupId: string | null;
+  pinned?: boolean;
 };
 
 type Task = {
@@ -45,9 +46,16 @@ type DaysheetEntry = {
   inGroup: boolean;
 };
 
+type PinnedSection = {
+  sectionId: string;
+  sectionName: string;
+  inGroup: boolean;
+};
+
 type DaysheetResponse = {
   date: string;
   entries: DaysheetEntry[];
+  pinnedSections: PinnedSection[];
 };
 
 type ApiResult = {
@@ -67,6 +75,7 @@ export type {
   StateResponse,
   ConfigResponse,
   DaysheetEntry,
+  PinnedSection,
   DaysheetResponse,
   ApiResult,
   AuthStatusResponse,

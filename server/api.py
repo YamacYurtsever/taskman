@@ -222,20 +222,37 @@ def create_app(test_config=None):
         )
 
         enriched = []
+        sections_with_entries = set()
         for entry in entries:
             lst = lists.get(entry["listId"])
             group_id = lst["groupId"] if lst else None
+            section_id = f"group:{group_id}" if group_id else f"list:{entry['listId']}"
+            sections_with_entries.add(section_id)
 
             enriched.append({
                 **entry,
                 "localTime": local_time_from_storage(entry["datetime"], tz_name),
                 "listName": lst["name"] if lst else "?",
-                "sectionId": f"group:{group_id}" if group_id else f"list:{entry['listId']}",
+                "sectionId": section_id,
                 "sectionName": groups[group_id]["name"] if group_id else (lst["name"] if lst else "?"),
                 "inGroup": bool(group_id),
             })
 
-        return jsonify({"date": target, "entries": enriched})
+        pinned_sections = []
+        for lst in data["lists"]:
+            if not lst.get("pinned"):
+                continue
+            group_id = lst.get("groupId")
+            section_id = f"group:{group_id}" if group_id else f"list:{lst['id']}"
+            if section_id in sections_with_entries:
+                continue
+            pinned_sections.append({
+                "sectionId": section_id,
+                "sectionName": groups[group_id]["name"] if group_id and group_id in groups else lst["name"],
+                "inGroup": bool(group_id),
+            })
+
+        return jsonify({"date": target, "entries": enriched, "pinnedSections": pinned_sections})
 
     # ─────────────────────────── Task Routes ───────────────────────────
 
@@ -368,6 +385,7 @@ def create_app(test_config=None):
                 "id": db.new_id(),
                 "name": list_name,
                 "groupId": None,
+                "pinned": False,
             })
 
             db.save(data, email)
@@ -450,6 +468,29 @@ def create_app(test_config=None):
             return ok()
         except ServiceError as e:
             return fail(str(e))
+
+    @app.post("/api/pin-list")
+    @require_auth
+    def api_pin_list():
+        email = session["email"]
+        body = request.get_json(force=True) or {}
+
+        list_id = body.get("listId", "")
+        pinned = body.get("pinned")
+
+        if not list_id:
+            return fail("listId is required")
+        if not isinstance(pinned, bool):
+            return fail("pinned must be a boolean")
+
+        data = db.load(email)
+        lst = next((l for l in data["lists"] if l["id"] == list_id), None)
+        if not lst:
+            return fail(f"list '{list_id}' not found", 404)
+
+        lst["pinned"] = pinned
+        db.save(data, email)
+        return ok()
 
     # ─────────────────────────── Group Routes ───────────────────────────
 

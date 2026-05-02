@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { AddTaskForm } from '../components/tasks/AddTaskForm';
 import { TaskRow } from '../components/tasks/TaskRow';
 import type { FocusedViewProps } from '../components/tasks/Tasks.shared';
-import { ChevronLeftIcon, ChevronRightIcon } from '../components/icons';
+import { ChevronLeftIcon, ChevronRightIcon, PinFilledIcon, PinIcon } from '../components/icons';
+import { API } from '../lib/api';
 import { doneFor, MSG, pendingFor } from '../lib/utils';
 import styles from '../components/tasks/Tasks.module.css';
 
@@ -19,7 +20,16 @@ export const FocusedView = ({ data, listId, filter, act, openDetail }: FocusedVi
     <div className={styles.focusedView}>
       <div className={styles.focusedHeader}>
         <h1 className={styles.focusedTitle}>{list.name}</h1>
-        <span className={styles.focusedMeta}>{pending.length}</span>
+        <div className={styles.focusedMetaRow}>
+          <span className={styles.focusedMeta}>{pending.length}</span>
+          <button
+            className={`action-btn pin ${list.pinned ? styles.pinBtnActive : ''}`}
+            title={list.pinned ? 'Unpin list' : 'Pin list'}
+            onClick={() => act(API.pinList, { listId: list.id, pinned: !list.pinned })}
+          >
+            {list.pinned ? <PinFilledIcon size={14} /> : <PinIcon size={14} />}
+          </button>
+        </div>
       </div>
 
       <div className={styles.focusedTasks}>

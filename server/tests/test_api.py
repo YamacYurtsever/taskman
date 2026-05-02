@@ -153,6 +153,41 @@ class ApiTest(unittest.TestCase):
 
         self.assertEqual(res.status_code, 400)
 
+    def test_get_daysheet_includes_pinned_sections_with_no_entries(self):
+        pinned_list = {**LIST_1, "pinned": True}
+        data = make_db(lists=[pinned_list, LIST_2])
+
+        with saved_db(data):
+            res = self.client.get("/api/daysheet?date=2026-04-26")
+
+        body = res.get_json()
+        self.assertEqual(len(body["entries"]), 0)
+        self.assertEqual(len(body["pinnedSections"]), 1)
+        self.assertEqual(body["pinnedSections"][0]["sectionId"], "list:list-1")
+        self.assertEqual(body["pinnedSections"][0]["sectionName"], "List A")
+        self.assertFalse(body["pinnedSections"][0]["inGroup"])
+
+    def test_get_daysheet_excludes_pinned_section_when_it_has_entries(self):
+        pinned_list = {**LIST_1, "pinned": True}
+        entry = daysheet_entry(datetime="2026-04-26T10:00:00Z")
+        data = make_db(lists=[pinned_list, LIST_2], daysheet=[entry])
+
+        with saved_db(data):
+            res = self.client.get("/api/daysheet?date=2026-04-26")
+
+        body = res.get_json()
+        self.assertEqual(len(body["entries"]), 1)
+        self.assertEqual(len(body["pinnedSections"]), 0)
+
+    def test_get_daysheet_unpinned_list_not_in_pinned_sections(self):
+        data = make_db()
+
+        with saved_db(data):
+            res = self.client.get("/api/daysheet?date=2026-04-26")
+
+        body = res.get_json()
+        self.assertEqual(body["pinnedSections"], [])
+
     # ─────────────────────────── Task Routes ───────────────────────────
 
     def test_add_task(self):
@@ -496,6 +531,43 @@ class ApiTest(unittest.TestCase):
         lst = next(lst for lst in saved["lists"] if lst["name"] == "List A")
         self.assertIsNone(lst["groupId"])
         self.assertEqual(saved["groups"], [GROUP_1])
+
+    def test_pin_list(self):
+        with saved_db(make_db()) as saved:
+            res = self.post("/api/pin-list", {"listId": "list-1", "pinned": True})
+
+        self.assert_ok(res)
+        lst = next(l for l in saved["lists"] if l["id"] == "list-1")
+        self.assertTrue(lst["pinned"])
+
+    def test_unpin_list(self):
+        pinned_list = {**LIST_1, "pinned": True}
+        data = make_db(lists=[pinned_list, LIST_2])
+
+        with saved_db(data) as saved:
+            res = self.post("/api/pin-list", {"listId": "list-1", "pinned": False})
+
+        self.assert_ok(res)
+        lst = next(l for l in saved["lists"] if l["id"] == "list-1")
+        self.assertFalse(lst["pinned"])
+
+    def test_pin_list_rejects_unknown_id(self):
+        with saved_db(make_db()):
+            res = self.post("/api/pin-list", {"listId": "no-such-id", "pinned": True})
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_pin_list_rejects_missing_list_id(self):
+        with saved_db(make_db()):
+            res = self.post("/api/pin-list", {"pinned": True})
+
+        self.assertEqual(res.status_code, 400)
+
+    def test_pin_list_rejects_non_boolean_pinned(self):
+        with saved_db(make_db()):
+            res = self.post("/api/pin-list", {"listId": "list-1", "pinned": "yes"})
+
+        self.assertEqual(res.status_code, 400)
 
     # ─────────────────────────── Group Routes ───────────────────────────
 

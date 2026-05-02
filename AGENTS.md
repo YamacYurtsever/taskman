@@ -307,6 +307,40 @@ Production deployment:
 - [x] `cd client && npm run build`
 - [ ] Manual production smoke test on desktop and iPhone Safari: login, task CRUD, daysheet add/edit/delete, calendar load, logout, hard refresh on a nested route, and home-screen launch behavior
 
+##### Milestone 8 — Pin Lists
+
+A list can be pinned so it always appears in the daysheet for the current day, even when it has no entries. The pin toggle lives only in the focused view, to the right of the pending task count.
+
+###### Schema
+
+- [x] `server/constants.py` — add `pinned: false` to the list object in `EMPTY_DB` (backward-compatible; existing lists without the field are treated as unpinned).
+
+Updated list schema:
+
+```json
+{ "id": "uuid", "name": "COMP3131", "groupId": "uuid | null", "pinned": false }
+```
+
+###### Backend
+
+- [x] `server/api.py` — `POST /api/pin-list` — accepts `{ listId, pinned: bool }` body; finds the list by ID and sets its `pinned` field; returns `ok()` / `fail()`; requires auth. Follow the same pattern as `rename-list` and `delete-list`.
+- [x] `server/api.py` — `GET /api/state` — `pinned` field is already present on list objects in the DB; no extra mapping needed as long as the raw list objects are returned (verify this is the case).
+- [x] `server/api.py` — `GET /api/daysheet` — extend the response with a `pinnedSections` key: an array of `{ sectionId, sectionName, inGroup }` objects for every pinned list that has **no entries** on the requested date. A pinned list that already has entries appears only in `entries` (not duplicated in `pinnedSections`). Section shape mirrors the enriched entry fields so the frontend can reuse the same grouping logic.
+
+###### Backend — tests
+
+- [x] `server/tests/test_api.py` — test `POST /api/pin-list`: pin a list, verify `pinned` is `true` in DB; unpin, verify `false`; 404 for unknown list ID.
+- [x] `server/tests/test_api.py` — test `GET /api/daysheet` with a pinned list that has no entries: `pinnedSections` contains the list's section. Test that a pinned list with at least one entry on the day does **not** appear in `pinnedSections`. Test that an unpinned list with no entries does not appear in `pinnedSections`.
+
+###### Frontend
+
+- [x] `client/src/lib/types.ts` — add `pinned?: boolean` to `TaskList`; add `pinnedSections: Array<{ sectionId: string; sectionName: string; inGroup: boolean }>` to `DaysheetResponse`.
+- [x] `client/src/lib/api.ts` — add `pinList: '/api/pin-list'` to the `API` const object.
+- [x] `client/src/components/icons.tsx` — add `PinIcon` (outline/filled SVG; filled when pinned). Use a simple thumbtack or pin SVG matching the existing icon style.
+- [x] `client/src/views/FocusedView.tsx` — add a `PinIcon` button immediately to the right of the `<span className={styles.focusedMeta}>{pending.length}</span>` badge. Clicking it calls `act(API.pinList, { listId: list.id, pinned: !list.pinned })`. The icon renders filled when `list.pinned` is `true`. The button should use the existing `action-btn` class pattern for consistent hover styling.
+- [x] `client/src/views/DaysheetView.tsx` — pass `pinnedSections` from `DaysheetResponse` into `Timeline`. In `groupEntries`, after building sections from entries, append any `pinnedSections` entries whose `sectionId` is not already in the map (renders the section header with no entry rows, so the section appears empty but visible).
+- [x] Styles — add pin button positioning styles in `Tasks.module.css` alongside the existing `focusedMeta` styles (small, vertically centred, no extra margin needed beyond the existing gap).
+
 ##### Future
 
 - Daily Lists
