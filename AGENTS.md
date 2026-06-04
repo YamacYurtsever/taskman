@@ -341,6 +341,17 @@ Updated list schema:
 - [x] `client/src/views/DaysheetView.tsx` — pass `pinnedSections` from `DaysheetResponse` into `Timeline`. In `groupEntries`, after building sections from entries, append any `pinnedSections` entries whose `sectionId` is not already in the map (renders the section header with no entry rows, so the section appears empty but visible).
 - [x] Styles — add pin button positioning styles in `Tasks.module.css` alongside the existing `focusedMeta` styles (small, vertically centred, no extra margin needed beyond the existing gap).
 
+##### Milestone 9 — Today's Plan
+
+Tasks can be flagged as "planned for today" — a daily intent marker separate from due date or priority. Flagged tasks appear as a dedicated "Today's Plan" section at the top of the daysheet for that day. As work is logged against them (or they are marked done), they move naturally into the daysheet entries below, so the plan shrinks as the log grows. The flag is day-scoped and auto-clears at the end of the day (it is not a permanent state on the task).
+
+_Design is still being fleshed out. Key open questions before speccing:_
+
+- Where is the toggle surfaced? (task detail panel, task row, or both)
+- Does flagging a task for today carry any visual indicator in the cards/focused views, or only in the daysheet? yes
+- Should the "Today's Plan" section in the daysheet be ordered manually or by list?
+- Exact auto-clear behaviour: midnight in the user's timezone, or on next login after midnight?
+
 ##### Future
 
 - Make Daysheet Entries Remain After List or Task Deletion
