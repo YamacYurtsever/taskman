@@ -73,13 +73,18 @@
 .timelineGroup {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-lg);
+  gap: var(--sp-sm);
 }
 
 .timelineGroupName {
   color: var(--text-2);
   font-size: var(--fs-lg);
   font-weight: 600;
+  margin-bottom: var(--sp-sm);
+}
+
+.timelineGroup + .timelineGroup {
+  margin-top: var(--sp);
 }
 
 .timelineEntry {
@@ -110,12 +115,20 @@
   flex: 1;
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
+  gap: var(--sp-sm);
   color: var(--text-1);
   font-size: var(--fs);
 }
 
+.timelineText::before {
+  content: '•';
+  color: var(--text-3);
+  margin-right: var(--sp-sm);
+  flex-shrink: 0;
+}
+
 .timelineListTag {
+  margin-left: auto;
   color: var(--text-3);
   font-size: var(--fs-xs);
 }

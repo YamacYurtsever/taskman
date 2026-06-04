@@ -180,8 +180,6 @@ const TimelineEntry = ({ entry, inGroup, act, refresh }: TimelineEntryProps) => 
   if (editing) {
     return (
       <div className={`${styles.timelineEntry} ${styles.timelineEditRow}`}>
-        <span className={styles.timelineTime}>{entry.localTime}</span>
-
         <input
           autoFocus
           autoComplete="off"
@@ -205,8 +203,6 @@ const TimelineEntry = ({ entry, inGroup, act, refresh }: TimelineEntryProps) => 
 
   return (
     <div className={styles.timelineEntry}>
-      <span className={styles.timelineTime}>{entry.localTime}</span>
-
       <span className={styles.timelineText}>
         {entryPrefix(entry.type)}
         {entry.text}
