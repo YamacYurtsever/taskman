@@ -148,7 +148,7 @@
 
 .taskNameRow {
   display: flex;
-  align-items: center;
+  align-items: top;
   gap: var(--sp-sm);
 }
 
@@ -497,10 +497,6 @@
   color: var(--accent);
 }
 
-.inlineAddToggleActive {
-  color: var(--accent);
-}
-
 .inlineAddRecurToggle {
   background: none;
   border: none;
@@ -513,6 +509,10 @@
 }
 
 .inlineAddRecurToggle:hover {
+  color: var(--accent);
+}
+
+.inlineAddToggleActive {
   color: var(--accent);
 }
 
