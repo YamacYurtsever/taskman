@@ -64,7 +64,7 @@ const pendingFor = (data: StateResponse, listId: string, filter: TaskFilter) => 
 
   if (filter === 'day') {
     return flaggedFirst(
-      pending.filter(t => t.due && new Date(t.due) <= today).sort(byDueThenName),
+      pending.filter(t => t.flagged || (t.due && new Date(t.due) <= today)).sort(byDueThenName),
     );
   }
 
@@ -73,7 +73,7 @@ const pendingFor = (data: StateResponse, listId: string, filter: TaskFilter) => 
     cut.setDate(cut.getDate() + 7);
 
     return flaggedFirst(
-      pending.filter(t => t.due && new Date(t.due) <= cut).sort(byDueThenName),
+      pending.filter(t => t.flagged || (t.due && new Date(t.due) <= cut)).sort(byDueThenName),
     );
   }
 
