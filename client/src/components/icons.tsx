@@ -116,6 +116,21 @@ const PinFilledIcon = (props: IconProps) => (
   </Icon>
 );
 
+const SoundOnIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M2 6h3l4-3.5v11L5 10H2z" />
+    <path d="M11 5.5a4 4 0 010 5" />
+    <path d="M13 3.5a7 7 0 010 9" />
+  </Icon>
+);
+
+const SoundOffIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M2 6h3l4-3.5v11L5 10H2z" />
+    <path d="M11 6l4 4M15 6l-4 4" />
+  </Icon>
+);
+
 const SignOutIcon = (props: IconProps) => (
   <Icon {...props}>
     <path d="M6 3H4a1 1 0 00-1 1v8a1 1 0 001 1h2" />
@@ -150,6 +165,8 @@ export {
   NoteIcon,
   PinIcon,
   PinFilledIcon,
+  SoundOnIcon,
+  SoundOffIcon,
   SignOutIcon,
   GoogleLogoIcon,
 };

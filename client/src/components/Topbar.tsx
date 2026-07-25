@@ -2,6 +2,7 @@ import { useLocation } from 'react-router-dom';
 import type { CSSProperties } from 'react';
 import type { TaskFilter } from '../lib/types';
 import { MenuIcon, SignOutIcon } from './icons';
+import { SoundToggle } from './SoundToggle';
 import { ThemeToggle } from './ThemeToggle';
 import styles from './Topbar.module.css';
 
@@ -53,6 +54,7 @@ const Topbar = ({ filter, setFilter, showMenuButton, onMenuClick, onLogout }: To
       )}
 
       <div className={styles.rightControls}>
+        <SoundToggle />
         <ThemeToggle />
         {onLogout && (
           <button className={styles.logoutBtn} title="Sign out" onClick={onLogout}>
