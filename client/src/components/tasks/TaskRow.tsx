@@ -173,7 +173,7 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
         {!task.doneAt && task.recurIntervalDays && (
           <button
             className="action-btn skp"
-            title="Skip to next occurrence"
+            title="Skip"
             onClick={() => {
               if (confirm(`Skip this occurrence of "${task.name}"?`)) {
                 act(API.skipTask, { taskId: task.id });
