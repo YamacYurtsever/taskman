@@ -25,11 +25,6 @@
   background: var(--yellow-bg);
 }
 
-.action-btn.del:hover {
-  color: var(--red);
-  background: var(--red-bg);
-}
-
 .action-btn.sav:hover {
   color: var(--green);
   background: var(--green-bg);
