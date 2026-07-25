@@ -21,6 +21,13 @@ const submitOnEnter =
     if (e.key === 'Escape') cancel();
   };
 
+const activateOnKey = (onClick: () => void) => (e: KeyboardEvent) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    onClick();
+  }
+};
+
 const SaveAction = ({ onClick }: { onClick: () => void }) => (
   <div className={styles.right}>
     <div className={styles.actions}>
@@ -69,9 +76,12 @@ const SidebarGroupRow = ({
   }
 
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       className={cx(styles.navItem, styles.navGroupHeader, active && styles.active)}
       onClick={selectGroup}
+      onKeyDown={activateOnKey(selectGroup)}
     >
       {group.name}
 
@@ -96,7 +106,7 @@ const SidebarGroupRow = ({
           <DeleteIcon />
         </button>
       </div>
-    </button>
+    </div>
   );
 };
 

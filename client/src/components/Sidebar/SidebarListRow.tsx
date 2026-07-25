@@ -13,6 +13,13 @@ const submitOnEnter =
     if (e.key === 'Escape') cancel();
   };
 
+const activateOnKey = (onClick: () => void) => (e: KeyboardEvent) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    onClick();
+  }
+};
+
 const SaveAction = ({ title, onClick }: { title: string; onClick: () => void }) => (
   <div className={styles.right}>
     <div className={styles.actions}>
@@ -46,9 +53,12 @@ const SidebarListRow = ({
   }
 
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       className={cx(styles.navItem, styles.navList, isActive && styles.active)}
       onClick={onSelect}
+      onKeyDown={activateOnKey(onSelect)}
     >
       {list.name}
 
@@ -75,7 +85,7 @@ const SidebarListRow = ({
 
         {filterCount > 0 && <span className={styles.count}>{filterCount}</span>}
       </div>
-    </button>
+    </div>
   );
 };
 
