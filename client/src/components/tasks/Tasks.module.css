@@ -500,8 +500,6 @@
 .inlineAddRecurToggle {
   background: none;
   border: none;
-  border-left: var(--border-w) solid var(--border);
-  padding-left: var(--sp);
   color: var(--text-3);
   cursor: pointer;
   display: flex;
@@ -533,7 +531,7 @@
   gap: var(--sp-sm);
 }
 
-.inlineAddSeriesGroup:first-child {
+.inlineAddSeriesGroup:not(:last-child) {
   border-right: var(--border-w) solid var(--border);
   padding-right: var(--sp);
 }
