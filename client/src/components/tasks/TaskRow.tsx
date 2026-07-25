@@ -28,6 +28,14 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
   const [due, setDue] = useState(task.due || '');
   const [recur, setRecur] = useState(String(task.recurIntervalDays ?? ''));
   const [newList, setNewList] = useState(listName);
+  const [toggling, setToggling] = useState(false);
+
+  const toggleDone = async () => {
+    if (toggling) return;
+    setToggling(true);
+    await act(task.doneAt ? API.undo : API.done, { taskId: task.id });
+    setToggling(false);
+  };
   const dueInfo = task.due ? formatDue(task.due, data.today) : null;
   const flagColorVar =
     dueInfo?.cls === 'due-overdue'
@@ -136,11 +144,8 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
           type="button"
           className={styles.taskCheck}
           title={task.doneAt ? 'Mark pending' : 'Mark done'}
-          onClick={() =>
-            task.doneAt
-              ? act(API.undo, { taskId: task.id })
-              : act(API.done, { taskId: task.id })
-          }
+          disabled={toggling}
+          onClick={toggleDone}
         >
           <svg
             className={styles.taskCheckSvg}
