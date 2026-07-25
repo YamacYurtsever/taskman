@@ -170,7 +170,6 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
           <span className={styles.taskName}>{task.name}</span>
           {(task.description || task.recurIntervalDays) && (
             <div className={styles.taskIcons}>
-              {task.description && <NoteIcon className={styles.noteIcon} />}
               {task.recurIntervalDays && (
                 <span
                   title={`Repeats every ${task.recurIntervalDays} day${task.recurIntervalDays === 1 ? '' : 's'}`}
@@ -178,6 +177,7 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
                   <RepeatIcon className={styles.repeatIcon} />
                 </span>
               )}
+              {task.description && <NoteIcon className={styles.noteIcon} />}
             </div>
           )}
         </div>
