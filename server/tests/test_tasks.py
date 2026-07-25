@@ -12,6 +12,7 @@ from server.services.tasks import (
     flag_task,
     move_task,
     set_task_description,
+    skip_task,
     undo_task,
 )
 from server.tests.utils import (
@@ -583,6 +584,54 @@ class TaskCompletionTest(unittest.TestCase):
 
         assert_ok(result)
         self.assertFalse(saved["tasks"][0]["flagged"])
+
+
+class TaskSkipTest(unittest.TestCase):
+
+    def test_skip_task_replaces_recurring_task_with_next_occurrence(self):
+        task = task_record(id="task-1", name="Task A", list_id="list-1", due="2026-04-20", recur_interval_days=7)
+
+        with (
+            saved_db(make_db(task)) as saved,
+            patch("server.services.tasks.today_in_timezone", return_value=TODAY),
+            patch("server.db.new_id", return_value="task-2"),
+        ):
+            result = skip_task("task-1")
+
+        assert_ok(result)
+        self.assertEqual(len(saved["tasks"]), 1)
+
+        spawned = saved["tasks"][0]
+        self.assertEqual(spawned["id"], "task-2")
+        self.assertEqual(spawned["name"], "Task A")
+        self.assertEqual(spawned["due"], "2026-04-27")
+        self.assertIsNone(spawned["doneAt"])
+        self.assertEqual(spawned["recurIntervalDays"], 7)
+
+    def test_skip_task_does_not_log_daysheet_entry(self):
+        task = task_record(id="task-1", name="Task A", list_id="list-1", recur_interval_days=7)
+
+        with (
+            saved_db(make_db(task)) as saved,
+            patch("server.services.tasks.today_in_timezone", return_value=TODAY),
+            patch("server.db.new_id", return_value="task-2"),
+        ):
+            result = skip_task("task-1")
+
+        assert_ok(result)
+        self.assertEqual(saved["daysheet"], [])
+
+    def test_skip_task_rejects_non_recurring_task(self):
+        with saved_db(make_db(TASK_1)):
+            result = skip_task("task-1")
+
+        assert_error(result, "not recurring")
+
+    def test_skip_task_rejects_unknown_task(self):
+        with saved_db(make_db()):
+            result = skip_task("ghost-id")
+
+        assert_error(result, "not found")
 
 
 class TaskFlagTest(unittest.TestCase):

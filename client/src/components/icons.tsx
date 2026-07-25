@@ -39,6 +39,13 @@ const ContinueIcon = (props: IconProps) => (
   </Icon>
 );
 
+const SkipIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M3 3l7 5-7 5V3z" />
+    <path d="M12 3v10" />
+  </Icon>
+);
+
 const ChevronLeftIcon = (props: IconProps) => (
   <Icon {...props}>
     <path d="M10 12L6 8l4-4" />
@@ -161,6 +168,7 @@ export {
   CheckIcon,
   DeleteIcon,
   ContinueIcon,
+  SkipIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   PlusIcon,

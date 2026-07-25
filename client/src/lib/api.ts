@@ -30,6 +30,7 @@ const API = {
 
   done: '/api/done',
   undo: '/api/undo',
+  skipTask: '/api/skip-task',
   delete: '/api/delete',
   continue: '/api/continue',
   edit: '/api/edit',

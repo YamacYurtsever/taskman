@@ -481,6 +481,31 @@ class ApiTest(unittest.TestCase):
         self.assert_ok(res)
         self.assertIsNone(saved["tasks"][0]["doneAt"])
 
+    def test_skip_task(self):
+        task = task_record(id="task-1", name="Task A", list_id="list-1", due="2026-04-20", recur_interval_days=7)
+
+        with (
+            saved_db(make_db(task)) as saved,
+            patch("server.services.tasks.today_in_timezone", return_value=TODAY),
+            patch("server.db.new_id", return_value="task-2"),
+        ):
+            res = self.post("/api/skip-task", {
+                "taskId": "task-1",
+            })
+
+        self.assert_ok(res)
+        self.assertEqual(len(saved["tasks"]), 1)
+        self.assertEqual(saved["tasks"][0]["id"], "task-2")
+        self.assertEqual(saved["tasks"][0]["due"], "2026-04-27")
+
+    def test_skip_task_rejects_non_recurring_task(self):
+        with saved_db(make_db(TASK_1)):
+            res = self.post("/api/skip-task", {
+                "taskId": "task-1",
+            })
+
+        self.assert_error(res, "not recurring")
+
     def test_task_description_updates_description(self):
         with saved_db(make_db(TASK_1)) as saved:
             res = self.post("/api/task-description", {

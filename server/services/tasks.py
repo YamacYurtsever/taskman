@@ -200,6 +200,23 @@ def duplicate_task(task_id: str, email: str | None = None, tz_name: str = "UTC")
     db.save(data, email)
 
 
+def _replace_with_next_occurrence(data, task, today: str):
+    recur_interval_days = task["recurIntervalDays"]
+    base_due = task.get("due") or today
+
+    data["tasks"] = [t for t in data["tasks"] if t["id"] != task["id"]]
+    data["tasks"].append({
+        "id": db.new_id(),
+        "name": task["name"],
+        "listId": task["listId"],
+        "due": add_days_to_date(base_due, recur_interval_days),
+        "doneAt": None,
+        "description": task.get("description", ""),
+        "flagged": False,
+        "recurIntervalDays": recur_interval_days,
+    })
+
+
 # ─────────────────────────── Completion State ───────────────────────────
 
 @service
@@ -230,23 +247,25 @@ def done_task(task_id: str, email: str | None = None, tz_name: str = "UTC"):
         completed_at,
     )
 
-    recur_interval_days = task.get("recurIntervalDays")
-    if recur_interval_days:
-        base_due = task.get("due") or today
-        data["tasks"] = [t for t in data["tasks"] if t["id"] != task_id]
-        data["tasks"].append({
-            "id": db.new_id(),
-            "name": task["name"],
-            "listId": task["listId"],
-            "due": add_days_to_date(base_due, recur_interval_days),
-            "doneAt": None,
-            "description": task.get("description", ""),
-            "flagged": False,
-            "recurIntervalDays": recur_interval_days,
-        })
+    if task.get("recurIntervalDays"):
+        _replace_with_next_occurrence(data, task, today)
     else:
         task["doneAt"] = completed_at
         task["flagged"] = False
+
+    db.save(data, email)
+
+
+@service
+def skip_task(task_id: str, email: str | None = None, tz_name: str = "UTC"):
+    data = db.load(email)
+    task = require_task_by_id(data, task_id)
+
+    if not task.get("recurIntervalDays"):
+        raise ServiceError(f"task '{task['name']}' is not recurring")
+
+    today = today_in_timezone(tz_name)
+    _replace_with_next_occurrence(data, task, today)
 
     db.save(data, email)
 

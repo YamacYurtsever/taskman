@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
-import { CheckIcon, ContinueIcon, DeleteIcon, DuplicateIcon, EditIcon, MoveIcon, NoteIcon, RepeatIcon } from '../icons';
+import { CheckIcon, ContinueIcon, DeleteIcon, DuplicateIcon, EditIcon, MoveIcon, NoteIcon, RepeatIcon, SkipIcon } from '../icons';
 import { API } from '../../lib/api';
 import { cx, formatDue, sortByName } from '../../lib/utils';
 import dueStyles from './DueDate.module.css';
@@ -168,6 +168,19 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
             onClick={() => act(API.continue, { taskId: task.id })}
           >
             <ContinueIcon />
+          </button>
+        )}
+        {!task.doneAt && task.recurIntervalDays && (
+          <button
+            className="action-btn skp"
+            title="Skip to next occurrence"
+            onClick={() => {
+              if (confirm(`Skip this occurrence of "${task.name}"?`)) {
+                act(API.skipTask, { taskId: task.id });
+              }
+            }}
+          >
+            <SkipIcon />
           </button>
         )}
       </div>

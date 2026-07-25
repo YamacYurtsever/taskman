@@ -27,6 +27,7 @@ from server.services.tasks import (
     flag_task,
     move_task,
     set_task_description,
+    skip_task,
     undo_task,
 )
 from server.services.utils import (
@@ -359,6 +360,18 @@ def create_app(test_config=None):
         _, tz_name = user_config_and_timezone(email)
         body = request.get_json(force=True) or {}
         return respond(done_task(
+            body.get("taskId", ""),
+            email=email,
+            tz_name=tz_name,
+        ))
+
+    @app.post("/api/skip-task")
+    @require_auth
+    def api_skip_task():
+        email = session["email"]
+        _, tz_name = user_config_and_timezone(email)
+        body = request.get_json(force=True) or {}
+        return respond(skip_task(
             body.get("taskId", ""),
             email=email,
             tz_name=tz_name,

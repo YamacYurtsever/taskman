@@ -39,3 +39,8 @@
   color: var(--accent);
   background: var(--accent-bg);
 }
+
+.action-btn.skp:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+}
