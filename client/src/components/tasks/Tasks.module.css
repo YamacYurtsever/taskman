@@ -320,6 +320,13 @@
   flex-shrink: 0;
 }
 
+.taskEditRecurLabel {
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .taskEditRecur {
   width: 40px;
   min-width: 0;

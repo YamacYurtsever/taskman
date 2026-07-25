@@ -80,7 +80,7 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
             onChange={e => setDue(e.target.value)}
           />
           <label className={styles.taskEditRecurGroup} title="Repeat every N days">
-            <RepeatIcon className={styles.repeatIcon} />
+            <span className={styles.taskEditRecurLabel}>↻</span>
             <input
               className={styles.taskEditRecur}
               type="number"
