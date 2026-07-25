@@ -500,6 +500,8 @@
 .inlineAddRecurToggle {
   background: none;
   border: none;
+  border-left: var(--border-w) solid var(--border);
+  padding-left: var(--sp);
   color: var(--text-3);
   cursor: pointer;
   display: flex;
