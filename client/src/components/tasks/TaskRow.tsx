@@ -3,6 +3,7 @@ import type { KeyboardEvent } from 'react';
 import { CheckIcon, ContinueIcon, DeleteIcon, DuplicateIcon, EditIcon, MoveIcon, NoteIcon } from '../icons';
 import { API } from '../../lib/api';
 import { cx, formatDue, sortByName } from '../../lib/utils';
+import dueStyles from './DueDate.module.css';
 import styles from './Tasks.module.css';
 import type { TaskRowProps } from './Tasks.shared';
 
@@ -32,13 +33,13 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
     const newName = name.trim();
     if (!newName) return;
 
-    await act(API.edit, { list: listName, name: task.name, newName, due: due || null });
+    await act(API.edit, { taskId: task.id, newName, due: due || null });
     setMode('view');
   };
 
   const saveMove = async () => {
     if (newList && newList !== listName) {
-      await act(API.moveTask, { list: listName, name: task.name, newList });
+      await act(API.moveTask, { taskId: task.id, newList });
     }
 
     setMode('view');
@@ -90,7 +91,13 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
   }
 
   return (
-    <div className={cx(styles.taskRow, task.doneAt && styles.done)}>
+    <div
+      className={cx(styles.taskRow, task.doneAt && styles.done, task.flagged && styles.flagged)}
+      onContextMenu={e => {
+        e.preventDefault();
+        act(API.flagTask, { taskId: task.id, flagged: !task.flagged });
+      }}
+    >
       <div className={styles.taskLeft}>
         <button
           type="button"
@@ -98,8 +105,8 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
           title={task.doneAt ? 'Mark pending' : 'Mark done'}
           onClick={() =>
             task.doneAt
-              ? act(API.undo, { list: listName, name: task.name })
-              : act(API.done, { list: listName, name: task.name })
+              ? act(API.undo, { taskId: task.id })
+              : act(API.done, { taskId: task.id })
           }
         >
           <svg
@@ -120,7 +127,7 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
           <button
             className="action-btn cnt"
             title="Log continue"
-            onClick={() => act(API.continue, { list: listName, task: task.name })}
+            onClick={() => act(API.continue, { taskId: task.id })}
           >
             <ContinueIcon />
           </button>
@@ -133,7 +140,7 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
           {task.description && <NoteIcon className={styles.noteIcon} />}
         </div>
         {dueInfo && (
-          <span className={cx(styles.taskDue, dueInfo.cls && styles[dueInfo.cls])}>
+          <span className={cx(styles.taskDue, dueInfo.cls && dueStyles[dueInfo.cls])}>
             {dueInfo.label}
           </span>
         )}
@@ -152,7 +159,7 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
           <button
             className="action-btn dup"
             title="Duplicate"
-            onClick={() => act(API.duplicate, { list: listName, name: task.name })}
+            onClick={() => act(API.duplicate, { taskId: task.id })}
           >
             <DuplicateIcon />
           </button>
@@ -161,7 +168,7 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
             title="Delete"
             onClick={() => {
               if (confirm(`Delete "${task.name}"?`)) {
-                act(API.delete, { list: listName, name: task.name });
+                act(API.delete, { taskId: task.id });
               }
             }}
           >

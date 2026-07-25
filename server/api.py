@@ -23,6 +23,7 @@ from server.services.tasks import (
     duplicate_task,
     done_task,
     edit_task,
+    flag_task,
     move_task,
     set_task_description,
     undo_task,
@@ -190,7 +191,15 @@ def create_app(test_config=None):
         email = session["email"]
         _, tz_name = user_config_and_timezone(email)
         data = db.load(email)
-        tasks = [{**t, "description": t.get("description", ""), "doneAt": t.get("doneAt")} for t in data["tasks"]]
+        tasks = [
+            {
+                **t,
+                "description": t.get("description", ""),
+                "doneAt": t.get("doneAt"),
+                "flagged": t.get("flagged", False),
+            }
+            for t in data["tasks"]
+        ]
         return jsonify({
             "groups": data["groups"],
             "lists": data["lists"],
@@ -232,9 +241,9 @@ def create_app(test_config=None):
             enriched.append({
                 **entry,
                 "localTime": local_time_from_storage(entry["datetime"], tz_name),
-                "listName": lst["name"] if lst else "?",
+                "listName": lst["name"] if lst else "Deleted list",
                 "sectionId": section_id,
-                "sectionName": groups[group_id]["name"] if group_id else (lst["name"] if lst else "?"),
+                "sectionName": groups[group_id]["name"] if group_id else (lst["name"] if lst else "Deleted list"),
                 "inGroup": bool(group_id),
             })
 
@@ -277,8 +286,7 @@ def create_app(test_config=None):
         _, tz_name = user_config_and_timezone(email)
         body = request.get_json(force=True) or {}
         return respond(edit_task(
-            body.get("list", ""),
-            body.get("name", ""),
+            body.get("taskId", ""),
             body.get("newName"),
             body.get("due"),
             "due" in body,
@@ -293,8 +301,7 @@ def create_app(test_config=None):
         _, tz_name = user_config_and_timezone(email)
         body = request.get_json(force=True) or {}
         return respond(delete_task(
-            body.get("list", ""),
-            body.get("name", ""),
+            body.get("taskId", ""),
             email=email,
             tz_name=tz_name,
         ))
@@ -306,8 +313,7 @@ def create_app(test_config=None):
         _, tz_name = user_config_and_timezone(email)
         body = request.get_json(force=True) or {}
         return respond(duplicate_task(
-            body.get("list", ""),
-            body.get("name", ""),
+            body.get("taskId", ""),
             email=email,
             tz_name=tz_name,
         ))
@@ -319,8 +325,7 @@ def create_app(test_config=None):
         _, tz_name = user_config_and_timezone(email)
         body = request.get_json(force=True) or {}
         return respond(move_task(
-            body.get("list", ""),
-            body.get("name", ""),
+            body.get("taskId", ""),
             body.get("newList", ""),
             email=email,
             tz_name=tz_name,
@@ -333,8 +338,7 @@ def create_app(test_config=None):
         _, tz_name = user_config_and_timezone(email)
         body = request.get_json(force=True) or {}
         return respond(done_task(
-            body.get("list", ""),
-            body.get("name", ""),
+            body.get("taskId", ""),
             email=email,
             tz_name=tz_name,
         ))
@@ -346,8 +350,7 @@ def create_app(test_config=None):
         _, tz_name = user_config_and_timezone(email)
         body = request.get_json(force=True) or {}
         return respond(undo_task(
-            body.get("list", ""),
-            body.get("name", ""),
+            body.get("taskId", ""),
             email=email,
             tz_name=tz_name,
         ))
@@ -359,9 +362,21 @@ def create_app(test_config=None):
         _, tz_name = user_config_and_timezone(email)
         body = request.get_json(force=True) or {}
         return respond(set_task_description(
-            body.get("list", ""),
-            body.get("name", ""),
+            body.get("taskId", ""),
             body.get("description", ""),
+            email=email,
+            tz_name=tz_name,
+        ))
+
+    @app.post("/api/flag-task")
+    @require_auth
+    def api_flag_task():
+        email = session["email"]
+        _, tz_name = user_config_and_timezone(email)
+        body = request.get_json(force=True) or {}
+        return respond(flag_task(
+            body.get("taskId", ""),
+            body.get("flagged", False),
             email=email,
             tz_name=tz_name,
         ))
@@ -592,8 +607,7 @@ def create_app(test_config=None):
         _, tz_name = user_config_and_timezone(email)
         body = request.get_json(force=True) or {}
         return respond(continue_task(
-            body.get("list", ""),
-            body.get("task", ""),
+            body.get("taskId", ""),
             email=email,
             tz_name=tz_name,
         ))

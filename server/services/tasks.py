@@ -3,12 +3,11 @@ from server.constants import DaysheetEntryType
 from server.services.utils import (
     ServiceError,
     add_daysheet_entry,
-    find_task,
     parse_date,
     remove_daysheet_entries,
     require_list,
     require_name,
-    require_task,
+    require_task_by_id,
     service,
     today_in_timezone,
     utc_now,
@@ -16,15 +15,17 @@ from server.services.utils import (
 
 
 def _copied_task_name(data, list_id: str, task_name: str) -> str:
-    base_name = f"{task_name} Copied"
-    candidate = base_name
-    copy_index = 2
+    existing = {t["name"] for t in data["tasks"] if t["listId"] == list_id}
 
-    while find_task(data, list_id, candidate):
-        candidate = f"{base_name} {copy_index}"
+    base_name = f"{task_name} Copied"
+    if base_name not in existing:
+        return base_name
+
+    copy_index = 2
+    while f"{base_name} {copy_index}" in existing:
         copy_index += 1
 
-    return candidate
+    return f"{base_name} {copy_index}"
 
 
 # ─────────────────────────── Create / Edit ───────────────────────────
@@ -36,9 +37,6 @@ def add_task(list_name: str, task_name: str, due: str | None = None, email: str 
     data = db.load(email)
     lst = require_list(data, list_name)
 
-    if find_task(data, lst["id"], task_name):
-        raise ServiceError(f"task '{task_name}' already exists in '{list_name}'")
-
     data["tasks"].append({
         "id": db.new_id(),
         "name": task_name,
@@ -46,6 +44,7 @@ def add_task(list_name: str, task_name: str, due: str | None = None, email: str 
         "due": parse_date(due) if due else None,
         "doneAt": None,
         "description": "",
+        "flagged": False,
     })
 
     db.save(data, email)
@@ -53,24 +52,17 @@ def add_task(list_name: str, task_name: str, due: str | None = None, email: str 
 
 @service
 def edit_task(
-    list_name: str,
-    task_name: str,
-    new_name: str | None = None,
+    task_id: str,
+    new_name: str,
     due: str | None = None,
     update_due: bool = False,
     email: str | None = None,
     tz_name: str = "UTC",
 ):
-    if new_name is None:
-        new_name = task_name
     new_name = require_name(new_name)
 
     data = db.load(email)
-    lst = require_list(data, list_name)
-    task = require_task(data, lst, task_name)
-
-    if new_name != task_name and find_task(data, lst["id"], new_name):
-        raise ServiceError(f"task '{new_name}' already exists in '{list_name}'")
+    task = require_task_by_id(data, task_id)
 
     task["name"] = new_name
 
@@ -83,26 +75,21 @@ def edit_task(
 # ─────────────────────────── Delete / Move ───────────────────────────
 
 @service
-def delete_task(list_name: str, task_name: str, email: str | None = None, tz_name: str = "UTC"):
+def delete_task(task_id: str, email: str | None = None, tz_name: str = "UTC"):
     data = db.load(email)
-    lst = require_list(data, list_name)
-    task = require_task(data, lst, task_name)
+    require_task_by_id(data, task_id)
 
-    data["tasks"] = [t for t in data["tasks"] if t["id"] != task["id"]]
+    data["tasks"] = [t for t in data["tasks"] if t["id"] != task_id]
 
     db.save(data, email)
 
 
 @service
-def move_task(list_name: str, task_name: str, new_list_name: str, email: str | None = None, tz_name: str = "UTC"):
+def move_task(task_id: str, new_list_name: str, email: str | None = None, tz_name: str = "UTC"):
     data = db.load(email)
 
-    lst = require_list(data, list_name)
-    task = require_task(data, lst, task_name)
+    task = require_task_by_id(data, task_id)
     new_lst = require_list(data, new_list_name)
-
-    if find_task(data, new_lst["id"], task_name):
-        raise ServiceError(f"task '{task_name}' already exists in '{new_list_name}'")
 
     task["listId"] = new_lst["id"]
 
@@ -110,18 +97,18 @@ def move_task(list_name: str, task_name: str, new_list_name: str, email: str | N
 
 
 @service
-def duplicate_task(list_name: str, task_name: str, email: str | None = None, tz_name: str = "UTC"):
+def duplicate_task(task_id: str, email: str | None = None, tz_name: str = "UTC"):
     data = db.load(email)
-    lst = require_list(data, list_name)
-    task = require_task(data, lst, task_name)
+    task = require_task_by_id(data, task_id)
 
     data["tasks"] = [*data["tasks"], {
         "id": db.new_id(),
-        "name": _copied_task_name(data, lst["id"], task_name),
-        "listId": lst["id"],
+        "name": _copied_task_name(data, task["listId"], task["name"]),
+        "listId": task["listId"],
         "due": task.get("due"),
         "doneAt": None,
         "description": task.get("description", ""),
+        "flagged": False,
     }]
 
     db.save(data, email)
@@ -130,58 +117,62 @@ def duplicate_task(list_name: str, task_name: str, email: str | None = None, tz_
 # ─────────────────────────── Completion State ───────────────────────────
 
 @service
-def done_task(list_name: str, task_name: str, email: str | None = None, tz_name: str = "UTC"):
+def done_task(task_id: str, email: str | None = None, tz_name: str = "UTC"):
     data = db.load(email)
-
-    lst = require_list(data, list_name)
-    task = require_task(data, lst, task_name)
+    task = require_task_by_id(data, task_id)
 
     if task["doneAt"]:
-        raise ServiceError(f"task '{task_name}' is already done")
+        raise ServiceError(f"task '{task['name']}' is already done")
 
     today = today_in_timezone(tz_name)
     completed_at = utc_now()
 
     remove_daysheet_entries(
         data,
-        lst["id"],
+        task["listId"],
         DaysheetEntryType.CONTINUE,
         tz_name,
-        task_name,
+        task["name"],
         today,
     )
 
     add_daysheet_entry(
         data,
-        lst["id"],
+        task["listId"],
         DaysheetEntryType.DONE,
-        task_name,
+        task["name"],
         completed_at,
     )
 
     task["doneAt"] = completed_at
+    task["flagged"] = False
 
     db.save(data, email)
 
 
 @service
-def set_task_description(list_name: str, task_name: str, description: str, email: str | None = None, tz_name: str = "UTC"):
+def flag_task(task_id: str, flagged: bool, email: str | None = None, tz_name: str = "UTC"):
     data = db.load(email)
-    lst = require_list(data, list_name)
-    task = require_task(data, lst, task_name)
+    task = require_task_by_id(data, task_id)
+    task["flagged"] = flagged
+    db.save(data, email)
+
+
+@service
+def set_task_description(task_id: str, description: str, email: str | None = None, tz_name: str = "UTC"):
+    data = db.load(email)
+    task = require_task_by_id(data, task_id)
     task["description"] = description
     db.save(data, email)
 
 
 @service
-def undo_task(list_name: str, task_name: str, email: str | None = None, tz_name: str = "UTC"):
+def undo_task(task_id: str, email: str | None = None, tz_name: str = "UTC"):
     data = db.load(email)
-
-    lst = require_list(data, list_name)
-    task = require_task(data, lst, task_name)
+    task = require_task_by_id(data, task_id)
 
     if not task["doneAt"]:
-        raise ServiceError(f"task '{task_name}' is not done")
+        raise ServiceError(f"task '{task['name']}' is not done")
 
     task["doneAt"] = None
 

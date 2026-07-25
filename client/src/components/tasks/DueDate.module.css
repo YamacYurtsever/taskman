@@ -1,0 +1,11 @@
+.due-overdue {
+  color: var(--red);
+}
+
+.due-today {
+  color: var(--accent-2);
+}
+
+.due-upcoming {
+  color: var(--accent);
+}

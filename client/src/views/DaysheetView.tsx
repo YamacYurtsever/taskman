@@ -9,7 +9,7 @@ import {
 } from '../components/icons';
 import { API, api } from '../lib/api';
 import type { DaysheetEntry, DaysheetResponse, PinnedSection, StateResponse } from '../lib/types';
-import { MSG, sortByName, todayStr } from '../lib/utils';
+import { MSG, localDateStr, sortByName, todayStr } from '../lib/utils';
 import styles from './DaysheetView.module.css';
 
 type Action = (path: string, body: unknown) => Promise<boolean>;
@@ -44,6 +44,7 @@ const DaysheetView = ({ data, act, refresh }: DaysheetViewProps) => {
   const [date, setDate] = useState(data?.today ?? todayStr());
   const [daysheet, setDaysheet] = useState<DaysheetResponse | null>(null);
   const dateInputRef = useRef<HTMLInputElement>(null);
+  const autoTodayRef = useRef(date);
 
   const fetchDaysheet = useCallback(async (date: string) => {
     setDaysheet(await api.daysheet(date));
@@ -54,10 +55,11 @@ const DaysheetView = ({ data, act, refresh }: DaysheetViewProps) => {
   }, [date, fetchDaysheet]);
 
   useEffect(() => {
-    if (data?.today && !daysheet) {
-      setDate(data.today);
+    if (data?.today && data.today !== autoTodayRef.current) {
+      setDate(current => (current === autoTodayRef.current ? data.today! : current));
+      autoTodayRef.current = data.today;
     }
-  }, [data?.today, daysheet]);
+  }, [data?.today]);
 
   const localAct = useCallback(
     async (path: string, body: unknown) => {
@@ -271,8 +273,7 @@ const LogForm = ({ date, lists, act }: LogFormProps) => {
   );
 };
 
-const dateString = (date: Date) =>
-  date.toISOString().slice(0, 10);
+const dateString = localDateStr;
 
 const parseLocalDate = (date: string) =>
   new Date(`${date}T12:00:00`);

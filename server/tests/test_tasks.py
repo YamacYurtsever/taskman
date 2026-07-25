@@ -8,6 +8,7 @@ from server.services.tasks import (
     duplicate_task,
     done_task,
     edit_task,
+    flag_task,
     move_task,
     set_task_description,
     undo_task,
@@ -35,7 +36,7 @@ NOW_DT = "2026-04-26T10:00:00Z"
 def make_db(*tasks, lists=None, daysheet=None):
     return db_record(
         lists=lists or [LIST_1, LIST_2],
-        tasks=tasks,
+        tasks=list(tasks),
         daysheet=daysheet or [],
     )
 
@@ -69,11 +70,15 @@ class TaskCreateTest(unittest.TestCase):
         assert_ok(result)
         self.assertEqual(saved["tasks"][0]["due"], "2026-05-01")
 
-    def test_add_task_rejects_duplicate_name_in_same_list(self):
-        with saved_db(make_db(TASK_1)):
+    def test_add_task_allows_duplicate_name_in_same_list(self):
+        with (
+            saved_db(make_db(TASK_1)) as saved,
+            patch("server.db.new_id", return_value="task-2"),
+        ):
             result = add_task("List A", "Task A")
 
-        assert_error(result, "already exists")
+        assert_ok(result)
+        self.assertEqual([t["name"] for t in saved["tasks"]], ["Task A", "Task A"])
 
     def test_add_task_rejects_unknown_list(self):
         with saved_db(make_db()):
@@ -98,7 +103,7 @@ class TaskEditTest(unittest.TestCase):
 
     def test_edit_task_renames_task(self):
         with saved_db(make_db(TASK_1)) as saved:
-            result = edit_task("List A", "Task A", "Renamed task")
+            result = edit_task("task-1", "Renamed task")
 
         assert_ok(result)
         self.assertEqual(saved["tasks"][0]["name"], "Renamed task")
@@ -106,8 +111,7 @@ class TaskEditTest(unittest.TestCase):
     def test_edit_task_changes_due_when_requested(self):
         with saved_db(make_db(TASK_1)) as saved:
             result = edit_task(
-                "List A",
-                "Task A",
+                "task-1",
                 "Task A",
                 "2026-06-01",
                 update_due=True,
@@ -121,8 +125,7 @@ class TaskEditTest(unittest.TestCase):
 
         with saved_db(make_db(task)) as saved:
             result = edit_task(
-                "List A",
-                "Task A",
+                "task-1",
                 "Task A",
                 None,
                 update_due=True,
@@ -135,28 +138,29 @@ class TaskEditTest(unittest.TestCase):
         task = task_record(id="task-1", name="Task A", list_id="list-1", due="2026-05-01")
 
         with saved_db(make_db(task)) as saved:
-            result = edit_task("List A", "Task A", "Renamed task")
+            result = edit_task("task-1", "Renamed task")
 
         assert_ok(result)
         self.assertEqual(saved["tasks"][0]["due"], "2026-05-01")
 
-    def test_edit_task_rejects_duplicate_name(self):
+    def test_edit_task_allows_duplicate_name(self):
         task_2 = task_record(id="task-2", name="Task B", list_id="list-1")
 
-        with saved_db(make_db(TASK_1, task_2)):
-            result = edit_task("List A", "Task A", "Task B")
+        with saved_db(make_db(TASK_1, task_2)) as saved:
+            result = edit_task("task-1", "Task B")
 
-        assert_error(result, "already exists")
+        assert_ok(result)
+        self.assertEqual([t["name"] for t in saved["tasks"]], ["Task B", "Task B"])
 
     def test_edit_task_rejects_unknown_task(self):
         with saved_db(make_db()):
-            result = edit_task("List A", "Ghost task", "New name")
+            result = edit_task("ghost-id", "New name")
 
         assert_error(result, "not found")
 
     def test_edit_task_rejects_empty_new_name(self):
         with saved_db(make_db(TASK_1)):
-            result = edit_task("List A", "Task A", "")
+            result = edit_task("task-1", "")
 
         assert_error(result, "name is required")
 
@@ -165,41 +169,42 @@ class TaskMoveDeleteTest(unittest.TestCase):
 
     def test_move_task_changes_list(self):
         with saved_db(make_db(TASK_1)) as saved:
-            result = move_task("List A", "Task A", "List B")
+            result = move_task("task-1", "List B")
 
         assert_ok(result)
         self.assertEqual(saved["tasks"][0]["listId"], "list-2")
 
-    def test_move_task_rejects_duplicate_in_destination(self):
+    def test_move_task_allows_duplicate_in_destination(self):
         task_2 = task_record(id="task-2", name="Task A", list_id="list-2")
 
-        with saved_db(make_db(TASK_1, task_2)):
-            result = move_task("List A", "Task A", "List B")
+        with saved_db(make_db(TASK_1, task_2)) as saved:
+            result = move_task("task-1", "List B")
 
-        assert_error(result, "already exists")
+        assert_ok(result)
+        self.assertEqual(saved["tasks"][0]["listId"], "list-2")
 
     def test_move_task_rejects_unknown_task(self):
         with saved_db(make_db()):
-            result = move_task("List A", "Ghost task", "List B")
+            result = move_task("ghost-id", "List B")
 
         assert_error(result, "not found")
 
     def test_move_task_rejects_unknown_destination_list(self):
         with saved_db(make_db(TASK_1)):
-            result = move_task("List A", "Task A", "Missing List")
+            result = move_task("task-1", "Missing List")
 
         assert_error(result, "not found")
 
     def test_delete_task_removes_task(self):
         with saved_db(make_db(TASK_1)) as saved:
-            result = delete_task("List A", "Task A")
+            result = delete_task("task-1")
 
         assert_ok(result)
         self.assertEqual(saved["tasks"], [])
 
     def test_delete_task_rejects_unknown_task(self):
         with saved_db(make_db()):
-            result = delete_task("List A", "Ghost task")
+            result = delete_task("ghost-id")
 
         assert_error(result, "not found")
 
@@ -216,7 +221,7 @@ class TaskMoveDeleteTest(unittest.TestCase):
             saved_db(make_db(task)) as saved,
             patch("server.db.new_id", return_value="task-2"),
         ):
-            result = duplicate_task("List A", "Task A")
+            result = duplicate_task("task-1")
 
         assert_ok(result)
 
@@ -235,14 +240,14 @@ class TaskMoveDeleteTest(unittest.TestCase):
             saved_db(make_db(TASK_1, copy)) as saved,
             patch("server.db.new_id", return_value="task-3"),
         ):
-            result = duplicate_task("List A", "Task A")
+            result = duplicate_task("task-1")
 
         assert_ok(result)
         self.assertEqual(saved["tasks"][2]["name"], "Task A Copied 2")
 
     def test_duplicate_task_rejects_unknown_task(self):
         with saved_db(make_db()):
-            result = duplicate_task("List A", "Ghost task")
+            result = duplicate_task("ghost-id")
 
         assert_error(result, "not found")
 
@@ -256,7 +261,7 @@ class TaskCompletionTest(unittest.TestCase):
             patch("server.services.tasks.utc_now", return_value=NOW_DT),
             patch("server.db.new_id", return_value="entry-1"),
         ):
-            result = done_task("List A", "Task A")
+            result = done_task("task-1")
 
         assert_ok(result)
         self.assertEqual(saved["tasks"][0]["doneAt"], NOW_DT)
@@ -268,7 +273,7 @@ class TaskCompletionTest(unittest.TestCase):
             patch("server.services.tasks.utc_now", return_value=NOW_DT),
             patch("server.db.new_id", return_value="entry-1"),
         ):
-            result = done_task("List A", "Task A")
+            result = done_task("task-1")
 
         assert_ok(result)
 
@@ -292,7 +297,7 @@ class TaskCompletionTest(unittest.TestCase):
             patch("server.services.tasks.utc_now", return_value=NOW_DT),
             patch("server.db.new_id", return_value="entry-2"),
         ):
-            result = done_task("List A", "Task A")
+            result = done_task("task-1")
 
         assert_ok(result)
 
@@ -302,29 +307,68 @@ class TaskCompletionTest(unittest.TestCase):
 
     def test_done_task_rejects_already_done_task(self):
         with saved_db(make_db(TASK_DONE)):
-            result = done_task("List A", "Task B")
+            result = done_task("task-2")
 
         assert_error(result, "already done")
 
     def test_undo_task_clears_done(self):
         with saved_db(make_db(TASK_DONE)) as saved:
-            result = undo_task("List A", "Task B")
+            result = undo_task("task-2")
 
         assert_ok(result)
         self.assertIsNone(saved["tasks"][0]["doneAt"])
 
     def test_undo_task_rejects_pending_task(self):
         with saved_db(make_db(TASK_1)):
-            result = undo_task("List A", "Task A")
+            result = undo_task("task-1")
 
         assert_error(result, "not done")
+
+    def test_done_task_clears_flag(self):
+        task = task_record(id="task-1", name="Task A", list_id="list-1", flagged=True)
+
+        with (
+            saved_db(make_db(task)) as saved,
+            patch("server.services.tasks.today_in_timezone", return_value=TODAY),
+            patch("server.services.tasks.utc_now", return_value=NOW_DT),
+            patch("server.db.new_id", return_value="entry-1"),
+        ):
+            result = done_task("task-1")
+
+        assert_ok(result)
+        self.assertFalse(saved["tasks"][0]["flagged"])
+
+
+class TaskFlagTest(unittest.TestCase):
+
+    def test_flag_task_sets_flag(self):
+        with saved_db(make_db(TASK_1)) as saved:
+            result = flag_task("task-1", True)
+
+        assert_ok(result)
+        self.assertTrue(saved["tasks"][0]["flagged"])
+
+    def test_flag_task_unsets_flag(self):
+        task = task_record(id="task-1", name="Task A", list_id="list-1", flagged=True)
+
+        with saved_db(make_db(task)) as saved:
+            result = flag_task("task-1", False)
+
+        assert_ok(result)
+        self.assertFalse(saved["tasks"][0]["flagged"])
+
+    def test_flag_task_rejects_unknown_task(self):
+        with saved_db(make_db()):
+            result = flag_task("ghost-id", True)
+
+        assert_error(result, "not found")
 
 
 class TaskDescriptionTest(unittest.TestCase):
 
     def test_set_description_updates_task(self):
         with saved_db(make_db(TASK_1)) as saved:
-            result = set_task_description("List A", "Task A", "Some notes here")
+            result = set_task_description("task-1", "Some notes here")
 
         assert_ok(result)
         self.assertEqual(saved["tasks"][0]["description"], "Some notes here")
@@ -333,20 +377,14 @@ class TaskDescriptionTest(unittest.TestCase):
         task = task_record(id="task-1", name="Task A", list_id="list-1", description="Existing notes")
 
         with saved_db(make_db(task)) as saved:
-            result = set_task_description("List A", "Task A", "")
+            result = set_task_description("task-1", "")
 
         assert_ok(result)
         self.assertEqual(saved["tasks"][0]["description"], "")
 
     def test_set_description_rejects_unknown_task(self):
         with saved_db(make_db()):
-            result = set_task_description("List A", "Ghost task", "Notes")
-
-        assert_error(result, "not found")
-
-    def test_set_description_rejects_unknown_list(self):
-        with saved_db(make_db(TASK_1)):
-            result = set_task_description("Missing List", "Task A", "Notes")
+            result = set_task_description("ghost-id", "Notes")
 
         assert_error(result, "not found")
 

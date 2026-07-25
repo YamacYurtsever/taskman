@@ -147,6 +147,29 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(entry["sectionName"], "Group")
         self.assertTrue(entry["inGroup"])
 
+    def test_get_daysheet_keeps_entries_for_deleted_list(self):
+        entry = daysheet_entry(
+            id="entry-1",
+            datetime="2026-04-26T10:30:00Z",
+            list_id="list-gone",
+            text="Finished old task",
+        )
+
+        data = make_db(daysheet=[entry])
+
+        with saved_db(data):
+            res = self.client.get("/api/daysheet?date=2026-04-26")
+
+        self.assertEqual(res.status_code, 200)
+
+        body = res.get_json()
+        self.assertEqual(len(body["entries"]), 1)
+
+        returned = body["entries"][0]
+        self.assertEqual(returned["text"], "Finished old task")
+        self.assertEqual(returned["listName"], "Deleted list")
+        self.assertEqual(returned["sectionName"], "Deleted list")
+
     def test_get_daysheet_rejects_invalid_date(self):
         with saved_db(make_db()):
             res = self.client.get("/api/daysheet?date=not-a-date")
@@ -208,20 +231,23 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(task["name"], "New task")
         self.assertEqual(task["due"], "2026-05-01")
 
-    def test_add_task_rejects_duplicate(self):
-        with saved_db(make_db(TASK_1)):
+    def test_add_task_allows_duplicate_name(self):
+        with (
+            saved_db(make_db(TASK_1)) as saved,
+            patch("server.db.new_id", return_value="task-2"),
+        ):
             res = self.post("/api/add", {
                 "list": "List A",
                 "name": "Task A",
             })
 
-        self.assert_error(res, "already exists")
+        self.assert_ok(res)
+        self.assertEqual([t["name"] for t in saved["tasks"]], ["Task A", "Task A"])
 
     def test_edit_task_renames_task(self):
         with saved_db(make_db(TASK_1)) as saved:
             res = self.post("/api/edit", {
-                "list": "List A",
-                "name": "Task A",
+                "taskId": "task-1",
                 "newName": "Renamed task",
             })
 
@@ -231,8 +257,7 @@ class ApiTest(unittest.TestCase):
     def test_edit_task_sets_due(self):
         with saved_db(make_db(TASK_1)) as saved:
             res = self.post("/api/edit", {
-                "list": "List A",
-                "name": "Task A",
+                "taskId": "task-1",
                 "newName": "Task A",
                 "due": "2026-05-15",
             })
@@ -245,8 +270,7 @@ class ApiTest(unittest.TestCase):
 
         with saved_db(make_db(task)) as saved:
             res = self.post("/api/edit", {
-                "list": "List A",
-                "name": "Task A",
+                "taskId": "task-1",
                 "newName": "Task A",
                 "due": None,
             })
@@ -259,31 +283,29 @@ class ApiTest(unittest.TestCase):
 
         with saved_db(make_db(task)) as saved:
             res = self.post("/api/edit", {
-                "list": "List A",
-                "name": "Task A",
+                "taskId": "task-1",
                 "newName": "Renamed task",
             })
 
         self.assert_ok(res)
         self.assertEqual(saved["tasks"][0]["due"], "2026-05-01")
 
-    def test_edit_task_rejects_duplicate_name(self):
+    def test_edit_task_allows_duplicate_name(self):
         task_2 = task_record(id="task-2", name="Task B", list_id="list-1")
 
-        with saved_db(make_db(TASK_1, task_2)):
+        with saved_db(make_db(TASK_1, task_2)) as saved:
             res = self.post("/api/edit", {
-                "list": "List A",
-                "name": "Task A",
+                "taskId": "task-1",
                 "newName": "Task B",
             })
 
-        self.assert_error(res, "already exists")
+        self.assert_ok(res)
+        self.assertEqual([t["name"] for t in saved["tasks"]], ["Task B", "Task B"])
 
     def test_edit_task_rejects_missing_task(self):
         with saved_db(make_db()):
             res = self.post("/api/edit", {
-                "list": "List A",
-                "name": "Ghost task",
+                "taskId": "ghost-id",
                 "newName": "New name",
             })
 
@@ -292,8 +314,7 @@ class ApiTest(unittest.TestCase):
     def test_delete_task(self):
         with saved_db(make_db(TASK_1)) as saved:
             res = self.post("/api/delete", {
-                "list": "List A",
-                "name": "Task A",
+                "taskId": "task-1",
             })
 
         self.assert_ok(res)
@@ -302,8 +323,7 @@ class ApiTest(unittest.TestCase):
     def test_delete_task_rejects_missing_task(self):
         with saved_db(make_db()):
             res = self.post("/api/delete", {
-                "list": "List A",
-                "name": "Ghost task",
+                "taskId": "ghost-id",
             })
 
         self.assert_error(res, "not found")
@@ -316,8 +336,7 @@ class ApiTest(unittest.TestCase):
             patch("server.db.new_id", return_value="task-2"),
         ):
             res = self.post("/api/duplicate", {
-                "list": "List A",
-                "name": "Task A",
+                "taskId": "task-1",
             })
 
         self.assert_ok(res)
@@ -332,8 +351,7 @@ class ApiTest(unittest.TestCase):
     def test_duplicate_task_rejects_missing_task(self):
         with saved_db(make_db()):
             res = self.post("/api/duplicate", {
-                "list": "List A",
-                "name": "Ghost task",
+                "taskId": "ghost-id",
             })
 
         self.assert_error(res, "not found")
@@ -341,25 +359,24 @@ class ApiTest(unittest.TestCase):
     def test_move_task(self):
         with saved_db(make_db(TASK_1)) as saved:
             res = self.post("/api/move-task", {
-                "list": "List A",
-                "name": "Task A",
+                "taskId": "task-1",
                 "newList": "List B",
             })
 
         self.assert_ok(res)
         self.assertEqual(saved["tasks"][0]["listId"], "list-2")
 
-    def test_move_task_rejects_duplicate_in_destination(self):
+    def test_move_task_allows_duplicate_in_destination(self):
         duplicate = task_record(id="task-2", name="Task A", list_id="list-2")
 
-        with saved_db(make_db(TASK_1, duplicate)):
+        with saved_db(make_db(TASK_1, duplicate)) as saved:
             res = self.post("/api/move-task", {
-                "list": "List A",
-                "name": "Task A",
+                "taskId": "task-1",
                 "newList": "List B",
             })
 
-        self.assert_error(res, "already exists")
+        self.assert_ok(res)
+        self.assertEqual(saved["tasks"][0]["listId"], "list-2")
 
     def test_done_task(self):
         with (
@@ -369,8 +386,7 @@ class ApiTest(unittest.TestCase):
             patch("server.db.new_id", return_value="entry-1"),
         ):
             res = self.post("/api/done", {
-                "list": "List A",
-                "name": "Task A",
+                "taskId": "task-1",
             })
 
         self.assert_ok(res)
@@ -381,8 +397,7 @@ class ApiTest(unittest.TestCase):
     def test_done_task_rejects_already_done_task(self):
         with saved_db(make_db(TASK_DONE)):
             res = self.post("/api/done", {
-                "list": "List A",
-                "name": "Task B",
+                "taskId": "task-2",
             })
 
         self.assert_error(res, "already done")
@@ -390,8 +405,7 @@ class ApiTest(unittest.TestCase):
     def test_undo_task(self):
         with saved_db(make_db(TASK_DONE)) as saved:
             res = self.post("/api/undo", {
-                "list": "List A",
-                "name": "Task B",
+                "taskId": "task-2",
             })
 
         self.assert_ok(res)
@@ -400,8 +414,7 @@ class ApiTest(unittest.TestCase):
     def test_task_description_updates_description(self):
         with saved_db(make_db(TASK_1)) as saved:
             res = self.post("/api/task-description", {
-                "list": "List A",
-                "name": "Task A",
+                "taskId": "task-1",
                 "description": "My notes",
             })
 
@@ -411,9 +424,39 @@ class ApiTest(unittest.TestCase):
     def test_task_description_rejects_missing_task(self):
         with saved_db(make_db()):
             res = self.post("/api/task-description", {
-                "list": "List A",
-                "name": "Ghost task",
+                "taskId": "ghost-id",
                 "description": "Notes",
+            })
+
+        self.assert_error(res, "not found")
+
+    def test_flag_task(self):
+        with saved_db(make_db(TASK_1)) as saved:
+            res = self.post("/api/flag-task", {
+                "taskId": "task-1",
+                "flagged": True,
+            })
+
+        self.assert_ok(res)
+        self.assertTrue(saved["tasks"][0]["flagged"])
+
+    def test_unflag_task(self):
+        task = task_record(id="task-1", name="Task A", list_id="list-1", flagged=True)
+
+        with saved_db(make_db(task)) as saved:
+            res = self.post("/api/flag-task", {
+                "taskId": "task-1",
+                "flagged": False,
+            })
+
+        self.assert_ok(res)
+        self.assertFalse(saved["tasks"][0]["flagged"])
+
+    def test_flag_task_rejects_missing_task(self):
+        with saved_db(make_db()):
+            res = self.post("/api/flag-task", {
+                "taskId": "ghost-id",
+                "flagged": True,
             })
 
         self.assert_error(res, "not found")
@@ -433,6 +476,22 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         task = res.get_json()["tasks"][0]
         self.assertEqual(task["description"], "")
+
+    def test_get_state_normalizes_flagged(self):
+        task_without_flag = {
+            "id": "task-1",
+            "name": "Task A",
+            "listId": "list-1",
+            "due": None,
+            "doneAt": None,
+        }
+
+        with saved_db(make_db(task_without_flag)):
+            res = self.client.get("/api/state")
+
+        self.assertEqual(res.status_code, 200)
+        task = res.get_json()["tasks"][0]
+        self.assertFalse(task["flagged"])
 
     # ─────────────────────────── List Routes ───────────────────────────
 
@@ -477,7 +536,9 @@ class ApiTest(unittest.TestCase):
         self.assert_error(res, "name is required")
 
     def test_delete_list(self):
-        with saved_db(make_db(TASK_1)) as saved:
+        entry = daysheet_entry(id="entry-1", list_id="list-1")
+
+        with saved_db(make_db(TASK_1, daysheet=[entry])) as saved:
             res = self.post("/api/delete-list", {"list": "List A"})
 
         self.assert_ok(res)
@@ -487,6 +548,7 @@ class ApiTest(unittest.TestCase):
 
         self.assertNotIn("List A", list_names)
         self.assertNotIn("list-1", task_list_ids)
+        self.assertEqual([e["id"] for e in saved["daysheet"]], ["entry-1"])
 
     def test_delete_list_preserves_empty_group(self):
         grouped_list = {**LIST_1, "groupId": "group-1"}
@@ -668,8 +730,7 @@ class ApiTest(unittest.TestCase):
             patch("server.db.new_id", return_value="entry-1"),
         ):
             res = self.post("/api/continue", {
-                "list": "List A",
-                "task": "Task A",
+                "taskId": "task-1",
             })
 
         self.assert_ok(res)
@@ -681,8 +742,7 @@ class ApiTest(unittest.TestCase):
     def test_continue_task_rejects_missing_task(self):
         with saved_db(make_db(TASK_1)):
             res = self.post("/api/continue", {
-                "list": "List A",
-                "task": "Ghost task",
+                "taskId": "ghost-id",
             })
 
         self.assert_error(res, "not found")

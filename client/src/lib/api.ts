@@ -38,6 +38,7 @@ const API = {
   daysheetEdit: '/api/daysheet/edit',
   taskDescription: '/api/task-description',
   pinList: '/api/pin-list',
+  flagTask: '/api/flag-task',
 } as const;
 
 let unauthorizedHandler: (() => void) | null = null;

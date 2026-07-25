@@ -31,7 +31,7 @@ def list_record(id="list-1", name="List A", group_id=None):
     }
 
 
-def task_record(id="task-1", name="Task A", list_id="list-1", due=None, done_at=None, description=""):
+def task_record(id="task-1", name="Task A", list_id="list-1", due=None, done_at=None, description="", flagged=False):
     return {
         "id": id,
         "name": name,
@@ -39,6 +39,7 @@ def task_record(id="task-1", name="Task A", list_id="list-1", due=None, done_at=
         "due": due,
         "doneAt": done_at,
         "description": description,
+        "flagged": flagged,
     }
 
 
@@ -74,10 +75,10 @@ NOW_DT = "2026-04-26T10:00:00Z"
 
 def db_record(groups=None, lists=None, tasks=None, daysheet=None):
     return {
-        "groups": copy.deepcopy(groups or []),
-        "lists": copy.deepcopy(lists or []),
-        "tasks": copy.deepcopy(tasks or []),
-        "daysheet": copy.deepcopy(daysheet or []),
+        "groups": copy.deepcopy(list(groups or [])),
+        "lists": copy.deepcopy(list(lists or [])),
+        "tasks": copy.deepcopy(list(tasks or [])),
+        "daysheet": copy.deepcopy(list(daysheet or [])),
     }
 
 

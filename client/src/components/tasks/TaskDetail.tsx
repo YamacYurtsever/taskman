@@ -4,6 +4,7 @@ import { API } from '../../lib/api';
 import type { Task, TaskList } from '../../lib/types';
 import { cx, formatDue } from '../../lib/utils';
 import type { Action } from './Tasks.shared';
+import dueStyles from './DueDate.module.css';
 import styles from './TaskDetail.module.css';
 
 type TaskDetailProps = {
@@ -57,13 +58,11 @@ export const TaskDetail = ({ task, list, today, act, onClose }: TaskDetailProps)
   const [isEditing, setIsEditing] = useState(false);
   const [localDesc, setLocalDesc] = useState(task.description);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const listNameRef = useRef(list.name);
-  const taskNameRef = useRef(task.name);
+  const taskIdRef = useRef(task.id);
   const dueInfo = task.due ? formatDue(task.due, today) : null;
 
   useEffect(() => {
-    listNameRef.current = list.name;
-    taskNameRef.current = task.name;
+    taskIdRef.current = task.id;
   });
 
   if (prevTaskId !== task.id) {
@@ -93,8 +92,7 @@ export const TaskDetail = ({ task, list, today, act, onClose }: TaskDetailProps)
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       act(API.taskDescription, {
-        list: listNameRef.current,
-        name: taskNameRef.current,
+        taskId: taskIdRef.current,
         description: value,
       });
     }, 600);
@@ -111,7 +109,7 @@ export const TaskDetail = ({ task, list, today, act, onClose }: TaskDetailProps)
         <div className={styles.meta}>
           <span className={styles.listName}>{list.name}</span>
           {dueInfo && (
-            <span className={cx(styles.due, dueInfo.cls ? styles[dueInfo.cls as keyof typeof styles] : undefined)}>
+            <span className={cx(styles.due, dueInfo.cls && dueStyles[dueInfo.cls])}>
               {dueInfo.label}
             </span>
           )}

@@ -19,6 +19,7 @@ type Task = {
   due: string | null;
   doneAt: string | null;
   description: string;
+  flagged: boolean;
 };
 
 type StateResponse = {

@@ -42,11 +42,6 @@
 
 .due {
   font-size: var(--fs-sm);
-  color: var(--accent);
-}
-
-.due.overdue {
-  color: var(--red);
 }
 
 .closeBtn {

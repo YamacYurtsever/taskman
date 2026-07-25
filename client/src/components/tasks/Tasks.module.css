@@ -125,6 +125,10 @@
   border-color: var(--text-3);
 }
 
+.taskRow.flagged {
+  border-left: 3px solid var(--accent-2);
+}
+
 .taskBody {
   flex: 1;
   display: flex;
@@ -214,11 +218,6 @@
 .taskDue {
   font-size: var(--fs-sm);
   line-height: 1;
-  color: var(--accent);
-}
-
-.taskDue.overdue {
-  color: var(--red);
 }
 
 .taskRight {

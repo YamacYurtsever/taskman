@@ -106,11 +106,8 @@ def find_group(data, name):
     return next((g for g in data["groups"] if g["name"] == name), None)
 
 
-def find_task(data, list_id, name):
-    return next(
-        (t for t in data["tasks"] if t["listId"] == list_id and t["name"] == name),
-        None,
-    )
+def find_task_by_id(data, task_id):
+    return next((t for t in data["tasks"] if t["id"] == task_id), None)
 
 
 def find_daysheet_entry(data, list_id, entry_type, text, entry_day, tz_name):
@@ -139,10 +136,10 @@ def require_list(data, name, message=None):
     return lst
 
 
-def require_task(data, lst, name):
-    task = find_task(data, lst["id"], name)
+def require_task_by_id(data, task_id):
+    task = find_task_by_id(data, task_id)
     if not task:
-        raise ServiceError(f"task '{name}' not found in '{lst['name']}'")
+        raise ServiceError("task not found")
     return task
 
 
@@ -187,7 +184,6 @@ def delete_group(data, group):
 
 def delete_list(data, lst):
     data["tasks"] = [t for t in data["tasks"] if t["listId"] != lst["id"]]
-    data["daysheet"] = [e for e in data["daysheet"] if e["listId"] != lst["id"]]
     data["lists"] = [l for l in data["lists"] if l["id"] != lst["id"]]
 
 

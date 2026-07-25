@@ -116,8 +116,8 @@ taskman/
 ```json
 {
   "groups":   [{ "id": "uuid", "name": "UNSW" }],
-  "lists":    [{ "id": "uuid", "name": "COMP3131", "groupId": "uuid | null" }],
-  "tasks":    [{ "id": "uuid", "name": "Finish Assignment 5", "listId": "uuid", "due": "2026-04-30 | null", "doneAt": "2026-04-26T04:32:05Z | null", "description": "" }],
+  "lists":    [{ "id": "uuid", "name": "COMP3131", "groupId": "uuid | null", "pinned": false }],
+  "tasks":    [{ "id": "uuid", "name": "Finish Assignment 5", "listId": "uuid", "due": "2026-04-30 | null", "doneAt": "2026-04-26T04:32:05Z | null", "description": "", "flagged": false }],
   "daysheet": [{ "id": "uuid", "datetime": "2026-04-26T04:32:05Z", "listId": "uuid", "type": "log | continue | done", "text": "Talked with Baba" }]
 }
 ```
@@ -341,22 +341,79 @@ Updated list schema:
 - [x] `client/src/views/DaysheetView.tsx` — pass `pinnedSections` from `DaysheetResponse` into `Timeline`. In `groupEntries`, after building sections from entries, append any `pinnedSections` entries whose `sectionId` is not already in the map (renders the section header with no entry rows, so the section appears empty but visible).
 - [x] Styles — add pin button positioning styles in `Tasks.module.css` alongside the existing `focusedMeta` styles (small, vertically centred, no extra margin needed beyond the existing gap).
 
-##### Milestone 9 — Pin Tasks
+##### Milestone 9 — Flag Tasks
 
-Tasks can be flagged as "planned for today" — a daily intent marker separate from due date or priority. Flagged tasks appear as a dedicated "Today's Plan" section at the top of the daysheet for that day. As work is logged against them (or they are marked done), they move naturally into the daysheet entries below, so the plan shrinks as the log grows. The flag is day-scoped and auto-clears at the end of the day (it is not a permanent state on the task).
+A task can be flagged as "planned for today" — a manual intent marker, independent of due date. Flagging is a plain boolean (`flagged`) that persists across days (no auto-clear); it is cleared automatically when the task is marked done. Flagged tasks sort to the top within their list/card in cards and focused views (existing relative order otherwise preserved), with a left border in `--accent-2` as the visual indicator. The toggle is right-click on the task row (no dedicated button — the row has no spare space for one); right-click's default browser context menu is suppressed.
 
-_Design is still being fleshed out. Key open questions before speccing:_
+Updated task schema:
 
-- Where is the toggle surfaced? (task detail panel, task row, or both)
-- Does flagging a task for today carry any visual indicator in the cards/focused views, or only in the daysheet? yes
-- Should the "Today's Plan" section in the daysheet be ordered manually or by list?
-- Exact auto-clear behaviour: midnight in the user's timezone, or on next login after midnight?
+```json
+{ "id": "uuid", "name": "Finish Assignment 5", "listId": "uuid", "due": "2026-04-30 | null", "doneAt": "2026-04-26T04:32:05Z | null", "description": "", "flagged": false }
+```
+
+###### Backend
+
+- [x] `server/services/tasks.py` — `flag_task(task_id, flagged, email=None, tz_name="UTC")`; sets the `flagged` field on the task found via `require_task_by_id`. Same shape as other id-based task services.
+- [x] `server/services/tasks.py` — `add_task` sets `"flagged": False` on new tasks; `duplicate_task` sets `"flagged": False` on the duplicate (the flag does not carry over to copies).
+- [x] `server/services/tasks.py` — `done_task` clears `flagged` to `False` when a task is marked done.
+- [x] `server/api.py` — `POST /api/flag-task` — accepts `{ taskId, flagged: bool }`; delegates to `flag_task`; requires auth. Follow the same pattern as `/api/pin-list`.
+- [x] `server/api.py` — `GET /api/state` — normalize `flagged` with `t.get("flagged", False)` alongside the existing `description`/`doneAt` normalization, for backward compatibility with existing records that predate this field.
+
+###### Backend — tests
+
+- [x] `server/tests/test_tasks.py` — test `flag_task` sets/unsets `flagged`; rejects unknown task id.
+- [x] `server/tests/test_tasks.py` — test `done_task` clears `flagged` on a previously-flagged task.
+- [x] `server/tests/test_api.py` — test `POST /api/flag-task`; test `GET /api/state` normalizes missing `flagged` to `false` for legacy records.
+
+###### Frontend
+
+- [x] `client/style.css` — rename `--pink` to `--accent-2` (a semantic secondary-accent token, distinct from `--accent`, used for "needs attention today" contexts); update `DueDate.module.css`'s `.due-today` to use it.
+- [x] `client/src/lib/types.ts` — add `flagged: boolean` to `Task` (backend always normalizes it, so it's non-optional, unlike list `pinned`).
+- [x] `client/src/lib/api.ts` — add `flagTask: '/api/flag-task'` to the `API` const object.
+- [x] `client/src/components/tasks/TaskRow.tsx` — `onContextMenu` handler: `e.preventDefault()`, then `act(API.flagTask, { taskId: task.id, flagged: !task.flagged })`.
+- [x] `client/src/components/tasks/Tasks.module.css` — flagged task rows get a left border in `var(--accent-2)`.
+- [x] `client/src/lib/utils.ts` — `pendingFor()` partitions into flagged/unflagged, sorts each partition with the existing due/name logic, and concatenates flagged first.
+
+###### Frontend — verification
+
+- [x] `cd client && npm run lint`
+- [x] `cd client && npm run build`
+- [ ] Manual: right-click a task in cards/focused view flags it (border appears, task moves to top of its list/card); right-click again unflags it; marking a flagged task done clears the flag.
+
+##### Milestone 10 — Batch Task Addition
+
+Generates a numbered series of tasks in one go — the motivating case is start-of-term setup, e.g. `LEC 01`–`LEC 10` due weekly. Toggled inline from the existing single-task add row (no modal, no new route/view) since it's used rarely (a few times a term) and shouldn't add permanent weight to the everyday single-add flow.
+
+**Name generation:** no template syntax. The typed starting name has its trailing number auto-detected via a `\d+$` match, preserving zero-padding width (`LEC 01` → prefix `"LEC "`, width `2`, start `1`); each subsequent task increments that number (`LEC 02`, `LEC 03`, …). If the name has no trailing number, fall back to appending `" 2"`, `" 3"`, etc.
+
+**Due dates:** `due_i = start_due + i * interval_days` for `i` in `range(count)`. No catch-up/skip logic — if a computed date is invalid it's just a plain date.
+
+**Skipping an occurrence** (e.g. week 6) is not a feature — generate the full run, delete the unwanted task manually afterward.
+
+###### Backend
+
+- [ ] `server/services/tasks.py` — `add_task_series(list_name, base_name, start_due, interval_days, count, email=None, tz_name="UTC")`: validates inputs (`count` positive, reasonable upper bound e.g. 100, `interval_days` positive), derives the name sequence via the trailing-number regex described above, computes due dates by adding `interval_days * i` to `start_due`, and appends all `count` tasks in a single `db.load`/`db.save` (not a loop over `add_task`, to avoid `count` separate file writes).
+- [ ] `server/api.py` — `POST /api/add-series` — accepts `{ list, name, startDue, intervalDays, count }`; delegates to `add_task_series`; requires auth.
+
+###### Backend — tests
+
+- [ ] `server/tests/test_tasks.py` — test name sequence generation (padding preserved, e.g. `LEC 01` → `LEC 01..LEC 10`; no trailing number falls back to `" 2"`, `" 3"`, …); test due date spacing; test rejection of non-positive `count`/`interval_days`; test unknown list.
+- [ ] `server/tests/test_api.py` — test `POST /api/add-series` end-to-end (task count, names, due dates all correct in the saved DB).
+
+###### Frontend
+
+- [ ] `client/src/lib/api.ts` — add `addSeries: '/api/add-series'` to the `API` const object.
+- [ ] `client/src/components/tasks/AddTaskForm.tsx` — add `mode: 'single' | 'batch'` state; a small toggle button as the leftmost element of the row flips it. Batch mode reuses the existing name input as the starting name and the existing date input as the start date, and adds two `type="number"` inputs (interval in days, default 7; count). `submit()` branches: single mode calls `API.add` as today, batch mode calls `API.addSeries`.
+- [ ] `client/src/components/tasks/Tasks.module.css` — `.inlineAdd` gets `flex-wrap: wrap` so the row reflows to multiple lines by available width rather than fixed breakpoints (looks like 2 rows at normal width, folds further on narrow viewports); give the new interval/count number inputs fixed small widths matching the existing `input[type=date]` width-token pattern; fix the trailing `border-right` divider so it doesn't dangle on whichever field lands last in a wrapped line.
+
+###### Frontend — verification
+
+- [ ] `cd client && npm run lint`
+- [ ] `cd client && npm run build`
+- [ ] Manual: toggle batch mode, generate a series, confirm names/dates/count are correct; confirm the row wraps sensibly at normal width and at mobile width; confirm toggling back to single mode restores the normal add flow.
 
 ##### Future
 
-- Make Daysheet Entries Remain After List or Task Deletion
-- Daily Lists
 - Sound Effects
-- Batch Addition
 - Daysheet analytics
 - Turn a task description into an actionable checklist (AI)

@@ -9,7 +9,7 @@ from server.services.utils import (
     remove_daysheet_entries,
     require_list,
     require_name,
-    require_task,
+    require_task_by_id,
     service,
     storage_datetime_for_local_date,
     today_in_timezone,
@@ -88,21 +88,19 @@ def delete_log(list_name: str, text: str, email: str | None = None, tz_name: str
 # ─────────────────────────── Continue Entries ───────────────────────────
 
 @service
-def continue_task(list_name: str, task_name: str, email: str | None = None, tz_name: str = "UTC"):
-    task_name = require_name(task_name, "task")
-
+def continue_task(task_id: str, email: str | None = None, tz_name: str = "UTC"):
     data = db.load(email)
-    lst = require_list(data, list_name)
-    require_task(data, lst, task_name)
+    task = require_task_by_id(data, task_id)
+    task_name = task["name"]
 
     today = today_in_timezone(tz_name)
 
-    if has_daysheet_entry(data, lst["id"], DaysheetEntryType.DONE, task_name, today, tz_name):
+    if has_daysheet_entry(data, task["listId"], DaysheetEntryType.DONE, task_name, today, tz_name):
         raise ServiceError(f"'{task_name}' was already finished today")
 
-    if has_daysheet_entry(data, lst["id"], DaysheetEntryType.CONTINUE, task_name, today, tz_name):
+    if has_daysheet_entry(data, task["listId"], DaysheetEntryType.CONTINUE, task_name, today, tz_name):
         raise ServiceError(f"'{task_name}' was already continued today")
 
-    add_daysheet_entry(data, lst["id"], DaysheetEntryType.CONTINUE, task_name, utc_now())
+    add_daysheet_entry(data, task["listId"], DaysheetEntryType.CONTINUE, task_name, utc_now())
 
     db.save(data, email)

@@ -23,8 +23,14 @@ const MSG = {
   noCalUrl: 'No calendars configured. Add a "calendars" array to ~/.taskman/users/<your-email>/config.json.',
 } as const;
 
-const todayStr = () =>
-  new Date().toISOString().slice(0, 10);
+const localDateStr = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const todayStr = () => localDateStr(new Date());
 
 const byName = <T extends { name: string }>(a: T, b: T) =>
   a.name.localeCompare(b.name);
@@ -47,29 +53,34 @@ const stop = (fn: () => void) => (e: MouseEvent) => {
   fn();
 };
 
+const flaggedFirst = (tasks: Task[]) => [
+  ...tasks.filter(t => t.flagged),
+  ...tasks.filter(t => !t.flagged),
+];
+
 const pendingFor = (data: StateResponse, listId: string, filter: TaskFilter) => {
   const today = new Date(data.today);
   const pending = data.tasks.filter(t => t.listId === listId && !t.doneAt);
 
   if (filter === 'day') {
-    return pending
-      .filter(t => t.due && new Date(t.due) <= today)
-      .sort(byDueThenName);
+    return flaggedFirst(
+      pending.filter(t => t.due && new Date(t.due) <= today).sort(byDueThenName),
+    );
   }
 
   if (filter === 'week') {
     const cut = new Date(today);
     cut.setDate(cut.getDate() + 7);
 
-    return pending
-      .filter(t => t.due && new Date(t.due) <= cut)
-      .sort(byDueThenName);
+    return flaggedFirst(
+      pending.filter(t => t.due && new Date(t.due) <= cut).sort(byDueThenName),
+    );
   }
 
-  return [
+  return flaggedFirst([
     ...pending.filter(t => t.due).sort(byDueThenName),
     ...pending.filter(t => !t.due).sort(byName),
-  ];
+  ]);
 };
 
 const doneFor = (data: StateResponse, listId: string) =>
@@ -88,43 +99,44 @@ const formatDue = (due: string, today: string) => {
   if (days === -1) {
     return {
       label: 'Yesterday',
-      cls: 'overdue',
+      cls: 'due-overdue',
     };
   }
 
   if (days > -7 && days < 0) {
     return {
       label: `Last ${weekdayName(dueDate)}`,
-      cls: 'overdue',
+      cls: 'due-overdue',
     };
   }
 
   if (days < 0) {
     return {
       label: dueDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-      cls: 'overdue',
+      cls: 'due-overdue',
     };
   }
 
-  if (days === 0) return { label: 'Today', cls: 'today-due' };
-  if (days === 1) return { label: 'Tomorrow', cls: 'soon' };
+  if (days === 0) return { label: 'Today', cls: 'due-today' };
+  if (days === 1) return { label: 'Tomorrow', cls: 'due-upcoming' };
 
   if (days < 7) {
     return {
       label: `Next ${weekdayName(dueDate)}`,
-      cls: '',
+      cls: 'due-upcoming',
     };
   }
 
   return {
     label: dueDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-    cls: '',
+    cls: 'due-upcoming',
   };
 };
 
 export {
   MSG,
   cx,
+  localDateStr,
   todayStr,
   sortByName,
   stop,
