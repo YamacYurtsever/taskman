@@ -489,6 +489,24 @@ class TaskCompletionTest(unittest.TestCase):
         self.assertEqual(entry["type"], DaysheetEntryType.DONE)
         self.assertEqual(entry["text"], "Task A")
 
+    def test_done_task_allows_completing_two_same_named_tasks_same_day(self):
+        task_a = task_record(id="task-1", name="Task A", list_id="list-1")
+        task_b = task_record(id="task-2", name="Task A", list_id="list-1")
+
+        with (
+            saved_db(make_db(task_a, task_b)) as saved,
+            patch("server.services.tasks.today_in_timezone", return_value=TODAY),
+            patch("server.services.tasks.utc_now", return_value=NOW_DT),
+            patch("server.db.new_id", side_effect=["entry-1", "entry-2"]),
+        ):
+            first = done_task("task-1")
+            second = done_task("task-2")
+
+        assert_ok(first)
+        assert_ok(second)
+        self.assertIsNotNone(saved["tasks"][0]["doneAt"])
+        self.assertIsNotNone(saved["tasks"][1]["doneAt"])
+
     def test_done_task_rejects_second_completion_of_recurring_task_same_day(self):
         task = task_record(id="task-1", name="Task A", list_id="list-1", recur_interval_days=7)
         entry = daysheet_entry(

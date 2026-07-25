@@ -214,7 +214,9 @@ def done_task(task_id: str, email: str | None = None, tz_name: str = "UTC"):
     today = today_in_timezone(tz_name)
     completed_at = utc_now()
 
-    if has_daysheet_entry(data, task["listId"], DaysheetEntryType.DONE, task["name"], today, tz_name):
+    if task.get("recurIntervalDays") and has_daysheet_entry(
+        data, task["listId"], DaysheetEntryType.DONE, task["name"], today, tz_name,
+    ):
         raise ServiceError(f"'{task['name']}' was already finished today")
 
     remove_daysheet_entries(
