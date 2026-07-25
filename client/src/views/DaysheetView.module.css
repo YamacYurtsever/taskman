@@ -69,38 +69,35 @@
   pointer-events: none;
 }
 
-.timeline,
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp);
+}
+
 .timelineGroup {
   display: flex;
   flex-direction: column;
   gap: var(--sp-sm);
+  background: var(--primary);
+  border: var(--border-w) solid var(--border);
+  border-radius: var(--r);
+  padding: var(--sp);
 }
 
 .timelineGroupName {
   color: var(--text-2);
   font-size: var(--fs-lg);
   font-weight: 600;
-  margin-bottom: var(--sp-sm);
-}
-
-.timelineGroup + .timelineGroup {
-  margin-top: var(--sp);
 }
 
 .timelineEntry {
   display: flex;
   align-items: center;
   gap: var(--sp);
-  border: var(--border-w) solid transparent;
   border-radius: var(--r);
   padding: calc(var(--sp-sm) + 2px) var(--sp);
-  transition: background var(--animation-d-lg), border-color var(--animation-d-lg);
-}
-
-.timelineEntry:hover,
-.timelineEntry.timelineEditRow {
-  background: var(--primary);
-  border-color: var(--border);
+  margin: 0 calc(var(--sp) * -1);
 }
 
 .timelineTime {
@@ -121,7 +118,7 @@
 }
 
 .timelineText::before {
-  content: '•';
+  content: '○';
   color: var(--text-3);
   margin-right: var(--sp-sm);
   flex-shrink: 0;

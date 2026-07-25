@@ -126,7 +126,7 @@
 }
 
 .taskRow.flagged {
-  border-left: 3px solid var(--accent-hl);
+  border-left: 3px solid var(--accent);
 }
 
 .taskBody {

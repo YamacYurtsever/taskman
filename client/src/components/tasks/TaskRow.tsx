@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { KeyboardEvent } from 'react';
+import type { CSSProperties, KeyboardEvent } from 'react';
 import { CheckIcon, ContinueIcon, DeleteIcon, DuplicateIcon, EditIcon, MoveIcon, NoteIcon } from '../icons';
 import { API } from '../../lib/api';
 import { cx, formatDue, sortByName } from '../../lib/utils';
@@ -28,6 +28,14 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
   const [due, setDue] = useState(task.due || '');
   const [newList, setNewList] = useState(listName);
   const dueInfo = task.due ? formatDue(task.due, data.today) : null;
+  const flagColorVar =
+    dueInfo?.cls === 'due-overdue'
+      ? '--red'
+      : dueInfo?.cls === 'due-today'
+        ? '--accent-hl'
+        : dueInfo?.cls === 'due-upcoming'
+          ? '--accent'
+          : null;
 
   const saveEdit = async () => {
     const newName = name.trim();
@@ -93,6 +101,11 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
   return (
     <div
       className={cx(styles.taskRow, task.doneAt && styles.done, task.flagged && styles.flagged)}
+      style={
+        task.flagged && flagColorVar
+          ? ({ borderLeftColor: `var(${flagColorVar})` } as CSSProperties)
+          : undefined
+      }
       onContextMenu={e => {
         e.preventDefault();
         act(API.flagTask, { taskId: task.id, flagged: !task.flagged });
