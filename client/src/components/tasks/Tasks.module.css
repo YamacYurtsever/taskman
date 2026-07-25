@@ -317,6 +317,9 @@
   display: flex;
   align-items: center;
   gap: var(--sp-sm);
+}
+
+.focusedView .taskEditRecurGroup {
   flex-shrink: 0;
 }
 
@@ -328,7 +331,7 @@
 }
 
 .taskEditRecur {
-  width: 40px;
+  flex: 1;
   min-width: 0;
   background: transparent;
   border: var(--border-w) solid var(--border);
@@ -338,6 +341,11 @@
   font: inherit;
   font-size: var(--fs-sm);
   outline: none;
+}
+
+.focusedView .taskEditRecur {
+  flex: initial;
+  width: 40px;
 }
 
 .taskMoveSelect {
