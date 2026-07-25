@@ -244,6 +244,38 @@ class ApiTest(unittest.TestCase):
         self.assert_ok(res)
         self.assertEqual([t["name"] for t in saved["tasks"]], ["Task A", "Task A"])
 
+    def test_add_series(self):
+        with (
+            saved_db(make_db()) as saved,
+            patch("server.db.new_id", side_effect=[f"id-{i}" for i in range(5)]),
+        ):
+            res = self.post("/api/add-series", {
+                "list": "List A",
+                "name": "LEC 01",
+                "startDue": "2026-05-04",
+                "intervalDays": 7,
+                "count": 5,
+            })
+
+        self.assert_ok(res)
+
+        names = [t["name"] for t in saved["tasks"]]
+        dues = [t["due"] for t in saved["tasks"]]
+        self.assertEqual(names, ["LEC 01", "LEC 02", "LEC 03", "LEC 04", "LEC 05"])
+        self.assertEqual(dues, ["2026-05-04", "2026-05-11", "2026-05-18", "2026-05-25", "2026-06-01"])
+
+    def test_add_series_rejects_non_positive_count(self):
+        with saved_db(make_db()):
+            res = self.post("/api/add-series", {
+                "list": "List A",
+                "name": "LEC 01",
+                "startDue": "2026-05-04",
+                "intervalDays": 7,
+                "count": 0,
+            })
+
+        self.assert_error(res, "count must be a positive integer")
+
     def test_edit_task_renames_task(self):
         with saved_db(make_db(TASK_1)) as saved:
             res = self.post("/api/edit", {

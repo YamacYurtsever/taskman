@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from server import db
@@ -40,6 +40,10 @@ def parse_date(s):
         except ValueError:
             pass
     raise ServiceError(f"invalid date '{s}' — expected YYYY-MM-DD")
+
+
+def add_days_to_date(date_str: str, days: int) -> str:
+    return (datetime.strptime(date_str, DATE_FORMAT) + timedelta(days=days)).strftime(DATE_FORMAT)
 
 
 def require_timezone(tz_name: str) -> str:

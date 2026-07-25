@@ -1,8 +1,11 @@
+import re
+
 from server import db
 from server.constants import DaysheetEntryType
 from server.services.utils import (
     ServiceError,
     add_daysheet_entry,
+    add_days_to_date,
     parse_date,
     remove_daysheet_entries,
     require_list,
@@ -12,6 +15,9 @@ from server.services.utils import (
     today_in_timezone,
     utc_now,
 )
+
+MAX_SERIES_COUNT = 100
+_TRAILING_NUMBER_RE = re.compile(r"(\d+)$")
 
 
 def _copied_task_name(data, list_id: str, task_name: str) -> str:
@@ -26,6 +32,29 @@ def _copied_task_name(data, list_id: str, task_name: str) -> str:
         copy_index += 1
 
     return f"{base_name} {copy_index}"
+
+
+def _series_names(base_name: str, count: int) -> list[str]:
+    match = _TRAILING_NUMBER_RE.search(base_name)
+    if match:
+        prefix = base_name[:match.start()]
+        width = len(match.group(1))
+        start = int(match.group(1))
+        return [f"{prefix}{str(start + i).zfill(width)}" for i in range(count)]
+
+    return [base_name] + [f"{base_name} {i}" for i in range(2, count + 1)]
+
+
+def _positive_int(value, field: str) -> int:
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        raise ServiceError(f"{field} must be a positive integer")
+
+    if value <= 0:
+        raise ServiceError(f"{field} must be a positive integer")
+
+    return value
 
 
 # ─────────────────────────── Create / Edit ───────────────────────────
@@ -46,6 +75,44 @@ def add_task(list_name: str, task_name: str, due: str | None = None, email: str 
         "description": "",
         "flagged": False,
     })
+
+    db.save(data, email)
+
+
+@service
+def add_task_series(
+    list_name: str,
+    base_name: str,
+    start_due: str,
+    interval_days: int,
+    count: int,
+    email: str | None = None,
+    tz_name: str = "UTC",
+):
+    base_name = require_name(base_name)
+    start = parse_date(start_due)
+    interval_days = _positive_int(interval_days, "intervalDays")
+    count = _positive_int(count, "count")
+
+    if count > MAX_SERIES_COUNT:
+        raise ServiceError(f"count must be at most {MAX_SERIES_COUNT}")
+
+    data = db.load(email)
+    lst = require_list(data, list_name)
+
+    names = _series_names(base_name, count)
+    data["tasks"].extend(
+        {
+            "id": db.new_id(),
+            "name": name,
+            "listId": lst["id"],
+            "due": add_days_to_date(start, i * interval_days),
+            "doneAt": None,
+            "description": "",
+            "flagged": False,
+        }
+        for i, name in enumerate(names)
+    )
 
     db.save(data, email)
 

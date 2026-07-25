@@ -8,7 +8,6 @@
   --red-bg:       oklch(65% 0.17 22 / 0.1);
   --yellow:       oklch(63.65% 0.13 75.4);
   --yellow-bg:    oklch(61.47% 0.13 72.8 / 0.1);
-  --accent-2:     oklch(60.911% 0.17526 326.673);
 
   /* Typography */
   --font-sans:    'Nunito', sans-serif;
@@ -71,6 +70,7 @@
   --text-3:       #a59a8f;
   --accent:       #5b6cff;
   --accent-bg:    #5b6cff1a;
+  --accent-hl:     #b756b9;
 }
 
 /* ──────────────────────────── Themes ─────────────────────────── */

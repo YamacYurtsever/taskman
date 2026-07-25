@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { PlusIcon } from '../icons';
+import { LayersIcon, PlusIcon } from '../icons';
 import { API } from '../../lib/api';
-import { MSG } from '../../lib/utils';
+import { cx, MSG } from '../../lib/utils';
 import styles from './Tasks.module.css';
 import type { Action } from './Tasks.shared';
 
@@ -11,20 +11,44 @@ type AddTaskFormProps = {
 };
 
 export const AddTaskForm = ({ listName, act }: AddTaskFormProps) => {
+  const [mode, setMode] = useState<'single' | 'batch'>('single');
   const [name, setName] = useState('');
   const [due, setDue] = useState('');
+  const [intervalDays, setIntervalDays] = useState('7');
+  const [count, setCount] = useState('1');
 
   const submit = async () => {
     const trimmed = name.trim();
     if (!trimmed) return;
 
-    await act(API.add, { list: listName, name: trimmed, due: due || null });
+    if (mode === 'batch') {
+      const ok = await act(API.addSeries, {
+        list: listName,
+        name: trimmed,
+        startDue: due || null,
+        intervalDays: Number(intervalDays),
+        count: Number(count),
+      });
+      if (!ok) return;
+    } else {
+      await act(API.add, { list: listName, name: trimmed, due: due || null });
+    }
+
     setName('');
     setDue('');
   };
 
   return (
     <div className={styles.inlineAdd}>
+      <button
+        type="button"
+        className={cx(styles.inlineAddToggle, mode === 'batch' && styles.inlineAddToggleActive)}
+        title={mode === 'batch' ? 'Switch to single add' : 'Switch to batch add'}
+        onClick={() => setMode(mode === 'batch' ? 'single' : 'batch')}
+      >
+        <LayersIcon />
+      </button>
+
       <input
         type="text"
         placeholder={MSG.addTask}
@@ -33,9 +57,35 @@ export const AddTaskForm = ({ listName, act }: AddTaskFormProps) => {
         onKeyDown={e => e.key === 'Enter' && submit()}
       />
       <input type="date" value={due} onChange={e => setDue(e.target.value)} />
+
       <button className={styles.inlineAddBtn} onClick={submit}>
         <PlusIcon />
       </button>
+
+      {mode === 'batch' && (
+        <div className={styles.inlineAddSeriesRow}>
+          <label className={styles.inlineAddSeriesGroup} title="Days between each task">
+            <span className={styles.inlineAddSeriesLabel}>↻</span>
+            <input
+              className={styles.inlineAddNumber}
+              type="number"
+              min={1}
+              value={intervalDays}
+              onChange={e => setIntervalDays(e.target.value)}
+            />
+          </label>
+          <label className={styles.inlineAddSeriesGroup} title="Number of tasks to create">
+            <span className={styles.inlineAddSeriesLabel}>×</span>
+            <input
+              className={styles.inlineAddNumber}
+              type="number"
+              min={1}
+              value={count}
+              onChange={e => setCount(e.target.value)}
+            />
+          </label>
+        </div>
+      )}
     </div>
   );
 };

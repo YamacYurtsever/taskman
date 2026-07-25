@@ -76,6 +76,14 @@ const MoveIcon = (props: IconProps) => (
   </Icon>
 );
 
+const LayersIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M8 3l6 3.2-6 3.2-6-3.2L8 3z" />
+    <path d="M2 9.6L8 12.8l6-3.2" />
+    <path d="M2 12.4L8 15.6l6-3.2" />
+  </Icon>
+);
+
 const MenuIcon = (props: IconProps) => (
   <Icon {...props}>
     <path d="M3 4h10M3 8h10M3 12h10" />
@@ -137,6 +145,7 @@ export {
   EditIcon,
   DuplicateIcon,
   MoveIcon,
+  LayersIcon,
   MenuIcon,
   NoteIcon,
   PinIcon,

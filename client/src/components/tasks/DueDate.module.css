@@ -3,7 +3,7 @@
 }
 
 .due-today {
-  color: var(--accent-2);
+  color: var(--accent-hl);
 }
 
 .due-upcoming {

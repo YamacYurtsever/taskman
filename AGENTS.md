@@ -343,7 +343,7 @@ Updated list schema:
 
 ##### Milestone 9 — Flag Tasks
 
-A task can be flagged as "planned for today" — a manual intent marker, independent of due date. Flagging is a plain boolean (`flagged`) that persists across days (no auto-clear); it is cleared automatically when the task is marked done. Flagged tasks sort to the top within their list/card in cards and focused views (existing relative order otherwise preserved), with a left border in `--accent-2` as the visual indicator. The toggle is right-click on the task row (no dedicated button — the row has no spare space for one); right-click's default browser context menu is suppressed.
+A task can be flagged as "planned for today" — a manual intent marker, independent of due date. Flagging is a plain boolean (`flagged`) that persists across days (no auto-clear); it is cleared automatically when the task is marked done. Flagged tasks sort to the top within their list/card in cards and focused views (existing relative order otherwise preserved), with a left border in `--accent-hl` as the visual indicator. The toggle is right-click on the task row (no dedicated button — the row has no spare space for one); right-click's default browser context menu is suppressed.
 
 Updated task schema:
 
@@ -367,11 +367,10 @@ Updated task schema:
 
 ###### Frontend
 
-- [x] `client/style.css` — rename `--pink` to `--accent-2` (a semantic secondary-accent token, distinct from `--accent`, used for "needs attention today" contexts); update `DueDate.module.css`'s `.due-today` to use it.
 - [x] `client/src/lib/types.ts` — add `flagged: boolean` to `Task` (backend always normalizes it, so it's non-optional, unlike list `pinned`).
 - [x] `client/src/lib/api.ts` — add `flagTask: '/api/flag-task'` to the `API` const object.
 - [x] `client/src/components/tasks/TaskRow.tsx` — `onContextMenu` handler: `e.preventDefault()`, then `act(API.flagTask, { taskId: task.id, flagged: !task.flagged })`.
-- [x] `client/src/components/tasks/Tasks.module.css` — flagged task rows get a left border in `var(--accent-2)`.
+- [x] `client/src/components/tasks/Tasks.module.css` — flagged task rows get a left border in `var(--accent-hl)`.
 - [x] `client/src/lib/utils.ts` — `pendingFor()` partitions into flagged/unflagged, sorts each partition with the existing due/name logic, and concatenates flagged first.
 
 ###### Frontend — verification
@@ -392,25 +391,25 @@ Generates a numbered series of tasks in one go — the motivating case is start-
 
 ###### Backend
 
-- [ ] `server/services/tasks.py` — `add_task_series(list_name, base_name, start_due, interval_days, count, email=None, tz_name="UTC")`: validates inputs (`count` positive, reasonable upper bound e.g. 100, `interval_days` positive), derives the name sequence via the trailing-number regex described above, computes due dates by adding `interval_days * i` to `start_due`, and appends all `count` tasks in a single `db.load`/`db.save` (not a loop over `add_task`, to avoid `count` separate file writes).
-- [ ] `server/api.py` — `POST /api/add-series` — accepts `{ list, name, startDue, intervalDays, count }`; delegates to `add_task_series`; requires auth.
+- [x] `server/services/tasks.py` — `add_task_series(list_name, base_name, start_due, interval_days, count, email=None, tz_name="UTC")`: validates inputs (`count` positive, reasonable upper bound e.g. 100, `interval_days` positive), derives the name sequence via the trailing-number regex described above, computes due dates by adding `interval_days * i` to `start_due`, and appends all `count` tasks in a single `db.load`/`db.save` (not a loop over `add_task`, to avoid `count` separate file writes).
+- [x] `server/api.py` — `POST /api/add-series` — accepts `{ list, name, startDue, intervalDays, count }`; delegates to `add_task_series`; requires auth.
 
 ###### Backend — tests
 
-- [ ] `server/tests/test_tasks.py` — test name sequence generation (padding preserved, e.g. `LEC 01` → `LEC 01..LEC 10`; no trailing number falls back to `" 2"`, `" 3"`, …); test due date spacing; test rejection of non-positive `count`/`interval_days`; test unknown list.
-- [ ] `server/tests/test_api.py` — test `POST /api/add-series` end-to-end (task count, names, due dates all correct in the saved DB).
+- [x] `server/tests/test_tasks.py` — test name sequence generation (padding preserved, e.g. `LEC 01` → `LEC 01..LEC 10`; no trailing number falls back to `" 2"`, `" 3"`, …); test due date spacing; test rejection of non-positive `count`/`interval_days`; test unknown list.
+- [x] `server/tests/test_api.py` — test `POST /api/add-series` end-to-end (task count, names, due dates all correct in the saved DB).
 
 ###### Frontend
 
-- [ ] `client/src/lib/api.ts` — add `addSeries: '/api/add-series'` to the `API` const object.
-- [ ] `client/src/components/tasks/AddTaskForm.tsx` — add `mode: 'single' | 'batch'` state; a small toggle button as the leftmost element of the row flips it. Batch mode reuses the existing name input as the starting name and the existing date input as the start date, and adds two `type="number"` inputs (interval in days, default 7; count). `submit()` branches: single mode calls `API.add` as today, batch mode calls `API.addSeries`.
-- [ ] `client/src/components/tasks/Tasks.module.css` — `.inlineAdd` gets `flex-wrap: wrap` so the row reflows to multiple lines by available width rather than fixed breakpoints (looks like 2 rows at normal width, folds further on narrow viewports); give the new interval/count number inputs fixed small widths matching the existing `input[type=date]` width-token pattern; fix the trailing `border-right` divider so it doesn't dangle on whichever field lands last in a wrapped line.
+- [x] `client/src/lib/api.ts` — add `addSeries: '/api/add-series'` to the `API` const object.
+- [x] `client/src/components/tasks/AddTaskForm.tsx` — add `mode: 'single' | 'batch'` state; a small toggle button as the leftmost element of the row flips it. Batch mode reuses the existing name input as the starting name and the existing date input as the start date, and adds two `type="number"` inputs (interval in days, default 7; count). `submit()` branches: single mode calls `API.add` as today, batch mode calls `API.addSeries`.
+- [x] `client/src/components/tasks/Tasks.module.css` — `.inlineAdd` gets `flex-wrap: wrap` so the row reflows to multiple lines by available width rather than fixed breakpoints (looks like 2 rows at normal width, folds further on narrow viewports); the interval/count number inputs are self-bordered chips (`.inlineAddNumber`, own border/radius) rather than continuing the `border-right`-divider chain, so there's no dangling divider regardless of where a line wraps.
 
 ###### Frontend — verification
 
-- [ ] `cd client && npm run lint`
-- [ ] `cd client && npm run build`
-- [ ] Manual: toggle batch mode, generate a series, confirm names/dates/count are correct; confirm the row wraps sensibly at normal width and at mobile width; confirm toggling back to single mode restores the normal add flow.
+- [x] `cd client && npm run lint`
+- [x] `cd client && npm run build`
+- [ ] Manual: toggle batch mode, generate a series, confirm names/dates/count are correct; confirm the row wraps sensibly at normal width and at mobile width; confirm toggling back to single mode restores the normal add flow. (Not verified this session — the app requires real Google OAuth login with no local bypass, and no browser tool was available to drive it; needs a manual pass.)
 
 ##### Future
 

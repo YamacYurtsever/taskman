@@ -17,6 +17,7 @@ const API = {
   daysheet: '/api/daysheet',
 
   add: '/api/add',
+  addSeries: '/api/add-series',
   addList: '/api/add-list',
   addGroup: '/api/add-group',
   duplicate: '/api/duplicate',

@@ -126,7 +126,7 @@
 }
 
 .taskRow.flagged {
-  border-left: 3px solid var(--accent-2);
+  border-left: 3px solid var(--accent-hl);
 }
 
 .taskBody {
@@ -398,6 +398,7 @@
 
 .inlineAdd {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   padding: var(--sp);
   background: var(--primary);
@@ -414,6 +415,7 @@
 
 .inlineAdd input[type=text] {
   flex: 1;
+  min-width: 0;
   background: transparent;
   border: none;
   border-right: var(--border-w) solid var(--border);
@@ -455,6 +457,67 @@
 
 .inlineAddBtn:hover {
   color: var(--accent);
+}
+
+.inlineAddToggle {
+  background: none;
+  border: none;
+  border-right: var(--border-w) solid var(--border);
+  padding-right: var(--sp);
+  color: var(--text-3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: color var(--animation-d);
+}
+
+.inlineAddToggle:hover {
+  color: var(--accent);
+}
+
+.inlineAddToggleActive {
+  color: var(--accent);
+}
+
+.inlineAddSeriesRow {
+  display: flex;
+  min-width: 0;
+  flex-basis: 100%;
+  gap: var(--sp);
+}
+
+.inlineAddSeriesGroup {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+}
+
+.inlineAddSeriesGroup:first-child {
+  border-right: var(--border-w) solid var(--border);
+  padding-right: var(--sp);
+}
+
+.inlineAddSeriesLabel {
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.inlineAddNumber {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: var(--border-w) solid var(--border);
+  border-radius: var(--r-sm);
+  padding: var(--sp-xs) var(--sp-sm);
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--fs-sm);
+  outline: none;
 }
 
 @media (max-width: 780px) {

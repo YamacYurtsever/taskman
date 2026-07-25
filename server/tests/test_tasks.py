@@ -4,6 +4,7 @@ from unittest.mock import patch
 from server.constants import DaysheetEntryType
 from server.services.tasks import (
     add_task,
+    add_task_series,
     delete_task,
     duplicate_task,
     done_task,
@@ -95,6 +96,75 @@ class TaskCreateTest(unittest.TestCase):
     def test_add_task_rejects_invalid_due_date(self):
         with saved_db(make_db()):
             result = add_task("List A", "New task", "not-a-date")
+
+        assert_error(result, "invalid date")
+
+
+class TaskSeriesTest(unittest.TestCase):
+
+    def test_add_task_series_generates_padded_sequence(self):
+        with (
+            saved_db(make_db()) as saved,
+            patch("server.db.new_id", side_effect=[f"id-{i}" for i in range(10)]),
+        ):
+            result = add_task_series("List A", "LEC 01", "2026-05-04", 7, 10)
+
+        assert_ok(result)
+
+        names = [t["name"] for t in saved["tasks"]]
+        self.assertEqual(names, [f"LEC {i:02d}" for i in range(1, 11)])
+
+    def test_add_task_series_spaces_due_dates_by_interval(self):
+        with (
+            saved_db(make_db()) as saved,
+            patch("server.db.new_id", side_effect=[f"id-{i}" for i in range(4)]),
+        ):
+            result = add_task_series("List A", "LEC 01", "2026-05-04", 7, 4)
+
+        assert_ok(result)
+
+        dues = [t["due"] for t in saved["tasks"]]
+        self.assertEqual(dues, ["2026-05-04", "2026-05-11", "2026-05-18", "2026-05-25"])
+
+    def test_add_task_series_falls_back_to_suffix_without_trailing_number(self):
+        with (
+            saved_db(make_db()) as saved,
+            patch("server.db.new_id", side_effect=[f"id-{i}" for i in range(3)]),
+        ):
+            result = add_task_series("List A", "Reading", "2026-05-04", 7, 3)
+
+        assert_ok(result)
+
+        names = [t["name"] for t in saved["tasks"]]
+        self.assertEqual(names, ["Reading", "Reading 2", "Reading 3"])
+
+    def test_add_task_series_rejects_non_positive_count(self):
+        with saved_db(make_db()):
+            result = add_task_series("List A", "LEC 01", "2026-05-04", 7, 0)
+
+        assert_error(result, "count must be a positive integer")
+
+    def test_add_task_series_rejects_count_over_max(self):
+        with saved_db(make_db()):
+            result = add_task_series("List A", "LEC 01", "2026-05-04", 7, 101)
+
+        assert_error(result, "count must be at most 100")
+
+    def test_add_task_series_rejects_non_positive_interval(self):
+        with saved_db(make_db()):
+            result = add_task_series("List A", "LEC 01", "2026-05-04", 0, 5)
+
+        assert_error(result, "intervalDays must be a positive integer")
+
+    def test_add_task_series_rejects_unknown_list(self):
+        with saved_db(make_db()):
+            result = add_task_series("Missing List", "LEC 01", "2026-05-04", 7, 5)
+
+        assert_error(result, "not found")
+
+    def test_add_task_series_rejects_invalid_start_date(self):
+        with saved_db(make_db()):
+            result = add_task_series("List A", "LEC 01", "not-a-date", 7, 5)
 
         assert_error(result, "invalid date")
 

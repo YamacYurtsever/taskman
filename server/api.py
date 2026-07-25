@@ -19,6 +19,7 @@ from server.services import auth
 from server.services.daysheet import add_log, continue_task
 from server.services.tasks import (
     add_task,
+    add_task_series,
     delete_task,
     duplicate_task,
     done_task,
@@ -275,6 +276,22 @@ def create_app(test_config=None):
             body.get("list", ""),
             body.get("name", ""),
             body.get("due"),
+            email=email,
+            tz_name=tz_name,
+        ))
+
+    @app.post("/api/add-series")
+    @require_auth
+    def api_add_series():
+        email = session["email"]
+        _, tz_name = user_config_and_timezone(email)
+        body = request.get_json(force=True) or {}
+        return respond(add_task_series(
+            body.get("list", ""),
+            body.get("name", ""),
+            body.get("startDue", ""),
+            body.get("intervalDays"),
+            body.get("count"),
             email=email,
             tz_name=tz_name,
         ))
