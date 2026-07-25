@@ -99,6 +99,22 @@ class TaskCreateTest(unittest.TestCase):
 
         assert_error(result, "invalid date")
 
+    def test_add_task_with_recur_interval(self):
+        with (
+            saved_db(make_db()) as saved,
+            patch("server.db.new_id", return_value="new-id"),
+        ):
+            result = add_task("List A", "New task", None, 7)
+
+        assert_ok(result)
+        self.assertEqual(saved["tasks"][0]["recurIntervalDays"], 7)
+
+    def test_add_task_rejects_non_positive_recur_interval(self):
+        with saved_db(make_db()):
+            result = add_task("List A", "New task", None, 0)
+
+        assert_error(result, "recurIntervalDays must be a positive integer")
+
 
 class TaskSeriesTest(unittest.TestCase):
 
@@ -222,6 +238,41 @@ class TaskEditTest(unittest.TestCase):
         assert_ok(result)
         self.assertEqual([t["name"] for t in saved["tasks"]], ["Task B", "Task B"])
 
+    def test_edit_task_sets_recur_interval_when_requested(self):
+        with saved_db(make_db(TASK_1)) as saved:
+            result = edit_task(
+                "task-1",
+                "Task A",
+                recur_interval_days=7,
+                update_recur=True,
+            )
+
+        assert_ok(result)
+        self.assertEqual(saved["tasks"][0]["recurIntervalDays"], 7)
+
+    def test_edit_task_clears_recur_interval_when_requested(self):
+        task = task_record(id="task-1", name="Task A", list_id="list-1", recur_interval_days=7)
+
+        with saved_db(make_db(task)) as saved:
+            result = edit_task(
+                "task-1",
+                "Task A",
+                recur_interval_days=None,
+                update_recur=True,
+            )
+
+        assert_ok(result)
+        self.assertIsNone(saved["tasks"][0]["recurIntervalDays"])
+
+    def test_edit_task_preserves_recur_interval_when_not_requested(self):
+        task = task_record(id="task-1", name="Task A", list_id="list-1", recur_interval_days=7)
+
+        with saved_db(make_db(task)) as saved:
+            result = edit_task("task-1", "Renamed task")
+
+        assert_ok(result)
+        self.assertEqual(saved["tasks"][0]["recurIntervalDays"], 7)
+
     def test_edit_task_rejects_unknown_task(self):
         with saved_db(make_db()):
             result = edit_task("ghost-id", "New name")
@@ -321,6 +372,18 @@ class TaskMoveDeleteTest(unittest.TestCase):
 
         assert_error(result, "not found")
 
+    def test_duplicate_task_copies_recur_interval(self):
+        task = task_record(id="task-1", name="Task A", list_id="list-1", recur_interval_days=7)
+
+        with (
+            saved_db(make_db(task)) as saved,
+            patch("server.db.new_id", return_value="task-2"),
+        ):
+            result = duplicate_task("task-1")
+
+        assert_ok(result)
+        self.assertEqual(saved["tasks"][1]["recurIntervalDays"], 7)
+
 
 class TaskCompletionTest(unittest.TestCase):
 
@@ -393,6 +456,56 @@ class TaskCompletionTest(unittest.TestCase):
             result = undo_task("task-1")
 
         assert_error(result, "not done")
+
+    def test_done_task_rolls_due_forward_for_recurring_task(self):
+        task = task_record(id="task-1", name="Task A", list_id="list-1", due="2026-04-20", recur_interval_days=7)
+
+        with (
+            saved_db(make_db(task)) as saved,
+            patch("server.services.tasks.today_in_timezone", return_value=TODAY),
+            patch("server.services.tasks.utc_now", return_value=NOW_DT),
+            patch("server.db.new_id", return_value="entry-1"),
+        ):
+            result = done_task("task-1")
+
+        assert_ok(result)
+        self.assertEqual(saved["tasks"][0]["due"], "2026-05-03")
+        self.assertIsNone(saved["tasks"][0]["doneAt"])
+
+    def test_done_task_logs_daysheet_entry_for_recurring_task(self):
+        task = task_record(id="task-1", name="Task A", list_id="list-1", recur_interval_days=7)
+
+        with (
+            saved_db(make_db(task)) as saved,
+            patch("server.services.tasks.today_in_timezone", return_value=TODAY),
+            patch("server.services.tasks.utc_now", return_value=NOW_DT),
+            patch("server.db.new_id", return_value="entry-1"),
+        ):
+            result = done_task("task-1")
+
+        assert_ok(result)
+
+        entry = saved["daysheet"][0]
+        self.assertEqual(entry["type"], DaysheetEntryType.DONE)
+        self.assertEqual(entry["text"], "Task A")
+
+    def test_done_task_rejects_second_completion_of_recurring_task_same_day(self):
+        task = task_record(id="task-1", name="Task A", list_id="list-1", recur_interval_days=7)
+        entry = daysheet_entry(
+            id="entry-1",
+            datetime=NOW_DT,
+            type=DaysheetEntryType.DONE,
+            text="Task A",
+        )
+
+        with (
+            saved_db(make_db(task, daysheet=[entry])),
+            patch("server.services.tasks.today_in_timezone", return_value=TODAY),
+            patch("server.services.tasks.utc_now", return_value=NOW_DT),
+        ):
+            result = done_task("task-1")
+
+        assert_error(result, "already finished today")
 
     def test_done_task_clears_flag(self):
         task = task_record(id="task-1", name="Task A", list_id="list-1", flagged=True)

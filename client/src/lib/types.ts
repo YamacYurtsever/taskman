@@ -20,6 +20,7 @@ type Task = {
   doneAt: string | null;
   description: string;
   flagged: boolean;
+  recurIntervalDays: number | null;
 };
 
 type StateResponse = {

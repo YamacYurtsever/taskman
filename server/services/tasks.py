@@ -6,6 +6,7 @@ from server.services.utils import (
     ServiceError,
     add_daysheet_entry,
     add_days_to_date,
+    has_daysheet_entry,
     parse_date,
     remove_daysheet_entries,
     require_list,
@@ -60,8 +61,18 @@ def _positive_int(value, field: str) -> int:
 # ─────────────────────────── Create / Edit ───────────────────────────
 
 @service
-def add_task(list_name: str, task_name: str, due: str | None = None, email: str | None = None, tz_name: str = "UTC"):
+def add_task(
+    list_name: str,
+    task_name: str,
+    due: str | None = None,
+    recur_interval_days: int | None = None,
+    email: str | None = None,
+    tz_name: str = "UTC",
+):
     task_name = require_name(task_name)
+    recur_interval_days = (
+        _positive_int(recur_interval_days, "recurIntervalDays") if recur_interval_days is not None else None
+    )
 
     data = db.load(email)
     lst = require_list(data, list_name)
@@ -74,6 +85,7 @@ def add_task(list_name: str, task_name: str, due: str | None = None, email: str 
         "doneAt": None,
         "description": "",
         "flagged": False,
+        "recurIntervalDays": recur_interval_days,
     })
 
     db.save(data, email)
@@ -123,6 +135,8 @@ def edit_task(
     new_name: str,
     due: str | None = None,
     update_due: bool = False,
+    recur_interval_days: int | None = None,
+    update_recur: bool = False,
     email: str | None = None,
     tz_name: str = "UTC",
 ):
@@ -135,6 +149,11 @@ def edit_task(
 
     if update_due:
         task["due"] = parse_date(due) if due else None
+
+    if update_recur:
+        task["recurIntervalDays"] = (
+            _positive_int(recur_interval_days, "recurIntervalDays") if recur_interval_days is not None else None
+        )
 
     db.save(data, email)
 
@@ -176,6 +195,7 @@ def duplicate_task(task_id: str, email: str | None = None, tz_name: str = "UTC")
         "doneAt": None,
         "description": task.get("description", ""),
         "flagged": False,
+        "recurIntervalDays": task.get("recurIntervalDays"),
     }]
 
     db.save(data, email)
@@ -194,6 +214,9 @@ def done_task(task_id: str, email: str | None = None, tz_name: str = "UTC"):
     today = today_in_timezone(tz_name)
     completed_at = utc_now()
 
+    if has_daysheet_entry(data, task["listId"], DaysheetEntryType.DONE, task["name"], today, tz_name):
+        raise ServiceError(f"'{task['name']}' was already finished today")
+
     remove_daysheet_entries(
         data,
         task["listId"],
@@ -211,7 +234,12 @@ def done_task(task_id: str, email: str | None = None, tz_name: str = "UTC"):
         completed_at,
     )
 
-    task["doneAt"] = completed_at
+    recur_interval_days = task.get("recurIntervalDays")
+    if recur_interval_days:
+        task["due"] = add_days_to_date(today, recur_interval_days)
+    else:
+        task["doneAt"] = completed_at
+
     task["flagged"] = False
 
     db.save(data, email)

@@ -117,7 +117,7 @@ taskman/
 {
   "groups":   [{ "id": "uuid", "name": "UNSW" }],
   "lists":    [{ "id": "uuid", "name": "COMP3131", "groupId": "uuid | null", "pinned": false }],
-  "tasks":    [{ "id": "uuid", "name": "Finish Assignment 5", "listId": "uuid", "due": "2026-04-30 | null", "doneAt": "2026-04-26T04:32:05Z | null", "description": "", "flagged": false }],
+  "tasks":    [{ "id": "uuid", "name": "Finish Assignment 5", "listId": "uuid", "due": "2026-04-30 | null", "doneAt": "2026-04-26T04:32:05Z | null", "description": "", "flagged": false, "recurIntervalDays": "7 | null" }],
   "daysheet": [{ "id": "uuid", "datetime": "2026-04-26T04:32:05Z", "listId": "uuid", "type": "log | continue | done", "text": "Talked with Baba" }]
 }
 ```
@@ -410,6 +410,44 @@ Generates a numbered series of tasks in one go — the motivating case is start-
 - [x] `cd client && npm run lint`
 - [x] `cd client && npm run build`
 - [ ] Manual: toggle batch mode, generate a series, confirm names/dates/count are correct; confirm the row wraps sensibly at normal width and at mobile width; confirm toggling back to single mode restores the normal add flow. (Not verified this session — the app requires real Google OAuth login with no local bypass, and no browser tool was available to drive it; needs a manual pass.)
+
+##### Milestone 11 — Recurring Tasks
+
+A task can recur: on completion it logs to the daysheet as usual, but instead of moving to done, it stays pending with its due date rolled forward by a fixed interval from the completion day (not the prior due date — no catch-up/skip logic). There is no separate "done" state for it beyond the daysheet log; the only way to reverse a completion is to delete the daysheet entry (the due-date roll is not undone). Recurrence is created via a special mode of the existing batch-add row rather than a separate flow, since a recurring task is conceptually "batch add with unlimited entries."
+
+Updated task schema:
+
+```json
+{ "id": "uuid", "name": "Water plants", "listId": "uuid", "due": "2026-04-30 | null", "doneAt": null, "description": "", "flagged": false, "recurIntervalDays": "7 | null" }
+```
+
+###### Backend
+
+- [x] `server/services/tasks.py` — `add_task` gains an optional `recur_interval_days` param, validated as a positive int when given; sets `recurIntervalDays` on new tasks (`null` when not recurring).
+- [x] `server/services/tasks.py` — `edit_task` gains `recur_interval_days` / `update_recur` params, following the same shape as the existing `due` / `update_due` pair, so the interval can be set, changed, or cleared independently of renaming.
+- [x] `server/services/tasks.py` — `duplicate_task` copies `recurIntervalDays` onto the copy (unlike `flagged`, which resets).
+- [x] `server/services/tasks.py` — `done_task`: guards double-completion for the day via `has_daysheet_entry(..., DONE, ...)` (mirrors `continue_task`'s guard), since a recurring task's `doneAt` never gets set and so can't be used as that guard. Still logs the `DONE` daysheet entry as normal. If `recurIntervalDays` is set, rolls `due` forward to `today + recurIntervalDays` and leaves `doneAt` as `null`; otherwise behaves as before (sets `doneAt`). Clears `flagged` either way.
+- [x] `server/api.py` — `POST /api/add` and `POST /api/edit` pass `recurIntervalDays` (and `"recurIntervalDays" in body` as the edit update-flag) through to the services above.
+- [x] `server/api.py` — `GET /api/state` normalizes `recurIntervalDays` with `t.get("recurIntervalDays")` for backward compatibility with existing records.
+
+###### Backend — tests
+
+- [x] `server/tests/test_tasks.py` — `add_task` sets/validates `recurIntervalDays`; `edit_task` sets/clears/preserves it; `duplicate_task` copies it; `done_task` rolls `due` forward without setting `doneAt` for a recurring task, still logs the `DONE` entry, and rejects a second same-day completion.
+- [x] `server/tests/test_api.py` — end-to-end coverage for `/api/add`, `/api/edit` with `recurIntervalDays`, and `/api/state` normalization for legacy records.
+
+###### Frontend
+
+- [x] `client/src/lib/types.ts` — add `recurIntervalDays: number | null` to `Task`.
+- [x] `client/src/components/icons.tsx` — add `RepeatIcon` (circular-arrow glyph, same style as other icons).
+- [x] `client/src/components/tasks/TaskRow.tsx` — display mode: `RepeatIcon` renders next to `NoteIcon` in `taskNameRow` when `task.recurIntervalDays` is set, with a title showing the interval. Edit mode: a small `↻`-labelled number input sits next to the due-date input, wired through `edit_task`'s `recurIntervalDays` / update-flag the same way the due-date input already works; empty clears the interval.
+- [x] `client/src/components/tasks/AddTaskForm.tsx` — batch mode gains a `RepeatIcon` toggle next to the count input; when active, the count input is disabled and `submit()` calls `API.add` with `recurIntervalDays` set (a single recurring task) instead of `API.addSeries` (a fixed batch of distinct tasks).
+- [x] `client/src/components/tasks/Tasks.module.css` — `.repeatIcon` (shares `.noteIcon`'s muted color), `.taskEditRecurGroup` / `.taskEditRecur` (small bordered chip, same treatment as the batch-add number inputs), `.inlineAddRecurToggle` (icon-only toggle, no divider, distinct from `.inlineAddToggle` which owns the row's leading divider).
+
+###### Frontend — verification
+
+- [x] `cd client && npm run lint`
+- [x] `cd client && npm run build`
+- [ ] Manual: create a recurring task via batch mode's `∞`-style toggle, complete it, confirm it stays pending with due date rolled forward by the interval and a daysheet entry logged; confirm the repeat icon shows on the row; edit an existing task's interval via the edit row and confirm it takes effect; duplicate a recurring task and confirm the copy keeps the interval. (Not verified this session — the app requires real Google OAuth login with no local bypass, and no browser tool was available to drive it; needs a manual pass.)
 
 ##### Future
 

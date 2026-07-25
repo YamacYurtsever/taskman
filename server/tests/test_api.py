@@ -343,6 +343,44 @@ class ApiTest(unittest.TestCase):
 
         self.assert_error(res, "not found")
 
+    def test_add_task_with_recur_interval(self):
+        with (
+            saved_db(make_db()) as saved,
+            patch("server.db.new_id", return_value="task-new"),
+        ):
+            res = self.post("/api/add", {
+                "list": "List A",
+                "name": "New task",
+                "recurIntervalDays": 7,
+            })
+
+        self.assert_ok(res)
+        self.assertEqual(saved["tasks"][0]["recurIntervalDays"], 7)
+
+    def test_edit_task_sets_recur_interval(self):
+        with saved_db(make_db(TASK_1)) as saved:
+            res = self.post("/api/edit", {
+                "taskId": "task-1",
+                "newName": "Task A",
+                "recurIntervalDays": 7,
+            })
+
+        self.assert_ok(res)
+        self.assertEqual(saved["tasks"][0]["recurIntervalDays"], 7)
+
+    def test_edit_task_clears_recur_interval(self):
+        task = task_record(recur_interval_days=7)
+
+        with saved_db(make_db(task)) as saved:
+            res = self.post("/api/edit", {
+                "taskId": "task-1",
+                "newName": "Task A",
+                "recurIntervalDays": None,
+            })
+
+        self.assert_ok(res)
+        self.assertIsNone(saved["tasks"][0]["recurIntervalDays"])
+
     def test_delete_task(self):
         with saved_db(make_db(TASK_1)) as saved:
             res = self.post("/api/delete", {
@@ -524,6 +562,22 @@ class ApiTest(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         task = res.get_json()["tasks"][0]
         self.assertFalse(task["flagged"])
+
+    def test_get_state_normalizes_recur_interval(self):
+        task_without_recur = {
+            "id": "task-1",
+            "name": "Task A",
+            "listId": "list-1",
+            "due": None,
+            "doneAt": None,
+        }
+
+        with saved_db(make_db(task_without_recur)):
+            res = self.client.get("/api/state")
+
+        self.assertEqual(res.status_code, 200)
+        task = res.get_json()["tasks"][0]
+        self.assertIsNone(task["recurIntervalDays"])
 
     # ─────────────────────────── List Routes ───────────────────────────
 

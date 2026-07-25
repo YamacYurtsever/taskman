@@ -131,6 +131,15 @@ const SoundOffIcon = (props: IconProps) => (
   </Icon>
 );
 
+const RepeatIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M4 5h6a3 3 0 013 3v1" />
+    <path d="M6.5 2.5L4 5l2.5 2.5" />
+    <path d="M12 11H6a3 3 0 01-3-3V7" />
+    <path d="M9.5 13.5L12 11l-2.5-2.5" />
+  </Icon>
+);
+
 const SignOutIcon = (props: IconProps) => (
   <Icon {...props}>
     <path d="M6 3H4a1 1 0 00-1 1v8a1 1 0 001 1h2" />
@@ -167,6 +176,7 @@ export {
   PinFilledIcon,
   SoundOnIcon,
   SoundOffIcon,
+  RepeatIcon,
   SignOutIcon,
   GoogleLogoIcon,
 };

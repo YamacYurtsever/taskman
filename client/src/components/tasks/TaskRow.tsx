@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
-import { CheckIcon, ContinueIcon, DeleteIcon, DuplicateIcon, EditIcon, MoveIcon, NoteIcon } from '../icons';
+import { CheckIcon, ContinueIcon, DeleteIcon, DuplicateIcon, EditIcon, MoveIcon, NoteIcon, RepeatIcon } from '../icons';
 import { API } from '../../lib/api';
 import { cx, formatDue, sortByName } from '../../lib/utils';
 import dueStyles from './DueDate.module.css';
@@ -26,6 +26,7 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
   const [mode, setMode] = useState<'view' | 'edit' | 'move'>('view');
   const [name, setName] = useState(task.name);
   const [due, setDue] = useState(task.due || '');
+  const [recur, setRecur] = useState(String(task.recurIntervalDays ?? ''));
   const [newList, setNewList] = useState(listName);
   const dueInfo = task.due ? formatDue(task.due, data.today) : null;
   const flagColorVar =
@@ -41,7 +42,13 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
     const newName = name.trim();
     if (!newName) return;
 
-    await act(API.edit, { taskId: task.id, newName, due: due || null });
+    const recurTrimmed = recur.trim();
+    await act(API.edit, {
+      taskId: task.id,
+      newName,
+      due: due || null,
+      recurIntervalDays: recurTrimmed ? Number(recurTrimmed) : null,
+    });
     setMode('view');
   };
 
@@ -72,6 +79,17 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
             value={due}
             onChange={e => setDue(e.target.value)}
           />
+          <label className={styles.taskEditRecurGroup} title="Repeat every N days">
+            <RepeatIcon className={styles.repeatIcon} />
+            <input
+              className={styles.taskEditRecur}
+              type="number"
+              min={1}
+              placeholder="—"
+              value={recur}
+              onChange={e => setRecur(e.target.value)}
+            />
+          </label>
         </div>
         <SaveAction onClick={saveEdit} />
       </div>
@@ -151,6 +169,13 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
         <div className={styles.taskNameRow}>
           <span className={styles.taskName}>{task.name}</span>
           {task.description && <NoteIcon className={styles.noteIcon} />}
+          {task.recurIntervalDays && (
+            <span
+              title={`Repeats every ${task.recurIntervalDays} day${task.recurIntervalDays === 1 ? '' : 's'}`}
+            >
+              <RepeatIcon className={styles.repeatIcon} />
+            </span>
+          )}
         </div>
         {dueInfo && (
           <span className={cx(styles.taskDue, dueInfo.cls && dueStyles[dueInfo.cls])}>

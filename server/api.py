@@ -198,6 +198,7 @@ def create_app(test_config=None):
                 "description": t.get("description", ""),
                 "doneAt": t.get("doneAt"),
                 "flagged": t.get("flagged", False),
+                "recurIntervalDays": t.get("recurIntervalDays"),
             }
             for t in data["tasks"]
         ]
@@ -276,6 +277,7 @@ def create_app(test_config=None):
             body.get("list", ""),
             body.get("name", ""),
             body.get("due"),
+            body.get("recurIntervalDays"),
             email=email,
             tz_name=tz_name,
         ))
@@ -307,6 +309,8 @@ def create_app(test_config=None):
             body.get("newName"),
             body.get("due"),
             "due" in body,
+            body.get("recurIntervalDays"),
+            "recurIntervalDays" in body,
             email=email,
             tz_name=tz_name,
         ))

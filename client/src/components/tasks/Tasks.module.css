@@ -152,7 +152,8 @@
   gap: var(--sp-sm);
 }
 
-.noteIcon {
+.noteIcon,
+.repeatIcon {
   color: var(--text-3);
   flex-shrink: 0;
 }
@@ -302,6 +303,26 @@
 .focusedView .taskEditDue {
   width: var(--inline-date-w);
   flex-shrink: 0;
+}
+
+.taskEditRecurGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+  flex-shrink: 0;
+}
+
+.taskEditRecur {
+  width: 40px;
+  min-width: 0;
+  background: transparent;
+  border: var(--border-w) solid var(--border);
+  border-radius: var(--r-sm);
+  padding: var(--sp-xs) var(--sp-sm);
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--fs-sm);
+  outline: none;
 }
 
 .taskMoveSelect {
@@ -477,6 +498,21 @@
 }
 
 .inlineAddToggleActive {
+  color: var(--accent);
+}
+
+.inlineAddRecurToggle {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: color var(--animation-d);
+}
+
+.inlineAddRecurToggle:hover {
   color: var(--accent);
 }
 

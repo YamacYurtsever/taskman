@@ -31,7 +31,16 @@ def list_record(id="list-1", name="List A", group_id=None):
     }
 
 
-def task_record(id="task-1", name="Task A", list_id="list-1", due=None, done_at=None, description="", flagged=False):
+def task_record(
+    id="task-1",
+    name="Task A",
+    list_id="list-1",
+    due=None,
+    done_at=None,
+    description="",
+    flagged=False,
+    recur_interval_days=None,
+):
     return {
         "id": id,
         "name": name,
@@ -40,6 +49,7 @@ def task_record(id="task-1", name="Task A", list_id="list-1", due=None, done_at=
         "doneAt": done_at,
         "description": description,
         "flagged": flagged,
+        "recurIntervalDays": recur_interval_days,
     }
 
 

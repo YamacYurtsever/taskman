@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayersIcon, PlusIcon } from '../icons';
+import { LayersIcon, PlusIcon, RepeatIcon } from '../icons';
 import { API } from '../../lib/api';
 import { cx, MSG } from '../../lib/utils';
 import styles from './Tasks.module.css';
@@ -12,6 +12,7 @@ type AddTaskFormProps = {
 
 export const AddTaskForm = ({ listName, act }: AddTaskFormProps) => {
   const [mode, setMode] = useState<'single' | 'batch'>('single');
+  const [recurring, setRecurring] = useState(false);
   const [name, setName] = useState('');
   const [due, setDue] = useState('');
   const [intervalDays, setIntervalDays] = useState('7');
@@ -21,7 +22,15 @@ export const AddTaskForm = ({ listName, act }: AddTaskFormProps) => {
     const trimmed = name.trim();
     if (!trimmed) return;
 
-    if (mode === 'batch') {
+    if (mode === 'batch' && recurring) {
+      const ok = await act(API.add, {
+        list: listName,
+        name: trimmed,
+        due: due || null,
+        recurIntervalDays: Number(intervalDays),
+      });
+      if (!ok) return;
+    } else if (mode === 'batch') {
       const ok = await act(API.addSeries, {
         list: listName,
         name: trimmed,
@@ -81,9 +90,18 @@ export const AddTaskForm = ({ listName, act }: AddTaskFormProps) => {
               type="number"
               min={1}
               value={count}
+              disabled={recurring}
               onChange={e => setCount(e.target.value)}
             />
           </label>
+          <button
+            type="button"
+            className={cx(styles.inlineAddRecurToggle, recurring && styles.inlineAddToggleActive)}
+            title={recurring ? 'Switch to fixed count' : 'Make this a recurring task instead'}
+            onClick={() => setRecurring(r => !r)}
+          >
+            <RepeatIcon />
+          </button>
         </div>
       )}
     </div>
