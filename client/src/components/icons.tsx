@@ -133,10 +133,8 @@ const SoundOffIcon = (props: IconProps) => (
 
 const RepeatIcon = (props: IconProps) => (
   <Icon {...props}>
-    <path d="M4 5h6a3 3 0 013 3v1" />
-    <path d="M6.5 2.5L4 5l2.5 2.5" />
-    <path d="M12 11H6a3 3 0 01-3-3V7" />
-    <path d="M9.5 13.5L12 11l-2.5-2.5" />
+    <circle cx="5.3" cy="8" r="2.8" />
+    <circle cx="10.7" cy="8" r="2.8" />
   </Icon>
 );
 
