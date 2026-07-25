@@ -168,13 +168,17 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
       <button type="button" className={styles.taskBody} onClick={() => openDetail(task)}>
         <div className={styles.taskNameRow}>
           <span className={styles.taskName}>{task.name}</span>
-          {task.description && <NoteIcon className={styles.noteIcon} />}
-          {task.recurIntervalDays && (
-            <span
-              title={`Repeats every ${task.recurIntervalDays} day${task.recurIntervalDays === 1 ? '' : 's'}`}
-            >
-              <RepeatIcon className={styles.repeatIcon} />
-            </span>
+          {(task.description || task.recurIntervalDays) && (
+            <div className={styles.taskIcons}>
+              {task.description && <NoteIcon className={styles.noteIcon} />}
+              {task.recurIntervalDays && (
+                <span
+                  title={`Repeats every ${task.recurIntervalDays} day${task.recurIntervalDays === 1 ? '' : 's'}`}
+                >
+                  <RepeatIcon className={styles.repeatIcon} />
+                </span>
+              )}
+            </div>
           )}
         </div>
         {dueInfo && (
