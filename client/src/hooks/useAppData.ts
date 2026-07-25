@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { api } from '../lib/api';
+import { API, api } from '../lib/api';
+import { playContinueSound, playDoneSound } from '../lib/sound';
 import type { StateResponse } from '../lib/types';
 
 
@@ -16,6 +17,8 @@ export const useAppData = () => {
     const res = await api.post(path, body);
 
     if (res?.ok) {
+      if (path === API.done) playDoneSound();
+      if (path === API.continue) playContinueSound();
       setData(await api.state());
       return true;
     }

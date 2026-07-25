@@ -413,6 +413,5 @@ Generates a numbered series of tasks in one go — the motivating case is start-
 
 ##### Future
 
-- Sound Effects
 - Daysheet analytics
 - Turn a task description into an actionable checklist (AI)
