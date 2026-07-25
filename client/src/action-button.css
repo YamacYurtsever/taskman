@@ -41,6 +41,6 @@
 }
 
 .action-btn.skp:hover {
-  color: var(--accent);
-  background: var(--accent-bg);
+  color: var(--red);
+  background: var(--red-bg);
 }
