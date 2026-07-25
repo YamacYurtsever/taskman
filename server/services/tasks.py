@@ -230,11 +230,9 @@ def done_task(task_id: str, email: str | None = None, tz_name: str = "UTC"):
         completed_at,
     )
 
-    task["doneAt"] = completed_at
-    task["flagged"] = False
-
     recur_interval_days = task.get("recurIntervalDays")
     if recur_interval_days:
+        data["tasks"] = [t for t in data["tasks"] if t["id"] != task_id]
         data["tasks"].append({
             "id": db.new_id(),
             "name": task["name"],
@@ -245,6 +243,9 @@ def done_task(task_id: str, email: str | None = None, tz_name: str = "UTC"):
             "flagged": False,
             "recurIntervalDays": recur_interval_days,
         })
+    else:
+        task["doneAt"] = completed_at
+        task["flagged"] = False
 
     db.save(data, email)
 

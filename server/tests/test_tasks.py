@@ -457,7 +457,7 @@ class TaskCompletionTest(unittest.TestCase):
 
         assert_error(result, "not done")
 
-    def test_done_task_spawns_next_occurrence_for_recurring_task(self):
+    def test_done_task_replaces_recurring_task_with_next_occurrence(self):
         task = task_record(id="task-1", name="Task A", list_id="list-1", due="2026-04-20", recur_interval_days=7)
 
         with (
@@ -470,11 +470,8 @@ class TaskCompletionTest(unittest.TestCase):
 
         assert_ok(result)
 
-        original = saved["tasks"][0]
-        self.assertEqual(original["due"], "2026-04-20")
-        self.assertEqual(original["doneAt"], NOW_DT)
-
-        spawned = saved["tasks"][1]
+        self.assertEqual(len(saved["tasks"]), 1)
+        spawned = saved["tasks"][0]
         self.assertEqual(spawned["id"], "task-2")
         self.assertEqual(spawned["name"], "Task A")
         self.assertEqual(spawned["listId"], "list-1")
@@ -542,8 +539,8 @@ class TaskCompletionTest(unittest.TestCase):
             second = done_task("task-1")
 
         assert_ok(first)
-        assert_error(second, "already done")
-        self.assertEqual(len(saved["tasks"]), 2)
+        assert_error(second, "not found")
+        self.assertEqual(len(saved["tasks"]), 1)
 
     def test_done_task_clears_flag(self):
         task = task_record(id="task-1", name="Task A", list_id="list-1", flagged=True)

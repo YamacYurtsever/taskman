@@ -413,7 +413,7 @@ Generates a numbered series of tasks in one go — the motivating case is start-
 
 ##### Milestone 11 — Recurring Tasks
 
-A task can recur: on completion it's marked done exactly like any other task (moves to the done list, undoable, logs to the daysheet as usual), and a fresh pending task is spawned for the next occurrence — same name and list, due date set to the completion day plus the interval (not the prior due date — no catch-up/skip logic). Each occurrence is its own row with its own id, so there's no special-cased "can't undo" or "can't complete twice" behavior to maintain — the ordinary `doneAt` guard already prevents re-completing a given occurrence, and completing one occurrence never blocks completing a different task (even one sharing the same name). Recurrence is created via a special mode of the existing batch-add row rather than a separate flow, since a recurring task is conceptually "batch add with unlimited entries" — generated lazily, one occurrence at a time, instead of all upfront.
+A task can recur: on completion it logs to the daysheet as usual, but it never enters the done list — the completed occurrence is deleted and replaced by a fresh task row for the next occurrence (same name and list, new id, due date set to the completion day plus the interval — not the prior due date, no catch-up/skip logic). Because each occurrence is deleted on completion, there's no "already done" state to undo (beyond deleting the daysheet entry) and no way to re-complete the same occurrence — the id is simply gone, so a repeat attempt fails with "not found" rather than needing a special same-day guard. Recurrence is created via a special mode of the existing batch-add row rather than a separate flow, since a recurring task is conceptually "batch add with unlimited entries" — generated lazily, one occurrence at a time, instead of all upfront.
 
 Updated task schema:
 
@@ -426,13 +426,13 @@ Updated task schema:
 - [x] `server/services/tasks.py` — `add_task` gains an optional `recur_interval_days` param, validated as a positive int when given; sets `recurIntervalDays` on new tasks (`null` when not recurring).
 - [x] `server/services/tasks.py` — `edit_task` gains `recur_interval_days` / `update_recur` params, following the same shape as the existing `due` / `update_due` pair, so the interval can be set, changed, or cleared independently of renaming.
 - [x] `server/services/tasks.py` — `duplicate_task` copies `recurIntervalDays` onto the copy (unlike `flagged`, which resets).
-- [x] `server/services/tasks.py` — `done_task` completes the task normally (sets `doneAt`, clears `flagged`, logs the `DONE` daysheet entry) regardless of `recurIntervalDays`. If `recurIntervalDays` is set, it additionally appends a new task row (new id, same name/list/`recurIntervalDays`, `due = today + recurIntervalDays`, `doneAt: null`) for the next occurrence. No same-day completion guard is needed — each occurrence is a distinct row, so the existing `doneAt` check already prevents re-completing it, and it can't collide with a different task of the same name.
+- [x] `server/services/tasks.py` — `done_task` always logs the `DONE` daysheet entry first. If `recurIntervalDays` is set, it deletes the completed task row and appends a new one (new id, same name/list/`recurIntervalDays`, `due = today + recurIntervalDays`, `doneAt: null`) instead of setting `doneAt`; otherwise it behaves as before (`doneAt` set, `flagged` cleared). Since the completed occurrence's id no longer exists afterward, no same-day completion guard is needed — a repeat attempt on the same id fails with "not found," and it can't collide with a different task of the same name.
 - [x] `server/api.py` — `POST /api/add` and `POST /api/edit` pass `recurIntervalDays` (and `"recurIntervalDays" in body` as the edit update-flag) through to the services above.
 - [x] `server/api.py` — `GET /api/state` normalizes `recurIntervalDays` with `t.get("recurIntervalDays")` for backward compatibility with existing records.
 
 ###### Backend — tests
 
-- [x] `server/tests/test_tasks.py` — `add_task` sets/validates `recurIntervalDays`; `edit_task` sets/clears/preserves it; `duplicate_task` copies it; `done_task` completes a recurring task normally and spawns a next-occurrence row with the due date rolled forward, does not spawn one for a plain task, rejects re-completing the same occurrence, and allows completing two distinct same-named tasks on the same day.
+- [x] `server/tests/test_tasks.py` — `add_task` sets/validates `recurIntervalDays`; `edit_task` sets/clears/preserves it; `duplicate_task` copies it; `done_task` replaces a recurring task with a next-occurrence row (due date rolled forward, original id gone) instead of marking it done, does not do this for a plain task, rejects re-completing the same (now-deleted) occurrence with "not found," and allows completing two distinct same-named tasks on the same day.
 - [x] `server/tests/test_api.py` — end-to-end coverage for `/api/add`, `/api/edit` with `recurIntervalDays`, and `/api/state` normalization for legacy records.
 
 ###### Frontend
@@ -447,7 +447,7 @@ Updated task schema:
 
 - [x] `cd client && npm run lint`
 - [x] `cd client && npm run build`
-- [ ] Manual: create a recurring task via batch mode's `∞`-style toggle, complete it, confirm it moves to done (undoable) and a new pending task appears with due date rolled forward by the interval and a daysheet entry logged; confirm the repeat icon shows on the new occurrence; edit an existing task's interval via the edit row and confirm it takes effect on its next completion; duplicate a recurring task and confirm the copy keeps the interval; confirm two same-named tasks can each be completed independently on the same day. (Not verified this session — the app requires real Google OAuth login with no local bypass, and no browser tool was available to drive it; needs a manual pass.)
+- [ ] Manual: create a recurring task via batch mode's `∞`-style toggle, complete it, confirm it does NOT appear in the done list and instead a new pending task appears with due date rolled forward by the interval and a daysheet entry logged; confirm the repeat icon shows on the new occurrence; edit an existing task's interval via the edit row and confirm it takes effect on its next completion; duplicate a recurring task and confirm the copy keeps the interval; confirm two same-named tasks can each be completed independently on the same day. (Not verified this session — the app requires real Google OAuth login with no local bypass, and no browser tool was available to drive it; needs a manual pass.)
 
 ##### Future
 
