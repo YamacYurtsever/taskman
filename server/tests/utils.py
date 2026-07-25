@@ -40,6 +40,7 @@ def task_record(
     description="",
     flagged=False,
     recur_interval_days=None,
+    recur_last_done=None,
 ):
     return {
         "id": id,
@@ -50,6 +51,7 @@ def task_record(
         "description": description,
         "flagged": flagged,
         "recurIntervalDays": recur_interval_days,
+        "recurLastDone": recur_last_done,
     }
 
 

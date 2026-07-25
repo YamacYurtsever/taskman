@@ -6,7 +6,6 @@ from server.services.utils import (
     ServiceError,
     add_daysheet_entry,
     add_days_to_date,
-    has_daysheet_entry,
     parse_date,
     remove_daysheet_entries,
     require_list,
@@ -214,11 +213,6 @@ def done_task(task_id: str, email: str | None = None, tz_name: str = "UTC"):
     today = today_in_timezone(tz_name)
     completed_at = utc_now()
 
-    if task.get("recurIntervalDays") and has_daysheet_entry(
-        data, task["listId"], DaysheetEntryType.DONE, task["name"], today, tz_name,
-    ):
-        raise ServiceError(f"'{task['name']}' was already finished today")
-
     remove_daysheet_entries(
         data,
         task["listId"],
@@ -236,13 +230,21 @@ def done_task(task_id: str, email: str | None = None, tz_name: str = "UTC"):
         completed_at,
     )
 
+    task["doneAt"] = completed_at
+    task["flagged"] = False
+
     recur_interval_days = task.get("recurIntervalDays")
     if recur_interval_days:
-        task["due"] = add_days_to_date(today, recur_interval_days)
-    else:
-        task["doneAt"] = completed_at
-
-    task["flagged"] = False
+        data["tasks"].append({
+            "id": db.new_id(),
+            "name": task["name"],
+            "listId": task["listId"],
+            "due": add_days_to_date(today, recur_interval_days),
+            "doneAt": None,
+            "description": task.get("description", ""),
+            "flagged": False,
+            "recurIntervalDays": recur_interval_days,
+        })
 
     db.save(data, email)
 
