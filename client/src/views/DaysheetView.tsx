@@ -206,8 +206,7 @@ const TimelineEntry = ({ entry, inGroup, act, refresh }: TimelineEntryProps) => 
   return (
     <div className={styles.timelineEntry}>
       <span className={styles.timelineText}>
-        {entryPrefix(entry.type)}
-        {entry.text}
+        {entryText(entry)}
         {inGroup && <span className={styles.timelineListTag}>{entry.listName}</span>}
       </span>
 
@@ -296,10 +295,26 @@ const dateLabel = (date: string) => {
   });
 };
 
-const entryPrefix = (type: DaysheetEntry['type']) => {
-  if (type === 'done') return 'Finished ';
-  if (type === 'continue') return 'Continued ';
-  return '';
+// First word of a done task's name -> its past-tense conjugation, so "Talk to John"
+// reads as "Talked to John" instead of the generic "Finished Talk to John".
+const DONE_VERB_MAP: Record<string, string> = {
+  talk: 'Talked',
+  go: 'Went',
+  cook: 'Cooked',
+};
+
+const doneEntryText = (text: string) => {
+  const spaceIdx = text.indexOf(' ');
+  const firstWord = spaceIdx === -1 ? text : text.slice(0, spaceIdx);
+  const rest = spaceIdx === -1 ? '' : text.slice(spaceIdx);
+  const conjugated = DONE_VERB_MAP[firstWord.toLowerCase()];
+  return conjugated ? `${conjugated}${rest}` : `Finished ${text}`;
+};
+
+const entryText = (entry: Pick<DaysheetEntry, 'type' | 'text'>) => {
+  if (entry.type === 'done') return doneEntryText(entry.text);
+  if (entry.type === 'continue') return `Continued ${entry.text}`;
+  return entry.text;
 };
 
 const groupEntries = (entries: DaysheetEntry[], pinnedSections: PinnedSection[]) => {
