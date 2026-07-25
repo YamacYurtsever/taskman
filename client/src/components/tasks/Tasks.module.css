@@ -154,8 +154,8 @@
 
 .taskIcons {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  align-items: top;
+  padding-top: 2px;
   gap: 2px;
   flex-shrink: 0;
 }
