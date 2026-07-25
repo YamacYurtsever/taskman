@@ -15,7 +15,7 @@ export const AddTaskForm = ({ listName, act }: AddTaskFormProps) => {
   const [recurring, setRecurring] = useState(false);
   const [name, setName] = useState('');
   const [due, setDue] = useState('');
-  const [intervalDays, setIntervalDays] = useState('7');
+  const [intervalDays, setIntervalDays] = useState('1');
   const [count, setCount] = useState('1');
 
   const submit = async () => {
