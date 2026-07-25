@@ -79,17 +79,19 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
             value={due}
             onChange={e => setDue(e.target.value)}
           />
-          <label className={styles.taskEditRecurGroup} title="Repeat every N days">
-            <span className={styles.taskEditRecurLabel}>↻</span>
-            <input
-              className={styles.taskEditRecur}
-              type="number"
-              min={1}
-              placeholder="—"
-              value={recur}
-              onChange={e => setRecur(e.target.value)}
-            />
-          </label>
+          {task.recurIntervalDays && (
+            <label className={styles.taskEditRecurGroup} title="Repeat every N days">
+              <span className={styles.taskEditRecurLabel}>↻</span>
+              <input
+                className={styles.taskEditRecur}
+                type="number"
+                min={1}
+                placeholder="—"
+                value={recur}
+                onChange={e => setRecur(e.target.value)}
+              />
+            </label>
+          )}
         </div>
         <SaveAction onClick={saveEdit} />
       </div>
