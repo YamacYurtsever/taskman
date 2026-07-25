@@ -475,9 +475,37 @@ class TaskCompletionTest(unittest.TestCase):
         self.assertEqual(spawned["id"], "task-2")
         self.assertEqual(spawned["name"], "Task A")
         self.assertEqual(spawned["listId"], "list-1")
-        self.assertEqual(spawned["due"], "2026-05-03")
+        self.assertEqual(spawned["due"], "2026-04-27")
         self.assertIsNone(spawned["doneAt"])
         self.assertEqual(spawned["recurIntervalDays"], 7)
+
+    def test_done_task_bases_next_due_on_prior_due_not_today(self):
+        task = task_record(id="task-1", name="Task A", list_id="list-1", due="2026-04-27", recur_interval_days=1)
+
+        with (
+            saved_db(make_db(task)) as saved,
+            patch("server.services.tasks.today_in_timezone", return_value=TODAY),
+            patch("server.services.tasks.utc_now", return_value=NOW_DT),
+            patch("server.db.new_id", side_effect=["entry-1", "task-2"]),
+        ):
+            result = done_task("task-1")
+
+        assert_ok(result)
+        self.assertEqual(saved["tasks"][0]["due"], "2026-04-28")
+
+    def test_done_task_falls_back_to_today_when_recurring_task_has_no_due(self):
+        task = task_record(id="task-1", name="Task A", list_id="list-1", due=None, recur_interval_days=7)
+
+        with (
+            saved_db(make_db(task)) as saved,
+            patch("server.services.tasks.today_in_timezone", return_value=TODAY),
+            patch("server.services.tasks.utc_now", return_value=NOW_DT),
+            patch("server.db.new_id", side_effect=["entry-1", "task-2"]),
+        ):
+            result = done_task("task-1")
+
+        assert_ok(result)
+        self.assertEqual(saved["tasks"][0]["due"], "2026-05-03")
 
     def test_done_task_does_not_spawn_next_occurrence_for_plain_task(self):
         with (

@@ -232,12 +232,13 @@ def done_task(task_id: str, email: str | None = None, tz_name: str = "UTC"):
 
     recur_interval_days = task.get("recurIntervalDays")
     if recur_interval_days:
+        base_due = task.get("due") or today
         data["tasks"] = [t for t in data["tasks"] if t["id"] != task_id]
         data["tasks"].append({
             "id": db.new_id(),
             "name": task["name"],
             "listId": task["listId"],
-            "due": add_days_to_date(today, recur_interval_days),
+            "due": add_days_to_date(base_due, recur_interval_days),
             "doneAt": None,
             "description": task.get("description", ""),
             "flagged": False,
