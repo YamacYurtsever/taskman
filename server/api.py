@@ -37,6 +37,7 @@ from server.services.utils import (
     find_list,
     local_date_from_storage,
     local_time_from_storage,
+    require_hex_color,
     require_name,
     require_timezone,
     today_in_timezone,
@@ -169,6 +170,7 @@ def create_app(test_config=None):
             "calendarUrl": calendar_url,
             "calendarTimezone": tz_name,
             "userCalendars": user_calendars,
+            "accentColor": cfg.get("accentColor"),
         })
 
     @app.post("/api/config/timezone")
@@ -181,6 +183,22 @@ def create_app(test_config=None):
             tz_name = require_timezone(require_name(body.get("timezone"), "timezone"))
             cfg = config.load(email)
             cfg["calendarTimezone"] = tz_name
+            config.save(cfg, email)
+
+            return ok()
+        except ServiceError as e:
+            return fail(str(e))
+
+    @app.post("/api/config/accent-color")
+    @require_auth
+    def set_accent_color():
+        email = session["email"]
+        body = request.get_json(force=True) or {}
+
+        try:
+            color = require_hex_color(body.get("accentColor"))
+            cfg = config.load(email)
+            cfg["accentColor"] = color
             config.save(cfg, email)
 
             return ok()

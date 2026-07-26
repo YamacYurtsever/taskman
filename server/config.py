@@ -13,6 +13,7 @@ USER_DEFAULTS = {
     "calendarTimezone": "UTC",
     "googleRefreshToken": None,
     "googleEmail": None,
+    "accentColor": None,
 }
 
 DEFAULTS = {**SERVER_DEFAULTS, **USER_DEFAULTS}

@@ -231,7 +231,7 @@ A list can be pinned so it always appears in the daysheet for the current day, e
 
 ##### Milestone 9 — Flag Tasks
 
-A task can be flagged as "planned for today" — a manual intent marker, independent of due date. Flagging is a plain boolean (`flagged`) that persists across days (no auto-clear); it is cleared automatically when the task is marked done. Flagged tasks sort to the top within their list/card in cards and focused views (existing relative order otherwise preserved), with a left border in `--accent-hl` as the visual indicator. The toggle is right-click on the task row (no dedicated button — the row has no spare space for one); right-click's default browser context menu is suppressed. `POST /api/flag-task` sets it; `GET /api/state` normalizes missing `flagged` to `false` for legacy records.
+A task can be flagged as "planned for today" — a manual intent marker, independent of due date. Flagging is a plain boolean (`flagged`) that persists across days (no auto-clear); it is cleared automatically when the task is marked done. Flagged tasks sort to the top within their list/card in cards and focused views (existing relative order otherwise preserved), with a left border in `--accent` as the visual indicator. The toggle is right-click on the task row (no dedicated button — the row has no spare space for one); right-click's default browser context menu is suppressed. `POST /api/flag-task` sets it; `GET /api/state` normalizes missing `flagged` to `false` for legacy records.
 
 - [X] Manual: right-click a task in cards/focused view flags it (border appears, task moves to top of its list/card); right-click again unflags it; marking a flagged task done clears the flag.
 
@@ -265,10 +265,17 @@ Markdown-style checkboxes inside a task's description, with a matching progress 
 
 - [X] Manual: add `- [ ] ...` lines to a description, confirm they render as checkboxes only outside edit mode; click to check/uncheck and confirm the state persists after a refresh; confirm the row's right-edge progress bar fills correctly and stays clipped to the row's corners at 0%, partial, and 100% completion.
 
+##### Milestone 13 — Accent Color Picker
+
+The accent color is user-configurable and stored per-user on the server (`accentColor` in `~/.taskman/users/<email>/config.json`), so it follows the user across devices rather than living in `localStorage` like the light/dark theme. A new settings slot sits alongside the theme toggle: a circular swatch filled with the current `--accent` value that opens a native `<input type="color">` on click. `--accent-bg` is derived from the picked hex by appending the same `1a` alpha suffix the built-in themes already use, so one control drives both tokens.
+
+`GET /api/config` returns `accentColor`; `POST /api/config/accent-color` validates and persists a `#rrggbb` hex value (`require_hex_color` in `server/services/utils.py`). Frontend: `useAppData` fetches and exposes `accentColor` alongside `calendarUrl`, and a new `AccentPicker.tsx` (mirroring `ThemeToggle.tsx`) applies `--accent` / `--accent-bg` to `document.documentElement` and posts changes to the server.
+
+- [ ] Manual: open settings, click the new accent swatch, pick a color, confirm the UI's accent (focus outlines, flagged-task border, filter pill, etc.) updates immediately; refresh and confirm it persists; log in from another browser/session for the same user and confirm the same accent color loads there.
+
 ##### Future
 
-- Daysheet analytics
+- Daysheet analytics - skip days with no daysheet entry
 - Turn a task description into an actionable checklist (AI)
 - Screen mates - overlay at the bottom right corner - can be turned off from settings - get fed and grow/transform as we complete tasks - we need animations - avatar store in the future?
-- Accent color picker
 - Information page (maybe button in settings - opens a panel like note panel)

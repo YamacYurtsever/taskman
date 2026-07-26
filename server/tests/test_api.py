@@ -97,6 +97,40 @@ class ApiTest(unittest.TestCase):
         self.assert_ok(res)
         self.assertEqual(saved["calendarTimezone"], "Australia/Sydney")
 
+    def test_get_config_returns_accent_color(self):
+        cfg = {"calendarTimezone": "UTC", "accentColor": "#ff8800"}
+
+        with patch("server.config.load", return_value=cfg):
+            res = self.client.get("/api/config")
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.get_json()["accentColor"], "#ff8800")
+
+    def test_get_config_treats_missing_accent_color_as_none(self):
+        with patch("server.config.load", return_value={"calendarTimezone": "UTC"}):
+            res = self.client.get("/api/config")
+
+        self.assertEqual(res.status_code, 200)
+        self.assertIsNone(res.get_json()["accentColor"])
+
+    def test_set_accent_color_updates_user_config(self):
+        cfg = {"accentColor": None}
+
+        with saved_config(cfg) as saved:
+            res = self.post("/api/config/accent-color", {"accentColor": "#5B6CFF"})
+
+        self.assert_ok(res)
+        self.assertEqual(saved["accentColor"], "#5b6cff")
+
+    def test_set_accent_color_rejects_invalid_hex(self):
+        cfg = {"accentColor": None}
+
+        with saved_config(cfg) as saved:
+            res = self.post("/api/config/accent-color", {"accentColor": "blue"})
+
+        self.assert_error(res, "invalid color")
+        self.assertIsNone(saved.get("accentColor"))
+
     def test_get_state_returns_db_state(self):
         with saved_db(make_db(TASK_1, TASK_DONE, groups=[GROUP_1])):
             res = self.client.get("/api/state")

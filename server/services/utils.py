@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -52,6 +53,14 @@ def require_timezone(tz_name: str) -> str:
     except ZoneInfoNotFoundError as e:
         raise ServiceError(f"invalid timezone '{tz_name}'") from e
     return tz_name
+
+
+HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
+def require_hex_color(value: str) -> str:
+    value = (value or "").strip()
+    if not HEX_COLOR_RE.match(value):
+        raise ServiceError(f"invalid color '{value}' — expected #rrggbb")
+    return value.lower()
 
 
 def utc_now() -> str:

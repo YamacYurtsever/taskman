@@ -82,7 +82,7 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
   const [filter, setFilter] = useState<TaskFilter>('all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const { data, calendarUrl, loading, act, refresh, logout } = useAppData();
+  const { data, calendarUrl, accentColor, setAccentColor, loading, act, refresh, logout } = useAppData();
   const isMobile = useIsMobile();
   const isNarrow = useIsNarrow();
 
@@ -146,6 +146,8 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
           showMenuButton={isMobile}
           onMenuClick={() => setSidebarOpen(true)}
           onLogout={handleLogout}
+          accentColor={accentColor}
+          onAccentColorChange={setAccentColor}
         />
         <main className={cx(styles.main, panelOpen && styles.mainWithPanel)}>
 

@@ -33,6 +33,7 @@ type StateResponse = {
 type ConfigResponse = {
   calendarUrl: string;
   calendarTimezone: string;
+  accentColor: string | null;
 };
 
 type DaysheetEntry = {

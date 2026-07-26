@@ -11,6 +11,7 @@ from server.services.utils import (
     has_daysheet_entry,
     local_date_from_storage,
     remove_daysheet_entries,
+    require_hex_color,
     service,
     storage_datetime_for_local_date,
     today_in_timezone,
@@ -46,6 +47,14 @@ class ServiceUtilsTest(unittest.TestCase):
             mock_now.astimezone.return_value.date.return_value.isoformat.return_value = "2026-04-26"
 
             self.assertEqual(today_in_timezone("Australia/Sydney"), "2026-04-26")
+
+    def test_require_hex_color_normalizes_case(self):
+        self.assertEqual(require_hex_color("#5B6CFF"), "#5b6cff")
+
+    def test_require_hex_color_rejects_invalid_values(self):
+        for bad in ["blue", "#fff", "5b6cff", "#5b6cf", ""]:
+            with self.assertRaises(ServiceError):
+                require_hex_color(bad)
 
     # ─────────────────────────── Group / List Deletion ───────────────────────────
 

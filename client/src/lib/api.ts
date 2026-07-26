@@ -13,6 +13,7 @@ const API = {
 
   config: '/api/config',
   configTimezone: '/api/config/timezone',
+  configAccentColor: '/api/config/accent-color',
   state: '/api/state',
   daysheet: '/api/daysheet',
 
@@ -89,6 +90,8 @@ const api = {
 
   config: () => request<ConfigResponse>('GET', API.config),
   setTimezone: (timezone: string) => request<ApiResult>('POST', API.configTimezone, { timezone }),
+  setAccentColor: (accentColor: string) =>
+    request<ApiResult>('POST', API.configAccentColor, { accentColor }),
   state: () => request<StateResponse>('GET', API.state),
   daysheet: (date: string) =>
     request<DaysheetResponse>('GET', `${API.daysheet}?date=${encodeURIComponent(date)}`),

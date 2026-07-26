@@ -1,6 +1,7 @@
 import { useLocation } from 'react-router-dom';
 import type { CSSProperties } from 'react';
 import type { TaskFilter } from '../lib/types';
+import { AccentPicker } from './AccentPicker';
 import { MenuIcon, SignOutIcon } from './icons';
 import { SettingsMenu } from './SettingsMenu';
 import { SoundToggle } from './SoundToggle';
@@ -13,6 +14,8 @@ type TopbarProps = {
   showMenuButton: boolean;
   onMenuClick: () => void;
   onLogout?: () => void;
+  accentColor?: string | null;
+  onAccentColorChange?: (color: string) => void;
 };
 
 const filters: TaskFilter[] = ['all', 'week', 'day'];
@@ -20,7 +23,15 @@ const filters: TaskFilter[] = ['all', 'week', 'day'];
 const label = (f: TaskFilter) =>
   f[0].toUpperCase() + f.slice(1);
 
-const Topbar = ({ filter, setFilter, showMenuButton, onMenuClick, onLogout }: TopbarProps) => {
+const Topbar = ({
+  filter,
+  setFilter,
+  showMenuButton,
+  onMenuClick,
+  onLogout,
+  accentColor,
+  onAccentColorChange,
+}: TopbarProps) => {
   const { pathname } = useLocation();
   const activeIndex = filters.indexOf(filter);
 
@@ -58,6 +69,9 @@ const Topbar = ({ filter, setFilter, showMenuButton, onMenuClick, onLogout }: To
         <SettingsMenu>
           <SoundToggle />
           <ThemeToggle />
+          {onAccentColorChange && (
+            <AccentPicker accentColor={accentColor ?? null} onChange={onAccentColorChange} />
+          )}
           {onLogout && (
             <button className={styles.logoutBtn} title="Sign out" onClick={onLogout}>
               <SignOutIcon size={14} />
