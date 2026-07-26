@@ -42,7 +42,7 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
     dueInfo?.cls === 'due-overdue'
       ? '--red'
       : dueInfo?.cls === 'due-today'
-        ? '--accent-hl'
+        ? '--pink'
         : dueInfo?.cls === 'due-upcoming'
           ? '--accent'
           : null;

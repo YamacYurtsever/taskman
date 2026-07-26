@@ -197,6 +197,7 @@ Google Calendar embed colors: `#E67C73` Flamingo · `#33B679` Sage · `#B39DDB` 
 - [x] Task detail panel: name, list, due date at top; editable textarea below; debounced save; Escape closes
 - [x] Opens as side panel when wide enough, replaces main content on mobile
 - [x] Raw URLs in descriptions rendered as clickable links
+- [x] Panel is manually resizable by dragging its left border above the narrow breakpoint: clamped to a `360px` minimum, snaps to full-width past ~85% of the available space (matching the narrow-breakpoint cover behavior), manual width persisted in `localStorage` and discarded once the viewport crosses into the narrow breakpoint
 
 ##### Milestone 5 — Authentication & Google OAuth ✅
 
@@ -272,14 +273,6 @@ The accent color is user-configurable and stored per-user on the server (`accent
 `GET /api/config` returns `accentColor`; `POST /api/config/accent-color` validates and persists a `#rrggbb` hex value, or clears it back to `null` when sent `null` (`require_hex_color` in `server/services/utils.py`). Frontend: `useAppData` fetches and exposes `accentColor` alongside `calendarUrl`, and a new `AccentPicker.tsx` (reusing `ThemeToggle.module.css`'s row styling) applies `--accent` / `--accent-bg` to `document.documentElement` (or clears the inline overrides on reset) and posts changes to the server.
 
 - [ ] Manual: open settings, click the new accent swatch, pick a color, confirm the UI's accent (focus outlines, flagged-task border, filter pill, etc.) updates immediately; refresh and confirm it persists; right-click the swatch and confirm it resets to the theme default and persists after refresh; log in from another browser/session for the same user and confirm the same accent color loads there.
-
-##### Milestone 14 — Resizable Task Detail Panel
-
-The task detail panel keeps its existing responsive default width (`500px` desktop, `500px * 2/3` under `1400px`, full-width/replaces-main-content under the `1024px` `useIsNarrow` breakpoint — unchanged). Above that breakpoint, the panel's left border is a drag handle: dragging it sets a manual pixel width (clamped to a `360px` minimum so content can't be squeezed pencil-thin), and dragging past ~85% of the available main-content width snaps the panel to the same full-width/hide-`routeContent` state the narrow breakpoint already uses. Dragging back in from that snapped state un-snaps it. The manual override lives in `localStorage` (not the server — it's a device/window-layout preference, not user data) and is discarded whenever the viewport crosses into the narrow breakpoint, since a saved width from a wide monitor is meaningless on a small one.
-
-`TaskDetail.tsx` takes `panelSize` (`number | 'full' | null`), `onResize`, and `resizable` (`= !isNarrow`) props and renders a `resizeHandle` strip (pointer events, delta-based drag, no library) that calls `onResize`; the manual width is applied as an inline `style` (which naturally overrides the CSS breakpoint widths). `App.tsx` owns the `panelSize` state, persists it to `localStorage`, resets it to `null` when `isNarrow` becomes true, and extends its existing `routeContentHidden` condition to also fire when `panelSize === 'full'`.
-
-- [ ] Manual: at a wide viewport, drag the panel's left border and confirm it resizes live and won't go below the minimum width; drag far enough left and confirm it snaps to full-width (matching the narrow-breakpoint look) and hides the rest of the page's content; drag back in from that state and confirm it un-snaps to a normal width; refresh and confirm the manual width persists; shrink the window below the narrow breakpoint and confirm the manual width is discarded and the panel returns to full-width/replace-content behavior; confirm no drag handle appears at all once the viewport is already narrow.
 
 ##### Future
 

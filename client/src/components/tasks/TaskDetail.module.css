@@ -41,13 +41,13 @@
 
 .listName {
   flex-shrink: 0;
+  margin-right: auto;
   font-size: var(--fs-sm);
   color: var(--text-2);
 }
 
 .due {
   flex-shrink: 0;
-  margin-left: auto;
   white-space: nowrap;
   font-size: var(--fs-sm);
 }
