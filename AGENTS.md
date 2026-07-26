@@ -267,15 +267,16 @@ Markdown-style checkboxes inside a task's description, with a matching progress 
 
 ##### Milestone 13 — Accent Color Picker
 
-The accent color is user-configurable and stored per-user on the server (`accentColor` in `~/.taskman/users/<email>/config.json`), so it follows the user across devices rather than living in `localStorage` like the light/dark theme. A new settings slot sits alongside the theme toggle: a circular swatch filled with the current `--accent` value that opens a native `<input type="color">` on click. `--accent-bg` is derived from the picked hex by appending the same `1a` alpha suffix the built-in themes already use, so one control drives both tokens.
+The accent color is user-configurable and stored per-user on the server (`accentColor` in `~/.taskman/users/<email>/config.json`), so it follows the user across devices rather than living in `localStorage` like the light/dark theme. A new settings slot sits alongside the theme toggle, laid out as a full-width row like the other settings entries (same separator/hover as sound/theme/logout) with a small circular swatch centered inside, filled with the current `--accent` value; clicking it opens a native `<input type="color">`. Right-clicking the swatch resets `accentColor` to `null` (falls back to the theme's built-in default), mirroring the right-click-to-toggle pattern from Milestone 9. `--accent-bg` is derived from the picked hex by appending the same `1a` alpha suffix the built-in themes already use, so one control drives both tokens.
 
-`GET /api/config` returns `accentColor`; `POST /api/config/accent-color` validates and persists a `#rrggbb` hex value (`require_hex_color` in `server/services/utils.py`). Frontend: `useAppData` fetches and exposes `accentColor` alongside `calendarUrl`, and a new `AccentPicker.tsx` (mirroring `ThemeToggle.tsx`) applies `--accent` / `--accent-bg` to `document.documentElement` and posts changes to the server.
+`GET /api/config` returns `accentColor`; `POST /api/config/accent-color` validates and persists a `#rrggbb` hex value, or clears it back to `null` when sent `null` (`require_hex_color` in `server/services/utils.py`). Frontend: `useAppData` fetches and exposes `accentColor` alongside `calendarUrl`, and a new `AccentPicker.tsx` (reusing `ThemeToggle.module.css`'s row styling) applies `--accent` / `--accent-bg` to `document.documentElement` (or clears the inline overrides on reset) and posts changes to the server.
 
-- [ ] Manual: open settings, click the new accent swatch, pick a color, confirm the UI's accent (focus outlines, flagged-task border, filter pill, etc.) updates immediately; refresh and confirm it persists; log in from another browser/session for the same user and confirm the same accent color loads there.
+- [ ] Manual: open settings, click the new accent swatch, pick a color, confirm the UI's accent (focus outlines, flagged-task border, filter pill, etc.) updates immediately; refresh and confirm it persists; right-click the swatch and confirm it resets to the theme default and persists after refresh; log in from another browser/session for the same user and confirm the same accent color loads there.
 
 ##### Future
 
+- Notes panel resizing?
+- Information page (maybe button in settings - opens a panel like note panel)
 - Daysheet analytics - skip days with no daysheet entry
 - Turn a task description into an actionable checklist (AI)
 - Screen mates - overlay at the bottom right corner - can be turned off from settings - get fed and grow/transform as we complete tasks - we need animations - avatar store in the future?
-- Information page (maybe button in settings - opens a panel like note panel)

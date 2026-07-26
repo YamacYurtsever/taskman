@@ -51,7 +51,7 @@ export const useAppData = () => {
     syncConfig();
   }, []);
 
-  const setAccentColor = useCallback(async (color: string) => {
+  const setAccentColor = useCallback(async (color: string | null) => {
     setAccentColorState(color);
     await api.setAccentColor(color);
   }, []);

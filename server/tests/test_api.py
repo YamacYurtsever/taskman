@@ -131,6 +131,15 @@ class ApiTest(unittest.TestCase):
         self.assert_error(res, "invalid color")
         self.assertIsNone(saved.get("accentColor"))
 
+    def test_set_accent_color_clears_when_null(self):
+        cfg = {"accentColor": "#5b6cff"}
+
+        with saved_config(cfg) as saved:
+            res = self.post("/api/config/accent-color", {"accentColor": None})
+
+        self.assert_ok(res)
+        self.assertIsNone(saved["accentColor"])
+
     def test_get_state_returns_db_state(self):
         with saved_db(make_db(TASK_1, TASK_DONE, groups=[GROUP_1])):
             res = self.client.get("/api/state")

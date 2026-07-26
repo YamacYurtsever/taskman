@@ -196,7 +196,8 @@ def create_app(test_config=None):
         body = request.get_json(force=True) or {}
 
         try:
-            color = require_hex_color(body.get("accentColor"))
+            raw = body.get("accentColor")
+            color = require_hex_color(raw) if raw is not None else None
             cfg = config.load(email)
             cfg["accentColor"] = color
             config.save(cfg, email)

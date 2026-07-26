@@ -15,7 +15,7 @@ type TopbarProps = {
   onMenuClick: () => void;
   onLogout?: () => void;
   accentColor?: string | null;
-  onAccentColorChange?: (color: string) => void;
+  onAccentColorChange?: (color: string | null) => void;
 };
 
 const filters: TaskFilter[] = ['all', 'week', 'day'];
