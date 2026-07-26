@@ -5,11 +5,8 @@
 }
 
 .content {
-  flex: 1;
-  font-size: var(--fs);
-  line-height: 1.6;
-  white-space: pre-wrap;
-  word-break: break-word;
+  composes: contentBox from './Panel.module.css';
+  border: var(--border-w) solid transparent;
 }
 
 .link {
