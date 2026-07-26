@@ -287,7 +287,7 @@ Content lives in `client/src/content/information.md`, imported via Vite's `?raw`
 Exact section list/copy is still TBD (to be supplied separately) before the header/anchor-nav work below.
 
 - [X] `InfoButton` row added to `SettingsMenu` (after `AccentPicker`, before logout), opening a new `InfoPanel` built on the `Panel` shell — verified in a real browser session (settings → Information opens/closes correctly, layout matches `TaskDetail`).
-- [ ] `renderMarkdown` gains `#`/`##`/`###` header parsing (slugified `id`s) and `[label](target)` link syntax (`#anchor` scrolls within the panel, external URLs keep opening in a new tab).
+- [X] `renderMarkdown` gains `#`/`##`/`###` header parsing (slugified `id`s) and `[label](target)` link syntax (`#anchor` scrolls within the panel, external URLs keep opening in a new tab) — verified in a real browser session (headers render, in-panel anchor jump scrolls without touching the URL, external link still opens with `target="_blank"`).
 - [ ] Auto-generated sticky nav-pill row at the top of the panel, built from the designated header level.
 - [ ] Actual section content written into `information.md`.
 - [ ] Manual: open the info panel from settings, click each nav pill and confirm it jumps to the right section; confirm external links still open in a new tab while `#anchor` links scroll within the panel; confirm the panel's own scrolling doesn't affect the rest of the page.
