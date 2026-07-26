@@ -22,6 +22,9 @@ type TaskDetailProps = {
 
 const MIN_PANEL_W = 360;
 const FULL_SNAP_RATIO = 0.85;
+// Guarantees at least one card column (--card-max-w) plus its padding stays visible
+// before the panel is allowed to snap to full-width, regardless of the ratio above.
+const MIN_CONTENT_W = 320;
 
 function renderLineWithLinks(line: string, lineIdx: number): ReactNode[] {
   const urlRegex = /https?:\/\/[^\s]+/g;
@@ -82,7 +85,10 @@ export const TaskDetail = ({
 
     const startX = e.clientX;
     const startWidth = rect.width;
-    const fullThreshold = containerRect.width * FULL_SNAP_RATIO;
+    const fullThreshold = Math.min(
+      containerRect.width * FULL_SNAP_RATIO,
+      containerRect.width - MIN_CONTENT_W,
+    );
 
     dragAbortRef.current?.abort();
     const controller = new AbortController();
