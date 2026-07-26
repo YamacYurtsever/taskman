@@ -270,8 +270,7 @@
   gap: var(--sp-sm);
 }
 
-.taskRow:hover .taskRight,
-.taskRow:focus-within .taskRight {
+.taskRow:hover .taskRight {
   opacity: 1;
 }
 
@@ -281,8 +280,7 @@
   transition: opacity var(--animation-d-sm), height var(--animation-d-sm), margin-top var(--animation-d-sm);
 }
 
-.taskRow:hover .taskLeft :global(.action-btn),
-.taskRow:focus-within .taskLeft :global(.action-btn) {
+.taskRow:hover .taskLeft :global(.action-btn) {
   opacity: 1;
 }
 
@@ -294,8 +292,7 @@
   overflow: hidden;
 }
 
-.taskRow:hover .taskLeft :global(.action-btn.skp),
-.taskRow:focus-within .taskLeft :global(.action-btn.skp) {
+.taskRow:hover .taskLeft :global(.action-btn.skp) {
   height: var(--btn-w);
   margin-top: var(--sp-sm);
 }
