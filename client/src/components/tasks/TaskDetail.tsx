@@ -137,18 +137,15 @@ export const TaskDetail = ({ task, list, today, act, onClose }: TaskDetailProps)
   return (
     <div className={styles.panel}>
       <div className={styles.header}>
-        <div className={styles.meta}>
-          <span className={styles.listName}>{list.name}</span>
-          {dueInfo && (
-            <span className={cx(styles.due, dueInfo.cls && dueStyles[dueInfo.cls])}>
-              {dueInfo.label}
-            </span>
-          )}
-        </div>
+        <h2 className={styles.taskName}>{task.name}</h2>
+        <span className={styles.listName}>{list.name}</span>
+        {dueInfo && (
+          <span className={cx(styles.due, dueInfo.cls && dueStyles[dueInfo.cls])}>
+            {dueInfo.label}
+          </span>
+        )}
         <button className={styles.closeBtn} onClick={onClose} title="Close (Esc)">✕</button>
       </div>
-
-      <h2 className={styles.taskName}>{task.name}</h2>
 
       <div className={styles.descriptionArea}>
         {isEditing ? (

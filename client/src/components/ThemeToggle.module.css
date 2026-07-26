@@ -11,7 +11,7 @@
   background: var(--primary);
   cursor: pointer;
   font-size: var(--fs-lg);
-  transition: background var(--animation-d), border-color var(--animation-d);
+  transition: background var(--animation-d-sm), border-color var(--animation-d-sm);
 }
 
 .themeToggle:hover {

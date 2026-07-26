@@ -12,12 +12,12 @@
 .mobileSidebar {
   position: fixed;
   inset: 0 auto 0 0;
-  z-index: 20;
+  z-index: 30;
   width: min(88vw, var(--sidebar-w));
   max-width: 320px;
   transform: translateX(-100%);
-  transition: transform var(--animation-d) ease;
-  box-shadow: 12px 0 30px rgba(0, 0, 0, 0.12);
+  transition: transform var(--animation-d-sm) ease;
+  box-shadow: 12px 0 30px rgb(var(--shadow-color) / 0.12);
 }
 
 .mobileSidebarOpen {
@@ -71,7 +71,7 @@
 
 .navItem {
   width: 100%;
-  padding: var(--sp-sm);
+  padding: var(--sp-sm) var(--sp);
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -85,7 +85,7 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   cursor: pointer;
-  transition: color var(--animation-d), background var(--animation-d);
+  transition: color var(--animation-d-sm), background var(--animation-d-sm);
 }
 
 .navItem:hover {
@@ -153,8 +153,8 @@
 }
 
 .action {
-  width: var(--sidebar-action-w);
-  height: var(--sidebar-action-w);
+  width: var(--btn-w);
+  height: var(--btn-w);
   padding: 0;
   display: flex;
   align-items: center;
@@ -164,18 +164,17 @@
   background: transparent;
   color: var(--text-3);
   cursor: pointer;
-  transition: color var(--animation-d), background var(--animation-d);
+  transition: color var(--animation-d-sm), background var(--animation-d-sm);
 }
 
 .action:hover,
 .action.mov:hover,
-.action.edt:hover {
+.action.edt:hover,
+.action.del:hover,
+.action.sav:hover {
   color: var(--text-1);
   background: var(--primary-bg);
 }
-
-.action.sav:hover { color: var(--green); background: var(--green-bg); }
-.action.del:hover { color: var(--red); background: var(--red-bg); }
 
 .renameRow,
 .moveRow,
@@ -224,7 +223,7 @@
 .newListBtn {
   text-align: left;
   cursor: pointer;
-  transition: color var(--animation-d), border-color var(--animation-d);
+  transition: color var(--animation-d-sm), border-color var(--animation-d-sm);
 }
 
 .newItemSplit {
@@ -244,7 +243,7 @@
   font-size: var(--fs-sm);
   text-align: center;
   cursor: pointer;
-  transition: color var(--animation-d), background var(--animation-d);
+  transition: color var(--animation-d-sm), background var(--animation-d-sm);
 }
 
 .newItemSplitBtn + .newItemSplitBtn {

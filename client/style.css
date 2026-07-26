@@ -4,7 +4,7 @@
   /* Accent colors */
   --green:        oklch(48% 0.14 148);
   --green-bg:     oklch(48% 0.14 148 / 0.1);
-  --red:          oklch(50% 0.17 22);
+  --red:          oklch(53.945% 0.16991 20.54);
   --red-bg:       oklch(65% 0.17 22 / 0.1);
   --yellow:       oklch(63.65% 0.13 75.4);
   --yellow-bg:    oklch(61.47% 0.13 72.8 / 0.1);
@@ -35,9 +35,11 @@
 
   /* Spacing */
   --sp-lg:        20px;
+  --sp-md:        15px;
   --sp:           10px;
   --sp-sm:        5px;
   --sp-xs:        3px;
+  --sp-2xs:       2px;
 
   /* Radius */
   --r-lg:         20px;
@@ -47,18 +49,21 @@
 
   /* Misc */
   --btn-w:             15px;
-  --sidebar-action-w:  15px;
   --timeline-action-w: 20px;
   --logo-w:            25px;
-  --theme-w:           35px;
-  --animation-d:       0.15s;
-  --animation-d-lg:    0.3s;
+  --theme-w:           45px;
+  --icon-w:            16px;
+  --animation-d-sm:    0.12s;
+  --animation-d-md:    0.2s;
+  --animation-d-lg:    0.32s;
   --animation-bounce:  360ms cubic-bezier(0.22, 1.2, 0.32, 1);
   --border-w:          1px;
   --border-w-strong:   1.5px;
   --outline-w:         2px;
   --scrollbar-w:       5px;
   --lift-sm:           -1px;
+  --icon-scale-hover:  1.1;
+  --overlay-bg:        rgba(18, 18, 18, 0.28);
 
   /* Default theme */
   --bg:           #f6f3ee;
@@ -71,6 +76,7 @@
   --accent:       #5b6cff;
   --accent-bg:    #5b6cff1a;
   --accent-hl:     #b756b9;
+  --shadow-color: 20 17 14;
 }
 
 /* ──────────────────────────── Themes ─────────────────────────── */
@@ -85,6 +91,7 @@
   --text-3:       #a59a8f;
   --accent:       #5b6cff;
   --accent-bg:    #5b6cff1a;
+  --shadow-color: 20 17 14;
 }
 
 [data-theme="dark"] {
@@ -97,6 +104,7 @@
   --text-3:       #6b645d;
   --accent:       #7a8cff;
   --accent-bg:    #7a8cff1a;
+  --shadow-color: 255 255 255;
 }
 
 /* ──────────────────────────── Reset ─────────────────────────── */

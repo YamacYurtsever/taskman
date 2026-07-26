@@ -1,0 +1,99 @@
+.container {
+  position: relative;
+  width: var(--theme-w);
+  height: var(--theme-w);
+}
+
+.pill {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  box-sizing: border-box;
+  width: var(--theme-w);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: var(--border-w) solid var(--border);
+  border-radius: calc(var(--theme-w) / 2);
+  background: var(--primary);
+  transition: border-radius var(--animation-d-sm), box-shadow var(--animation-d-sm), background var(--animation-d-sm);
+}
+
+.pill:not(.pillOpen):hover {
+  background: var(--primary-bg);
+}
+
+.pillOpen {
+  aspect-ratio: auto;
+  border-radius: var(--r-lg);
+  box-shadow: 0 0 15px rgb(var(--shadow-color) / 0.2);
+}
+
+.gearBtn {
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: color var(--animation-d-sm);
+}
+
+.gearBtn:hover,
+.gearBtn[aria-expanded='true'] {
+  color: var(--text-1);
+}
+
+.pillOpen .gearBtn {
+  min-height: var(--theme-w);
+}
+
+.gearIcon {
+  display: block;
+  width: var(--icon-w);
+  height: var(--icon-w);
+  background-color: currentColor;
+  -webkit-mask: url('/icons/settings.png') center / contain no-repeat;
+  mask: url('/icons/settings.png') center / contain no-repeat;
+}
+
+.items {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height var(--animation-d-sm), opacity var(--animation-d-sm);
+}
+
+.itemsOpen {
+  max-height: 240px;
+  opacity: 1;
+}
+
+.itemsInner {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.itemsInner > button {
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--theme-w);
+  border: 0;
+  border-top: var(--border-w) solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.itemsInner > button:hover {
+  background: var(--primary-bg);
+}

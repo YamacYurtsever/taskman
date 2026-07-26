@@ -9,8 +9,8 @@
 .sidebarBackdrop {
   position: fixed;
   inset: 0;
-  z-index: 10;
-  background: rgba(18, 18, 18, 0.28);
+  z-index: 25;
+  background: var(--overlay-bg);
   border: 0;
 }
 
@@ -33,6 +33,7 @@
   gap: var(--sp);
   padding: var(--main-padding);
   overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .routeContentHidden {

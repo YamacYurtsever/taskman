@@ -99,7 +99,7 @@
     var(--primary),
     color-mix(in srgb, var(--primary-bg) 90%, white)
   );
-  box-shadow: 0 24px 64px rgb(20 17 14 / 0.12);
+  box-shadow: 0 24px 64px rgb(var(--shadow-color) / 0.12);
   animation: loginFloatIn 1s cubic-bezier(0.2, 0.9, 0.2, 1) both;
 }
 
@@ -165,7 +165,7 @@
   font-weight: 800;
   cursor: pointer;
   box-shadow: 0 12px 32px color-mix(in srgb, var(--accent) 20%, transparent);
-  transition: transform 240ms ease, box-shadow 240ms ease;
+  transition: transform var(--animation-d-md) ease, box-shadow var(--animation-d-md) ease;
 }
 
 .signInBtn:hover {

@@ -48,7 +48,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 2px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 4px rgb(var(--shadow-color) / 0.08), 0 2px 12px rgb(var(--shadow-color) / 0.06);
   padding: var(--sp);
   gap: var(--sp);
 }
@@ -60,7 +60,7 @@
   width: 100%;
   padding: var(--sp-sm);
   cursor: pointer;
-  transition: background var(--animation-d);
+  transition: background var(--animation-d-sm);
   background: var(--primary);
   border: none;
   border-radius: var(--r);
@@ -101,7 +101,7 @@
   font: inherit;
   font-size: var(--fs);
   cursor: pointer;
-  transition: color var(--animation-d);
+  transition: color var(--animation-d-sm);
 }
 
 .cardOverflowToggle:hover {
@@ -116,11 +116,11 @@
   align-items: flex-start;
   background-color: var(--primary);
   gap: var(--sp);
-  padding: calc(var(--sp-sm) + 2px);
+  padding: calc(var(--sp-sm) + var(--sp-2xs));
   border: var(--border-w) solid var(--border);
   border-radius: var(--r);
   overflow: hidden;
-  transition: border-color var(--animation-d-lg);
+  transition: border-color var(--animation-d-md);
 }
 
 .taskRow:hover {
@@ -177,8 +177,8 @@
 .taskIcons {
   display: flex;
   align-items: top;
-  padding-top: 2px;
-  gap: 2px;
+  padding-top: var(--sp-2xs);
+  gap: var(--sp-2xs);
   flex-shrink: 0;
 }
 
@@ -213,7 +213,7 @@
   padding: 0;
   align-items: center;
   justify-content: center;
-  transition: border-color var(--animation-d), background var(--animation-d);
+  transition: border-color var(--animation-d-sm), background var(--animation-d-sm);
 }
 
 .taskCheck:hover {
@@ -260,7 +260,7 @@
   align-items: flex-end;
   gap: var(--sp-sm);
   opacity: 0;
-  transition: opacity var(--animation-d);
+  transition: opacity var(--animation-d-sm);
   flex-shrink: 0;
 }
 
@@ -278,7 +278,7 @@
 /* action-btn is global; scope opacity toggle here */
 .taskLeft :global(.action-btn) {
   opacity: 0;
-  transition: opacity var(--animation-d), height var(--animation-d), margin-top var(--animation-d);
+  transition: opacity var(--animation-d-sm), height var(--animation-d-sm), margin-top var(--animation-d-sm);
 }
 
 .taskRow:hover .taskLeft :global(.action-btn),
@@ -464,7 +464,7 @@
   font: inherit;
   font-size: var(--fs);
   cursor: pointer;
-  transition: color var(--animation-d);
+  transition: color var(--animation-d-sm);
 }
 
 .doneToggle:hover {
@@ -472,6 +472,20 @@
 }
 
 .doneSection {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows var(--animation-d-md) ease, opacity var(--animation-d-md) ease;
+}
+
+.doneSectionOpen {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.doneSectionInner {
+  overflow: hidden;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: var(--sp);
@@ -487,13 +501,12 @@
   background: var(--primary);
   border: var(--border-w) solid var(--border);
   border-radius: var(--r);
-  transition: border-color var(--animation-d);
+  transition: border-color var(--animation-d-sm);
   gap: var(--sp);
 }
 
 .inlineAdd:focus-within {
   border-color: var(--accent);
-  border-width: var(--border-w-strong);
 }
 
 .inlineAdd input[type=text] {
@@ -535,11 +548,7 @@
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  transition: color var(--animation-d);
-}
-
-.inlineAddBtn:hover {
-  color: var(--accent);
+  transition: color var(--animation-d-sm);
 }
 
 .inlineAddToggle {
@@ -551,12 +560,9 @@
   cursor: pointer;
   display: flex;
   align-items: center;
+  align-self: stretch;
   flex-shrink: 0;
-  transition: color var(--animation-d);
-}
-
-.inlineAddToggle:hover {
-  color: var(--accent);
+  transition: color var(--animation-d-sm);
 }
 
 .inlineAddRecurToggle {
@@ -567,15 +573,25 @@
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  transition: color var(--animation-d);
-}
-
-.inlineAddRecurToggle:hover {
-  color: var(--accent);
+  transition: color var(--animation-d-sm);
 }
 
 .inlineAddToggleActive {
   color: var(--accent);
+}
+
+.inlineAddBtn svg,
+.inlineAddToggle svg,
+.inlineAddRecurToggle svg {
+  width: var(--icon-w);
+  height: var(--icon-w);
+  transition: transform var(--animation-d-sm);
+}
+
+.inlineAddBtn:hover svg,
+.inlineAddToggle:hover svg,
+.inlineAddRecurToggle:hover svg {
+  transform: scale(var(--icon-scale-hover));
 }
 
 .inlineAddSeriesRow {
@@ -600,7 +616,7 @@
 
 .inlineAddSeriesLabel {
   color: var(--text-2);
-  font-size: var(--fs-sm);
+  font-size: var(--fs-lg);
   white-space: nowrap;
   flex-shrink: 0;
 }

@@ -5,7 +5,7 @@
   grid-template-areas: "left center right";
   align-items: center;
   gap: var(--sp-sm);
-  padding: 0 var(--sp);
+  padding: 0 var(--main-padding);
   border-bottom: var(--border-w) solid var(--border);
   flex-shrink: 0;
 }
@@ -23,7 +23,7 @@
   background: var(--primary);
   color: var(--text-2);
   cursor: pointer;
-  transition: color var(--animation-d), background var(--animation-d), border-color var(--animation-d);
+  transition: color var(--animation-d-sm), background var(--animation-d-sm), border-color var(--animation-d-sm);
 }
 
 .menuBtn:hover {
@@ -60,7 +60,7 @@
 .filterPill {
   position: relative;
   z-index: 1;
-  padding: 7px 14px;
+  padding: calc(var(--sp-sm) + var(--sp-2xs)) var(--sp-md);
   border: 0;
   border-radius: var(--r-full);
   background: transparent;
@@ -69,7 +69,7 @@
   font-size: var(--fs);
   font-weight: 500;
   cursor: pointer;
-  transition: color 220ms ease, transform 220ms ease;
+  transition: color var(--animation-d-md) ease, transform var(--animation-d-md) ease;
 }
 
 .filterPill:hover {
@@ -101,7 +101,7 @@
   background: var(--primary);
   color: var(--text-2);
   cursor: pointer;
-  transition: color var(--animation-d), background var(--animation-d), border-color var(--animation-d);
+  transition: color var(--animation-d-sm), background var(--animation-d-sm), border-color var(--animation-d-sm);
 }
 
 .logoutBtn:hover {
@@ -112,19 +112,10 @@
 @media (max-width: 480px) {
   .topbar {
     gap: var(--sp-xs);
-    padding: 0 var(--sp-sm);
-  }
-
-  .menuBtn,
-  .rightControls {
-    --theme-w: 28px;
-  }
-
-  .rightControls {
-    gap: var(--sp-xs);
+    padding: 0 var(--sp);
   }
 
   .filterPill {
-    padding: 7px 8px;
+    padding: calc(var(--sp-sm) + var(--sp-2xs)) var(--sp);
   }
 }

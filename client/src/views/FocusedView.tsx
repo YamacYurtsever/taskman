@@ -51,11 +51,12 @@ export const FocusedView = ({ data, listId, filter, act, openDetail }: FocusedVi
             {` ${showDone ? 'hide' : 'show'} done (${done.length})`}
           </button>
 
-          <div className={styles.doneSection}>
-            {showDone &&
-              done.map(task => (
+          <div className={`${styles.doneSection} ${showDone ? styles.doneSectionOpen : ''}`}>
+            <div className={styles.doneSectionInner}>
+              {done.map(task => (
                 <TaskRow key={task.id} data={data} task={task} listName={list.name} act={act} openDetail={openDetail} />
               ))}
+            </div>
           </div>
         </div>
       )}

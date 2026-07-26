@@ -36,7 +36,7 @@
   background: transparent;
   color: var(--text-2);
   cursor: pointer;
-  transition: color var(--animation-d), background var(--animation-d);
+  transition: color var(--animation-d-sm), background var(--animation-d-sm);
 }
 
 .dateNavBtn:first-child { border-right: var(--border-w) solid var(--border); }
@@ -96,7 +96,7 @@
   align-items: center;
   gap: var(--sp);
   border-radius: var(--r);
-  padding: calc(var(--sp-sm) + 2px) var(--sp);
+  padding: calc(var(--sp-sm) + var(--sp-2xs)) var(--sp);
   margin: 0 calc(var(--sp) * -1);
 }
 
@@ -140,7 +140,7 @@
   width: var(--timeline-action-w);
   height: var(--timeline-action-w);
   opacity: 0;
-  transition: color var(--animation-d), background var(--animation-d), opacity var(--animation-d);
+  transition: color var(--animation-d-sm), background var(--animation-d-sm), opacity var(--animation-d-sm);
 }
 
 .timelineEntry:hover .timelineAction,
@@ -169,7 +169,7 @@
   background: var(--primary);
   border: var(--border-w) solid var(--border);
   border-radius: var(--r);
-  transition: border-color var(--animation-d);
+  transition: border-color var(--animation-d-sm);
 }
 
 .logForm:focus-within {
@@ -211,7 +211,7 @@
   background: transparent;
   color: var(--text-3);
   cursor: pointer;
-  transition: color var(--animation-d);
+  transition: color var(--animation-d-sm);
 }
 
 .logFormBtn:hover {

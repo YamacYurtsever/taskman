@@ -9,13 +9,14 @@
   background: transparent;
   color: var(--text-2);
   cursor: pointer;
-  transition: color var(--animation-d), background var(--animation-d);
+  transition: color var(--animation-d-sm), background var(--animation-d-sm);
 }
 
 .action-btn:hover,
 .action-btn.mov:hover,
 .action-btn.edt:hover,
-.action-btn.dup:hover {
+.action-btn.dup:hover,
+.action-btn.sav:hover {
   color: var(--text-1);
   background: var(--primary-bg);
 }
@@ -25,17 +26,7 @@
   background: var(--yellow-bg);
 }
 
-.action-btn.sav:hover {
-  color: var(--green);
-  background: var(--green-bg);
-}
-
 .action-btn.pin:hover {
   color: var(--accent);
   background: var(--accent-bg);
-}
-
-.action-btn.skp:hover {
-  color: var(--red);
-  background: var(--red-bg);
 }
