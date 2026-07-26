@@ -109,6 +109,11 @@
   background: var(--primary-bg);
 }
 
+.logoutBtn svg {
+  width: var(--icon-w-btn);
+  height: var(--icon-w-btn);
+}
+
 @media (max-width: 480px) {
   .topbar {
     gap: var(--sp-xs);

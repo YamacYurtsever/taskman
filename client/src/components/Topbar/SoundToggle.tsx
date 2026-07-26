@@ -18,7 +18,7 @@ const SoundToggle = () => {
       title={muted ? 'Unmute sounds' : 'Mute sounds'}
       onClick={toggle}
     >
-      {muted ? <SoundOffIcon size={14} /> : <SoundOnIcon size={14} />}
+      {muted ? <SoundOffIcon /> : <SoundOnIcon />}
     </button>
   );
 };

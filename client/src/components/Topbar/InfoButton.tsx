@@ -7,7 +7,7 @@ type InfoButtonProps = {
 
 const InfoButton = ({ onClick }: InfoButtonProps) => (
   <button className={themeStyles.themeToggle} title="Information" onClick={onClick}>
-    <InfoIcon size={14} />
+    <InfoIcon />
   </button>
 );
 

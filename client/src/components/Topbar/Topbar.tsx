@@ -78,7 +78,7 @@ const Topbar = ({
           {onInfoClick && <InfoButton onClick={onInfoClick} />}
           {onLogout && (
             <button className={styles.logoutBtn} title="Sign out" onClick={onLogout}>
-              <SignOutIcon size={14} />
+              <SignOutIcon />
             </button>
           )}
         </SettingsMenu>

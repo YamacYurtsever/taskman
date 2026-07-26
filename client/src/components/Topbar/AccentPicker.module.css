@@ -3,8 +3,8 @@
 }
 
 .swatch {
-  width: var(--icon-w);
-  height: var(--icon-w);
+  width: var(--icon-w-btn);
+  height: var(--icon-w-btn);
   border-radius: 50%;
   border: var(--border-w) solid var(--border);
   pointer-events: none;
