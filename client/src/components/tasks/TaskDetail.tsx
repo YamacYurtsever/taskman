@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { CSSProperties, ReactNode } from 'react';
 import { API } from '../../lib/api';
+import { CHECKBOX_LINE, renderMarkdown } from '../../lib/markdown';
 import type { Task, TaskList } from '../../lib/types';
-import { CHECKBOX_LINE, cx, formatDue } from '../../lib/utils';
+import { cx, formatDue } from '../../lib/utils';
+import { Panel } from '../Panel';
+import type { PanelSize } from '../Panel';
 import type { Action } from './Tasks.shared';
 import dueStyles from './DueDate.module.css';
 import styles from './TaskDetail.module.css';
-
-export type PanelSize = number | 'full' | null;
 
 type TaskDetailProps = {
   task: Task;
@@ -20,99 +20,22 @@ type TaskDetailProps = {
   resizable?: boolean;
 };
 
-const MIN_PANEL_W = 360;
-const FULL_SNAP_RATIO = 0.85;
-// Guarantees at least one card column (--card-max-w) plus its padding stays visible
-// before the panel is allowed to snap to full-width, regardless of the ratio above.
-const MIN_CONTENT_W = 320;
-
-function renderLineWithLinks(line: string, lineIdx: number): ReactNode[] {
-  const urlRegex = /https?:\/\/[^\s]+/g;
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-  const lineNodes: ReactNode[] = [];
-
-  while ((match = urlRegex.exec(line)) !== null) {
-    if (match.index > lastIndex) {
-      lineNodes.push(line.slice(lastIndex, match.index));
-    }
-    lineNodes.push(
-      <a
-        key={`${lineIdx}-${match.index}`}
-        href={match[0]}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={styles.link}
-        onClick={e => e.stopPropagation()}
-      >
-        {match[0]}
-      </a>,
-    );
-    lastIndex = match.index + match[0].length;
-  }
-
-  if (lastIndex < line.length) lineNodes.push(line.slice(lastIndex));
-  return lineNodes.length > 0 ? lineNodes : [line];
-}
-
 export const TaskDetail = ({
   task,
   list,
   today,
   act,
   onClose,
-  panelSize = null,
+  panelSize,
   onResize,
-  resizable = false,
+  resizable,
 }: TaskDetailProps) => {
   const [prevTaskId, setPrevTaskId] = useState(task.id);
   const [isEditing, setIsEditing] = useState(false);
   const [localDesc, setLocalDesc] = useState(task.description);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const taskIdRef = useRef(task.id);
-  const panelRef = useRef<HTMLDivElement>(null);
-  const dragAbortRef = useRef<AbortController | null>(null);
   const dueInfo = task.due ? formatDue(task.due, today) : null;
-
-  useEffect(() => {
-    return () => dragAbortRef.current?.abort();
-  }, []);
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    const rect = panelRef.current?.getBoundingClientRect();
-    const containerRect = panelRef.current?.parentElement?.getBoundingClientRect();
-    if (!rect || !containerRect || !onResize) return;
-
-    const startX = e.clientX;
-    const startWidth = rect.width;
-    const fullThreshold = Math.min(
-      containerRect.width * FULL_SNAP_RATIO,
-      containerRect.width - MIN_CONTENT_W,
-    );
-
-    dragAbortRef.current?.abort();
-    const controller = new AbortController();
-    dragAbortRef.current = controller;
-    document.body.style.userSelect = 'none';
-
-    window.addEventListener('pointermove', (moveEvent: PointerEvent) => {
-      const rawWidth = startWidth + (startX - moveEvent.clientX);
-      onResize(rawWidth >= fullThreshold ? 'full' : Math.max(MIN_PANEL_W, rawWidth));
-    }, { signal: controller.signal });
-
-    window.addEventListener('pointerup', () => {
-      document.body.style.userSelect = '';
-      controller.abort();
-    }, { signal: controller.signal });
-  };
-
-  const panelStyle: CSSProperties | undefined = !resizable
-    ? undefined
-    : panelSize === 'full'
-      ? { width: '100%', borderLeft: 'none' }
-      : typeof panelSize === 'number'
-        ? { width: `${panelSize}px` }
-        : undefined;
 
   useEffect(() => {
     taskIdRef.current = task.id;
@@ -130,17 +53,6 @@ export const TaskDetail = ({
     };
   }, []);
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      const target = e.target as HTMLElement;
-      if (target.closest('[data-task-edit]')) return;
-      onClose();
-    };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [onClose]);
-
   const scheduleSave = useCallback((value: string) => {
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
@@ -156,65 +68,44 @@ export const TaskDetail = ({
     scheduleSave(value);
   };
 
-  const toggleCheckbox = (lineIdx: number) => {
-    const lines = localDesc.split('\n');
-    const match = lines[lineIdx]?.match(CHECKBOX_LINE);
-    if (!match) return;
-    const [, indent, mark, rest] = match;
-    lines[lineIdx] = `${indent}- [${mark.toLowerCase() === 'x' ? ' ' : 'x'}] ${rest}`;
-    const newDesc = lines.join('\n');
-    setLocalDesc(newDesc);
-    if (timerRef.current) clearTimeout(timerRef.current);
-    act(API.taskDescription, { taskId: taskIdRef.current, description: newDesc });
-  };
+  const toggleCheckbox = useCallback((lineIdx: number) => {
+    setLocalDesc(prev => {
+      const lines = prev.split('\n');
+      const match = lines[lineIdx]?.match(CHECKBOX_LINE);
+      if (!match) return prev;
+      const [, indent, mark, rest] = match;
+      lines[lineIdx] = `${indent}- [${mark.toLowerCase() === 'x' ? ' ' : 'x'}] ${rest}`;
+      const newDesc = lines.join('\n');
+      if (timerRef.current) clearTimeout(timerRef.current);
+      act(API.taskDescription, { taskId: taskIdRef.current, description: newDesc });
+      return newDesc;
+    });
+  }, [act]);
 
-  const descriptionNodes: ReactNode[] = [];
-  localDesc.split('\n').forEach((line, lineIdx) => {
-    if (lineIdx > 0) descriptionNodes.push(<br key={`br-${lineIdx}`} />);
-
-    const checkboxMatch = line.match(CHECKBOX_LINE);
-    if (checkboxMatch) {
-      const [, indent, mark, rest] = checkboxMatch;
-      descriptionNodes.push(
-        <label
-          key={`line-${lineIdx}`}
-          className={styles.checkboxLine}
-          style={indent ? { marginLeft: `${indent.length * 0.6}em` } : undefined}
-        >
-          <input
-            type="checkbox"
-            checked={mark.toLowerCase() === 'x'}
-            onChange={() => toggleCheckbox(lineIdx)}
-            onClick={e => e.stopPropagation()}
-          />
-          {renderLineWithLinks(rest, lineIdx)}
-        </label>,
-      );
-      return;
-    }
-
-    descriptionNodes.push(...renderLineWithLinks(line, lineIdx));
+  const descriptionNodes = renderMarkdown(localDesc, {
+    linkClassName: styles.link,
+    checkboxLineClassName: styles.checkboxLine,
+    onToggleCheckbox: toggleCheckbox,
   });
 
   return (
-    <div className={styles.panel} style={panelStyle} ref={panelRef}>
-      {resizable && (
-        <div
-          className={styles.resizeHandle}
-          onPointerDown={handlePointerDown}
-        />
-      )}
-      <div className={styles.header}>
-        <h2 className={styles.taskName}>{task.name}</h2>
-        <span className={styles.listName}>{list.name}</span>
-        {dueInfo && (
-          <span className={cx(styles.due, dueInfo.cls && dueStyles[dueInfo.cls])}>
-            {dueInfo.label}
-          </span>
-        )}
-        <button className={styles.closeBtn} onClick={onClose} title="Close (Esc)">✕</button>
-      </div>
-
+    <Panel
+      onClose={onClose}
+      panelSize={panelSize}
+      onResize={onResize}
+      resizable={resizable}
+      header={
+        <>
+          <h2 className={styles.taskName}>{task.name}</h2>
+          <span className={styles.listName}>{list.name}</span>
+          {dueInfo && (
+            <span className={cx(styles.due, dueInfo.cls && dueStyles[dueInfo.cls])}>
+              {dueInfo.label}
+            </span>
+          )}
+        </>
+      }
+    >
       <div className={styles.descriptionArea}>
         {isEditing ? (
           <textarea
@@ -234,6 +125,6 @@ export const TaskDetail = ({
           </div>
         )}
       </div>
-    </div>
+    </Panel>
   );
 };

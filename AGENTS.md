@@ -67,9 +67,10 @@ taskman/
         Sidebar/        Sidebar shell, nav, list/group rows, shared sidebar types
         tasks/          TaskRow, TaskCard, TaskDetail, AddTaskForm, shared task types/styles
         Topbar/         Topbar shell (filter pills), settings menu, theme/sound/accent toggles
+        Panel.tsx       Generic resizable/closable side panel shell (used by TaskDetail)
         icons.tsx       Shared icon components
       hooks/            App-level React hooks (useAppData, useIsMobile, useIsNarrow)
-      lib/              api.ts, types.ts, utils.ts, sound.ts
+      lib/              api.ts, types.ts, utils.ts, sound.ts, markdown.tsx (hand-rolled description parser)
     index.html
     vite.config.ts
     tsconfig.json
@@ -94,6 +95,8 @@ taskman/
 - Frontend organization is route-oriented: route screens live in `client/src/views/`, reusable UI lives in `client/src/components/`, shared hooks live in `client/src/hooks/`, and generic helpers/types live in `client/src/lib/`.
 - Styles use CSS Modules for feature/component-local styling. Global tokens and layout styles live in `client/style.css`, and the shared `.action-btn` utility lives in `client/src/action-button.css`.
 - Repeated visual constants (animation durations, icon sizes, shadow color, hover-scale factor) are CSS custom properties in `client/style.css` rather than hardcoded per-component — e.g. `--animation-d-sm/md/lg`, `--shadow-color` (theme-aware, white shadows in dark mode), `--icon-scale-hover`.
+- Description-style text (task descriptions, and later the info panel) is parsed by a small hand-rolled subset parser in `client/src/lib/markdown.tsx` (`renderMarkdown`, `checkboxProgress`, `CHECKBOX_LINE`), not a markdown library — the content is always author-controlled and only needs a few constructs (checkboxes, raw-URL links), so a general CommonMark/remark pipeline would add significant dependency and bundle weight for no real benefit here.
+- `Panel.tsx` in `client/src/components/` is the generic resizable/closable side-panel shell (slide-in animation, drag-to-resize with full-width snap, mobile/narrow full-takeover, Escape-to-close) shared by any panel-style UI; `TaskDetail.tsx` supplies its own header/body content into it.
 
 ---
 
