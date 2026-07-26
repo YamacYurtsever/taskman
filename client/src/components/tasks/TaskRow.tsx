@@ -235,15 +235,12 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
       </div>
 
       {progress && (
-        <div
-          className={styles.taskProgress}
-          style={{
-            background: `linear-gradient(to top, var(--accent) 0%, var(--accent) ${
-              (progress.done / progress.total) * 100
-            }%, var(--border) ${(progress.done / progress.total) * 100}%, var(--border) 100%)`,
-          }}
-          title={`${progress.done}/${progress.total} subtasks done`}
-        />
+        <div className={styles.taskProgress} title={`${progress.done}/${progress.total} subtasks done`}>
+          <div
+            className={styles.taskProgressFill}
+            style={{ height: `${(progress.done / progress.total) * 100}%` }}
+          />
+        </div>
       )}
     </div>
   );

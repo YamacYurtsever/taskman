@@ -100,7 +100,10 @@ export const TaskDetail = ({ task, list, today, act, onClose }: TaskDetailProps)
     if (!match) return;
     const [, indent, mark, rest] = match;
     lines[lineIdx] = `${indent}- [${mark.toLowerCase() === 'x' ? ' ' : 'x'}] ${rest}`;
-    handleChange(lines.join('\n'));
+    const newDesc = lines.join('\n');
+    setLocalDesc(newDesc);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    act(API.taskDescription, { taskId: taskIdRef.current, description: newDesc });
   };
 
   const descriptionNodes: ReactNode[] = [];

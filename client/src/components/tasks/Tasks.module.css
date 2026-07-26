@@ -137,7 +137,18 @@
   right: 0px;
   bottom: 0;
   width: 3px;
+  background: var(--border);
+  overflow: hidden;
   pointer-events: none;
+}
+
+.taskProgressFill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--accent);
+  transition: height var(--animation-d-lg) ease;
 }
 
 .taskBody {
