@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { API } from '../../lib/api';
 import type { Task, TaskList } from '../../lib/types';
 import { CHECKBOX_LINE, cx, formatDue } from '../../lib/utils';
@@ -7,13 +7,21 @@ import type { Action } from './Tasks.shared';
 import dueStyles from './DueDate.module.css';
 import styles from './TaskDetail.module.css';
 
+export type PanelSize = number | 'full' | null;
+
 type TaskDetailProps = {
   task: Task;
   list: TaskList;
   today: string;
   act: Action;
   onClose: () => void;
+  panelSize?: PanelSize;
+  onResize?: (size: PanelSize) => void;
+  resizable?: boolean;
 };
+
+const MIN_PANEL_W = 360;
+const FULL_SNAP_RATIO = 0.85;
 
 function renderLineWithLinks(line: string, lineIdx: number): ReactNode[] {
   const urlRegex = /https?:\/\/[^\s]+/g;
@@ -44,13 +52,61 @@ function renderLineWithLinks(line: string, lineIdx: number): ReactNode[] {
   return lineNodes.length > 0 ? lineNodes : [line];
 }
 
-export const TaskDetail = ({ task, list, today, act, onClose }: TaskDetailProps) => {
+export const TaskDetail = ({
+  task,
+  list,
+  today,
+  act,
+  onClose,
+  panelSize = null,
+  onResize,
+  resizable = false,
+}: TaskDetailProps) => {
   const [prevTaskId, setPrevTaskId] = useState(task.id);
   const [isEditing, setIsEditing] = useState(false);
   const [localDesc, setLocalDesc] = useState(task.description);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const taskIdRef = useRef(task.id);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const dragAbortRef = useRef<AbortController | null>(null);
   const dueInfo = task.due ? formatDue(task.due, today) : null;
+
+  useEffect(() => {
+    return () => dragAbortRef.current?.abort();
+  }, []);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    const rect = panelRef.current?.getBoundingClientRect();
+    const containerRect = panelRef.current?.parentElement?.getBoundingClientRect();
+    if (!rect || !containerRect || !onResize) return;
+
+    const startX = e.clientX;
+    const startWidth = rect.width;
+    const fullThreshold = containerRect.width * FULL_SNAP_RATIO;
+
+    dragAbortRef.current?.abort();
+    const controller = new AbortController();
+    dragAbortRef.current = controller;
+    document.body.style.userSelect = 'none';
+
+    window.addEventListener('pointermove', (moveEvent: PointerEvent) => {
+      const rawWidth = startWidth + (startX - moveEvent.clientX);
+      onResize(rawWidth >= fullThreshold ? 'full' : Math.max(MIN_PANEL_W, rawWidth));
+    }, { signal: controller.signal });
+
+    window.addEventListener('pointerup', () => {
+      document.body.style.userSelect = '';
+      controller.abort();
+    }, { signal: controller.signal });
+  };
+
+  const panelStyle: CSSProperties | undefined = !resizable
+    ? undefined
+    : panelSize === 'full'
+      ? { width: '100%', borderLeft: 'none' }
+      : typeof panelSize === 'number'
+        ? { width: `${panelSize}px` }
+        : undefined;
 
   useEffect(() => {
     taskIdRef.current = task.id;
@@ -135,7 +191,13 @@ export const TaskDetail = ({ task, list, today, act, onClose }: TaskDetailProps)
   });
 
   return (
-    <div className={styles.panel}>
+    <div className={styles.panel} style={panelStyle} ref={panelRef}>
+      {resizable && (
+        <div
+          className={styles.resizeHandle}
+          onPointerDown={handlePointerDown}
+        />
+      )}
       <div className={styles.header}>
         <h2 className={styles.taskName}>{task.name}</h2>
         <span className={styles.listName}>{list.name}</span>

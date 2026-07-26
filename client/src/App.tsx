@@ -13,6 +13,7 @@ import {
 import styles from './App.module.css';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { TaskDetail } from './components/tasks/TaskDetail';
+import type { PanelSize } from './components/tasks/TaskDetail';
 import { Topbar } from './components/Topbar';
 import { useAppData } from './hooks/useAppData';
 import { useIsMobile } from './hooks/useIsMobile';
@@ -27,6 +28,16 @@ import { FocusedView } from './views/FocusedView';
 import { LoginView } from './views/LoginView';
 
 type Action = (path: string, body: unknown) => Promise<boolean>;
+
+const PANEL_SIZE_KEY = 'panelSize';
+
+const loadStoredPanelSize = (): PanelSize => {
+  const raw = localStorage.getItem(PANEL_SIZE_KEY);
+  if (!raw) return null;
+  if (raw === 'full') return 'full';
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+};
 
 type RouteProps = {
   data: StateResponse;
@@ -82,9 +93,23 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
   const [filter, setFilter] = useState<TaskFilter>('all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [panelSize, setPanelSize] = useState<PanelSize>(loadStoredPanelSize);
   const { data, calendarUrl, accentColor, setAccentColor, loading, act, refresh, logout } = useAppData();
   const isMobile = useIsMobile();
   const isNarrow = useIsNarrow();
+
+  const handlePanelResize = useCallback((size: PanelSize) => {
+    setPanelSize(size);
+    if (size === null) {
+      localStorage.removeItem(PANEL_SIZE_KEY);
+    } else {
+      localStorage.setItem(PANEL_SIZE_KEY, String(size));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isNarrow) handlePanelResize(null);
+  }, [isNarrow, handlePanelResize]);
 
   const handleLogout = useCallback(async () => {
     await logout();
@@ -152,7 +177,10 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
         <main className={cx(styles.main, panelOpen && styles.mainWithPanel)}>
 
           <div
-            className={cx(styles.routeContent, isNarrow && panelOpen && styles.routeContentHidden)}
+            className={cx(
+              styles.routeContent,
+              panelOpen && (isNarrow || panelSize === 'full') && styles.routeContentHidden,
+            )}
             hidden={false}
           >
             <div hidden={!!showingCalendar}>
@@ -196,6 +224,9 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
               today={data!.today}
               act={act}
               onClose={closeDetail}
+              panelSize={panelSize}
+              onResize={handlePanelResize}
+              resizable={!isNarrow}
             />
           )}
         </main>
