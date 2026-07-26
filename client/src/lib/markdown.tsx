@@ -75,6 +75,7 @@ type RenderMarkdownOptions = {
 const renderMarkdown = (text: string, options: RenderMarkdownOptions = {}): ReactNode[] => {
   const { linkClassName, checkboxLineClassName, onToggleCheckbox } = options;
   const nodes: ReactNode[] = [];
+  let prevWasHeader = false;
 
   text.split('\n').forEach((line, lineIdx) => {
     const headerMatch = line.match(HEADER_LINE);
@@ -86,10 +87,14 @@ const renderMarkdown = (text: string, options: RenderMarkdownOptions = {}): Reac
           {renderLineWithLinks(headerText, lineIdx, linkClassName)}
         </Tag>,
       );
+      prevWasHeader = true;
       return;
     }
 
-    if (lineIdx > 0) nodes.push(<br key={`br-${lineIdx}`} />);
+    // Headings already carry their own block-level break + bottom margin,
+    // so the line right after one shouldn't also get a manual <br>.
+    if (lineIdx > 0 && !prevWasHeader) nodes.push(<br key={`br-${lineIdx}`} />);
+    prevWasHeader = false;
 
     const checkboxMatch = line.match(CHECKBOX_LINE);
     if (checkboxMatch) {
