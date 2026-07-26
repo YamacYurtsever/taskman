@@ -78,6 +78,12 @@ const renderMarkdown = (text: string, options: RenderMarkdownOptions = {}): Reac
   let prevWasHeader = false;
 
   text.split('\n').forEach((line, lineIdx) => {
+    // Headings already carry their own block-level break + bottom margin, so the
+    // line right after one shouldn't also get a manual <br> — but this needs to
+    // apply uniformly (including when that next line is itself another heading),
+    // otherwise a blank line between two headings loses its only source of gap.
+    if (lineIdx > 0 && !prevWasHeader) nodes.push(<br key={`br-${lineIdx}`} />);
+
     const headerMatch = line.match(HEADER_LINE);
     if (headerMatch) {
       const [, hashes, headerText] = headerMatch;
@@ -91,9 +97,6 @@ const renderMarkdown = (text: string, options: RenderMarkdownOptions = {}): Reac
       return;
     }
 
-    // Headings already carry their own block-level break + bottom margin,
-    // so the line right after one shouldn't also get a manual <br>.
-    if (lineIdx > 0 && !prevWasHeader) nodes.push(<br key={`br-${lineIdx}`} />);
     prevWasHeader = false;
 
     const checkboxMatch = line.match(CHECKBOX_LINE);
