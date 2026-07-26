@@ -15,42 +15,35 @@ type TaskDetailProps = {
   onClose: () => void;
 };
 
-function renderWithLinks(text: string): ReactNode[] {
-  const result: ReactNode[] = [];
-  const lines = text.split('\n');
+const CHECKBOX_LINE = /^(\s*)-\s\[([ xX])\]\s(.*)$/;
 
-  lines.forEach((line, lineIdx) => {
-    if (lineIdx > 0) result.push(<br key={`br-${lineIdx}`} />);
+function renderLineWithLinks(line: string, lineIdx: number): ReactNode[] {
+  const urlRegex = /https?:\/\/[^\s]+/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  const lineNodes: ReactNode[] = [];
 
-    const urlRegex = /https?:\/\/[^\s]+/g;
-    let lastIndex = 0;
-    let match: RegExpExecArray | null;
-    const lineNodes: ReactNode[] = [];
-
-    while ((match = urlRegex.exec(line)) !== null) {
-      if (match.index > lastIndex) {
-        lineNodes.push(line.slice(lastIndex, match.index));
-      }
-      lineNodes.push(
-        <a
-          key={`${lineIdx}-${match.index}`}
-          href={match[0]}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={styles.link}
-          onClick={e => e.stopPropagation()}
-        >
-          {match[0]}
-        </a>,
-      );
-      lastIndex = match.index + match[0].length;
+  while ((match = urlRegex.exec(line)) !== null) {
+    if (match.index > lastIndex) {
+      lineNodes.push(line.slice(lastIndex, match.index));
     }
+    lineNodes.push(
+      <a
+        key={`${lineIdx}-${match.index}`}
+        href={match[0]}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={styles.link}
+        onClick={e => e.stopPropagation()}
+      >
+        {match[0]}
+      </a>,
+    );
+    lastIndex = match.index + match[0].length;
+  }
 
-    if (lastIndex < line.length) lineNodes.push(line.slice(lastIndex));
-    result.push(...(lineNodes.length > 0 ? lineNodes : [line]));
-  });
-
-  return result;
+  if (lastIndex < line.length) lineNodes.push(line.slice(lastIndex));
+  return lineNodes.length > 0 ? lineNodes : [line];
 }
 
 export const TaskDetail = ({ task, list, today, act, onClose }: TaskDetailProps) => {
@@ -103,6 +96,43 @@ export const TaskDetail = ({ task, list, today, act, onClose }: TaskDetailProps)
     scheduleSave(value);
   };
 
+  const toggleCheckbox = (lineIdx: number) => {
+    const lines = localDesc.split('\n');
+    const match = lines[lineIdx]?.match(CHECKBOX_LINE);
+    if (!match) return;
+    const [, indent, mark, rest] = match;
+    lines[lineIdx] = `${indent}- [${mark.toLowerCase() === 'x' ? ' ' : 'x'}] ${rest}`;
+    handleChange(lines.join('\n'));
+  };
+
+  const descriptionNodes: ReactNode[] = [];
+  localDesc.split('\n').forEach((line, lineIdx) => {
+    if (lineIdx > 0) descriptionNodes.push(<br key={`br-${lineIdx}`} />);
+
+    const checkboxMatch = line.match(CHECKBOX_LINE);
+    if (checkboxMatch) {
+      const [, indent, mark, rest] = checkboxMatch;
+      descriptionNodes.push(
+        <label
+          key={`line-${lineIdx}`}
+          className={styles.checkboxLine}
+          style={indent ? { marginLeft: `${indent.length * 0.6}em` } : undefined}
+        >
+          <input
+            type="checkbox"
+            checked={mark.toLowerCase() === 'x'}
+            onChange={() => toggleCheckbox(lineIdx)}
+            onClick={e => e.stopPropagation()}
+          />
+          {renderLineWithLinks(rest, lineIdx)}
+        </label>,
+      );
+      return;
+    }
+
+    descriptionNodes.push(...renderLineWithLinks(line, lineIdx));
+  });
+
   return (
     <div className={styles.panel}>
       <div className={styles.header}>
@@ -134,7 +164,7 @@ export const TaskDetail = ({ task, list, today, act, onClose }: TaskDetailProps)
             className={cx(styles.descView, !localDesc && styles.descPlaceholder)}
             onClick={() => setIsEditing(true)}
           >
-            {localDesc ? renderWithLinks(localDesc) : 'Add a description...'}
+            {localDesc ? descriptionNodes : 'Add a description...'}
           </div>
         )}
       </div>
