@@ -23,7 +23,7 @@ const activateOnKey = (onClick: () => void) => (e: KeyboardEvent) => {
 const SaveAction = ({ title, onClick }: { title: string; onClick: () => void }) => (
   <div className={styles.right}>
     <div className={styles.actions}>
-      <button className={cx(styles.action, styles.sav)} title={title} onClick={onClick}>
+      <button className="action-btn sav" title={title} onClick={onClick}>
         <CheckIcon />
       </button>
     </div>
@@ -66,7 +66,7 @@ const SidebarListRow = ({
         <div className={styles.actions}>
           {dataGroups.length > 0 && (
             <button
-              className={cx(styles.action, styles.mov)}
+              className="action-btn mov"
               title="Move to group"
               onClick={stop(onMove)}
             >
@@ -74,11 +74,11 @@ const SidebarListRow = ({
             </button>
           )}
 
-          <button className={cx(styles.action, styles.edt)} title="Rename" onClick={stop(onEdit)}>
+          <button className="action-btn edt" title="Rename" onClick={stop(onEdit)}>
             <EditIcon />
           </button>
 
-          <button className={cx(styles.action, styles.del)} title="Delete" onClick={stop(onDelete)}>
+          <button className="action-btn del" title="Delete" onClick={stop(onDelete)}>
             <DeleteIcon />
           </button>
         </div>

@@ -31,7 +31,7 @@ const activateOnKey = (onClick: () => void) => (e: KeyboardEvent) => {
 const SaveAction = ({ onClick }: { onClick: () => void }) => (
   <div className={styles.right}>
     <div className={styles.actions}>
-      <button className={cx(styles.action, styles.sav)} title="Save" onClick={onClick}>
+      <button className="action-btn sav" title="Save" onClick={onClick}>
         <CheckIcon />
       </button>
     </div>
@@ -87,7 +87,7 @@ const SidebarGroupRow = ({
 
       <div className={cx(styles.actions, styles.groupActions)}>
         <button
-          className={cx(styles.action, styles.edt)}
+          className="action-btn edt"
           title="Rename"
           onClick={stop(() => setRenaming(true))}
         >
@@ -95,7 +95,7 @@ const SidebarGroupRow = ({
         </button>
 
         <button
-          className={cx(styles.action, styles.del)}
+          className="action-btn del"
           title="Delete group"
           onClick={stop(() => {
             if (confirm(`Delete group "${group.name}"? Lists will be ungrouped.`)) {

@@ -54,7 +54,7 @@
   --logo-w:            25px;
   --theme-w:           45px;
   --icon-w:            16px;
-  --icon-w-btn:        14px;
+  --icon-w-btn:        16px;
   --animation-d-sm:    0.12s;
   --animation-d-md:    0.2s;
   --animation-d-lg:    0.32s;
@@ -162,6 +162,25 @@ body {
 
 .spacer {
   flex: 1;
+}
+
+.action-btn {
+  width: var(--btn-w);
+  height: var(--btn-w);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: color var(--animation-d-sm), background var(--animation-d-sm);
+}
+
+.action-btn:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
 }
 
 /* ──────────────────────────── Scrollbar ─────────────────────────── */

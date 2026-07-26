@@ -61,13 +61,13 @@ taskman/
       App.tsx           Root component and route composition
       App.module.css    Layout styles (content wrapper, main, detail panel, calendar iframe)
       main.tsx          React entry point, imports global styles
-      action-button.css Shared global action-button styles (`.action-btn`)
       views/            Route-level screens: CalendarView, DaysheetView, CardsView, FocusedView, LoginView
       components/       Reusable UI
         Sidebar/        Sidebar shell, nav, list/group rows, shared sidebar types
         tasks/          TaskRow, TaskCard, TaskDetail, AddTaskForm, shared task types/styles
         Topbar/         Topbar shell (filter pills), settings menu, theme/sound/accent toggles
-        Panel.tsx       Generic resizable/closable side panel shell (used by TaskDetail)
+        Panel.tsx       Generic resizable/closable side panel shell (used by TaskDetail, InfoPanel)
+        InfoPanel.tsx   Read-only reference panel rendering client/src/content/information.md
         icons.tsx       Shared icon components
       hooks/            App-level React hooks (useAppData, useIsMobile, useIsNarrow)
       lib/              api.ts, types.ts, utils.ts, sound.ts, markdown.tsx (hand-rolled description parser)
@@ -93,7 +93,7 @@ taskman/
 - In local development the Flask server exposes API routes only; Vite serves the frontend separately and proxies `/api` to Flask on port 5050. In production, Flask also serves the built `client/dist` bundle with an SPA fallback (see Milestone 7).
 - Routing uses React Router (`BrowserRouter`).
 - Frontend organization is route-oriented: route screens live in `client/src/views/`, reusable UI lives in `client/src/components/`, shared hooks live in `client/src/hooks/`, and generic helpers/types live in `client/src/lib/`.
-- Styles use CSS Modules for feature/component-local styling. Global tokens and layout styles live in `client/style.css`, and the shared `.action-btn` utility lives in `client/src/action-button.css`.
+- Styles use CSS Modules for feature/component-local styling. Global tokens, layout, and shared utilities (including `.action-btn`, used as a plain global class name across components rather than a CSS Module import) live in `client/style.css`.
 - Repeated visual constants (animation durations, icon sizes, shadow color, hover-scale factor) are CSS custom properties in `client/style.css` rather than hardcoded per-component — e.g. `--animation-d-sm/md/lg`, `--shadow-color` (theme-aware, white shadows in dark mode), `--icon-scale-hover`.
 - Description-style text (task descriptions, and later the info panel) is parsed by a small hand-rolled subset parser in `client/src/lib/markdown.tsx` (`renderMarkdown`, `checkboxProgress`, `CHECKBOX_LINE`), not a markdown library — the content is always author-controlled and only needs a few constructs (checkboxes, raw-URL links), so a general CommonMark/remark pipeline would add significant dependency and bundle weight for no real benefit here.
 - `Panel.tsx` in `client/src/components/` is the generic resizable/closable side-panel shell (slide-in animation, drag-to-resize with full-width snap, mobile/narrow full-takeover, Escape-to-close) shared by any panel-style UI; `TaskDetail.tsx` supplies its own header/body content into it.
@@ -130,7 +130,7 @@ taskman/
 
 - **Backend:** Python, Flask
 - **Frontend:** Vite + React + TypeScript, React Router
-- **Styling:** CSS Modules + global `client/style.css` + shared `client/src/action-button.css`
+- **Styling:** CSS Modules + global `client/style.css` (tokens, layout, shared `.action-btn` utility)
 - **Storage:** JSON flat files (`~/.taskman/users/<email>/db.json`, `~/.taskman/users/<email>/config.json`)
 - **Tests:** `python -m pytest server/ -v`
 - **Frontend lint:** `cd client && npm run lint`

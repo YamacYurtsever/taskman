@@ -152,30 +152,6 @@
   margin-left: auto;
 }
 
-.action {
-  width: var(--btn-w);
-  height: var(--btn-w);
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: var(--r-sm);
-  background: transparent;
-  color: var(--text-3);
-  cursor: pointer;
-  transition: color var(--animation-d-sm), background var(--animation-d-sm);
-}
-
-.action:hover,
-.action.mov:hover,
-.action.edt:hover,
-.action.del:hover,
-.action.sav:hover {
-  color: var(--text-1);
-  background: var(--primary-bg);
-}
-
 .renameRow,
 .moveRow,
 .newListInput {
