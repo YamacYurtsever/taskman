@@ -297,3 +297,4 @@ Exact section list/copy is still TBD (to be supplied separately) before the head
 - Daysheet analytics - skip days with no daysheet entry
 - Turn a task description into an actionable checklist (AI)
 - Screen mates - overlay at the bottom right corner - can be turned off from settings - get fed and grow/transform as we complete tasks - we need animations - avatar store in the future?
+- Drag and drop to move in group view?
