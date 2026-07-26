@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import {
   Navigate,
@@ -11,10 +11,11 @@ import {
 } from 'react-router-dom';
 
 import styles from './App.module.css';
-import { InfoPanel } from './components/InfoPanel';
+import { InfoPanelBody, InfoPanelHeader } from './components/InfoPanel';
+import { Panel } from './components/Panel';
 import type { PanelSize } from './components/Panel';
 import { Sidebar } from './components/Sidebar/Sidebar';
-import { TaskDetail } from './components/tasks/TaskDetail';
+import { TaskDetailBody, TaskDetailHeader } from './components/tasks/TaskDetail';
 import { Topbar } from './components/Topbar/Topbar';
 import { useAppData } from './hooks/useAppData';
 import { useIsMobile } from './hooks/useIsMobile';
@@ -31,6 +32,8 @@ import { LoginView } from './views/LoginView';
 type Action = (path: string, body: unknown) => Promise<boolean>;
 
 const PANEL_SIZE_KEY = 'panelSize';
+// Matches --animation-d-lg, the duration of Panel's slide-out CSS animation.
+const PANEL_EXIT_MS = 320;
 
 const loadStoredPanelSize = (): PanelSize => {
   const raw = localStorage.getItem(PANEL_SIZE_KEY);
@@ -96,7 +99,12 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
   const [filter, setFilter] = useState<TaskFilter>('all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidePanel, setSidePanel] = useState<SidePanel>(null);
+  const [lastSidePanel, setLastSidePanel] = useState<SidePanel>(null);
+  const [panelMounted, setPanelMounted] = useState(false);
+  const [panelClosing, setPanelClosing] = useState(false);
   const [panelSize, setPanelSize] = useState<PanelSize>(loadStoredPanelSize);
+  const panelCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wasPanelOpenRef = useRef(false);
   const { data, calendarUrl, accentColor, setAccentColor, loading, act, refresh, logout } = useAppData();
   const isMobile = useIsMobile();
   const isNarrow = useIsNarrow();
@@ -119,14 +127,56 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
     onLogout();
   }, [logout, onLogout]);
 
-  const selectedTask = sidePanel?.type === 'task' && data
+  const currentTask = sidePanel?.type === 'task' && data
     ? (data.tasks.find(t => t.id === sidePanel.taskId) ?? null)
     : null;
-  const selectedTaskList = selectedTask
-    ? (data!.lists.find(l => l.id === selectedTask.listId) ?? null)
+  const currentTaskList = currentTask
+    ? (data!.lists.find(l => l.id === currentTask.listId) ?? null)
     : null;
-  const showingInfo = sidePanel?.type === 'info';
-  const panelOpen = showingInfo || !!(selectedTask && selectedTaskList);
+  const showingInfoNow = sidePanel?.type === 'info';
+  // Whether the panel should be open right now — driven straight off sidePanel,
+  // used only to decide the animation direction (see the effect below).
+  const targetOpen = showingInfoNow || !!(currentTask && currentTaskList);
+
+  // The panel keeps rendering its last content while it fades out, since sidePanel
+  // itself goes back to null immediately on close (before the exit animation ends).
+  useEffect(() => {
+    if (targetOpen) setLastSidePanel(sidePanel);
+  }, [targetOpen, sidePanel]);
+
+  useEffect(() => {
+    const wasOpen = wasPanelOpenRef.current;
+    wasPanelOpenRef.current = targetOpen;
+
+    if (targetOpen) {
+      if (panelCloseTimerRef.current) clearTimeout(panelCloseTimerRef.current);
+      setPanelClosing(false);
+      setPanelMounted(true);
+      return;
+    }
+
+    if (wasOpen) {
+      setPanelClosing(true);
+      panelCloseTimerRef.current = setTimeout(() => {
+        setPanelMounted(false);
+        setPanelClosing(false);
+      }, PANEL_EXIT_MS);
+    }
+  }, [targetOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (panelCloseTimerRef.current) clearTimeout(panelCloseTimerRef.current);
+    };
+  }, []);
+
+  const displayedTask = lastSidePanel?.type === 'task' && data
+    ? (data.tasks.find(t => t.id === lastSidePanel.taskId) ?? null)
+    : null;
+  const displayedTaskList = displayedTask
+    ? (data!.lists.find(l => l.id === displayedTask.listId) ?? null)
+    : null;
+  const showingInfo = lastSidePanel?.type === 'info';
 
   const openDetail = useCallback((task: Task) => setSidePanel({ type: 'task', taskId: task.id }), []);
   const openInfo = useCallback(() => setSidePanel({ type: 'info' }), []);
@@ -180,12 +230,12 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
           onAccentColorChange={setAccentColor}
           onInfoClick={openInfo}
         />
-        <main className={cx(styles.main, panelOpen && styles.mainWithPanel)}>
+        <main className={cx(styles.main, panelMounted && styles.mainWithPanel)}>
 
           <div
             className={cx(
               styles.routeContent,
-              panelOpen && (isNarrow || panelSize === 'full') && styles.routeContentHidden,
+              panelMounted && (isNarrow || panelSize === 'full') && styles.routeContentHidden,
             )}
             hidden={false}
           >
@@ -223,26 +273,25 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
             )}
           </div>
 
-          {showingInfo && (
-            <InfoPanel
+          {panelMounted && (
+            <Panel
+              closing={panelClosing}
               onClose={closeDetail}
               panelSize={panelSize}
               onResize={handlePanelResize}
               resizable={!isNarrow}
-            />
-          )}
-
-          {!showingInfo && panelOpen && (
-            <TaskDetail
-              task={selectedTask!}
-              list={selectedTaskList!}
-              today={data!.today}
-              act={act}
-              onClose={closeDetail}
-              panelSize={panelSize}
-              onResize={handlePanelResize}
-              resizable={!isNarrow}
-            />
+              header={
+                showingInfo
+                  ? <InfoPanelHeader />
+                  : (displayedTask && displayedTaskList && (
+                      <TaskDetailHeader task={displayedTask} list={displayedTaskList} today={data!.today} />
+                    ))
+              }
+            >
+              {showingInfo
+                ? <InfoPanelBody />
+                : (displayedTask && <TaskDetailBody task={displayedTask} act={act} />)}
+            </Panel>
           )}
         </main>
       </div>

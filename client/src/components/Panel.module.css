@@ -9,6 +9,17 @@
   }
 }
 
+@keyframes panelSlideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+}
+
 .panel {
   position: relative;
   width: var(--panel-w);
@@ -20,6 +31,11 @@
   gap: var(--main-padding);
   padding: var(--main-padding);
   animation: panelSlideIn var(--animation-d-lg) ease;
+}
+
+.closing {
+  animation: panelSlideOut var(--animation-d-lg) ease forwards;
+  pointer-events: none;
 }
 
 .resizeHandle {

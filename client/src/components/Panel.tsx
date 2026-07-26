@@ -1,10 +1,12 @@
 import { useEffect, useRef } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
+import { cx } from '../lib/utils';
 import styles from './Panel.module.css';
 
 export type PanelSize = number | 'full' | null;
 
 type PanelProps = {
+  closing?: boolean;
   onClose: () => void;
   panelSize?: PanelSize;
   onResize?: (size: PanelSize) => void;
@@ -20,6 +22,7 @@ const FULL_SNAP_RATIO = 0.85;
 const MIN_CONTENT_W = 320;
 
 const Panel = ({
+  closing = false,
   onClose,
   panelSize = null,
   onResize,
@@ -82,7 +85,7 @@ const Panel = ({
         : undefined;
 
   return (
-    <div className={styles.panel} style={panelStyle} ref={panelRef}>
+    <div className={cx(styles.panel, closing && styles.closing)} style={panelStyle} ref={panelRef}>
       {resizable && (
         <div className={styles.resizeHandle} onPointerDown={handlePointerDown} />
       )}

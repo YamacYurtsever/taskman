@@ -3,39 +3,43 @@ import { API } from '../../lib/api';
 import { CHECKBOX_LINE, renderMarkdown } from '../../lib/markdown';
 import type { Task, TaskList } from '../../lib/types';
 import { cx, formatDue } from '../../lib/utils';
-import { Panel } from '../Panel';
-import type { PanelSize } from '../Panel';
 import type { Action } from './Tasks.shared';
 import dueStyles from './DueDate.module.css';
 import styles from './TaskDetail.module.css';
 
-type TaskDetailProps = {
+type TaskDetailHeaderProps = {
   task: Task;
   list: TaskList;
   today: string;
-  act: Action;
-  onClose: () => void;
-  panelSize?: PanelSize;
-  onResize?: (size: PanelSize) => void;
-  resizable?: boolean;
 };
 
-export const TaskDetail = ({
-  task,
-  list,
-  today,
-  act,
-  onClose,
-  panelSize,
-  onResize,
-  resizable,
-}: TaskDetailProps) => {
+const TaskDetailHeader = ({ task, list, today }: TaskDetailHeaderProps) => {
+  const dueInfo = task.due ? formatDue(task.due, today) : null;
+
+  return (
+    <>
+      <h2 className={styles.taskName}>{task.name}</h2>
+      <span className={styles.listName}>{list.name}</span>
+      {dueInfo && (
+        <span className={cx(styles.due, dueInfo.cls && dueStyles[dueInfo.cls])}>
+          {dueInfo.label}
+        </span>
+      )}
+    </>
+  );
+};
+
+type TaskDetailBodyProps = {
+  task: Task;
+  act: Action;
+};
+
+const TaskDetailBody = ({ task, act }: TaskDetailBodyProps) => {
   const [prevTaskId, setPrevTaskId] = useState(task.id);
   const [isEditing, setIsEditing] = useState(false);
   const [localDesc, setLocalDesc] = useState(task.description);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const taskIdRef = useRef(task.id);
-  const dueInfo = task.due ? formatDue(task.due, today) : null;
 
   useEffect(() => {
     taskIdRef.current = task.id;
@@ -89,42 +93,26 @@ export const TaskDetail = ({
   });
 
   return (
-    <Panel
-      onClose={onClose}
-      panelSize={panelSize}
-      onResize={onResize}
-      resizable={resizable}
-      header={
-        <>
-          <h2 className={styles.taskName}>{task.name}</h2>
-          <span className={styles.listName}>{list.name}</span>
-          {dueInfo && (
-            <span className={cx(styles.due, dueInfo.cls && dueStyles[dueInfo.cls])}>
-              {dueInfo.label}
-            </span>
-          )}
-        </>
-      }
-    >
-      <div className={styles.descriptionArea}>
-        {isEditing ? (
-          <textarea
-            autoFocus
-            className={styles.textarea}
-            value={localDesc}
-            onChange={e => handleChange(e.target.value)}
-            onBlur={() => setIsEditing(false)}
-            placeholder="Add a description..."
-          />
-        ) : (
-          <div
-            className={cx(styles.descView, !localDesc && styles.descPlaceholder)}
-            onClick={() => setIsEditing(true)}
-          >
-            {localDesc ? descriptionNodes : 'Add a description...'}
-          </div>
-        )}
-      </div>
-    </Panel>
+    <div className={styles.descriptionArea}>
+      {isEditing ? (
+        <textarea
+          autoFocus
+          className={styles.textarea}
+          value={localDesc}
+          onChange={e => handleChange(e.target.value)}
+          onBlur={() => setIsEditing(false)}
+          placeholder="Add a description..."
+        />
+      ) : (
+        <div
+          className={cx(styles.descView, !localDesc && styles.descPlaceholder)}
+          onClick={() => setIsEditing(true)}
+        >
+          {localDesc ? descriptionNodes : 'Add a description...'}
+        </div>
+      )}
+    </div>
   );
 };
+
+export { TaskDetailHeader, TaskDetailBody };
