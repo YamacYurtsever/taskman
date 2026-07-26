@@ -269,4 +269,6 @@ Markdown-style checkboxes inside a task's description, with a matching progress 
 
 - Daysheet analytics
 - Turn a task description into an actionable checklist (AI)
-- Screen mates (get fed and grow larger as we complete tasks)
+- Screen mates - overlay at the bottom right corner - can be turned off from settings - get fed and grow/transform as we complete tasks - we need animations - avatar store in the future?
+- Accent color picker
+- Information page (maybe button in settings - opens a panel like note panel)
