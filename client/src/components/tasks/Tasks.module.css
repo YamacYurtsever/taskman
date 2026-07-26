@@ -111,6 +111,7 @@
 /* ── Task rows ── */
 
 .taskRow {
+  position: relative;
   display: flex;
   align-items: flex-start;
   background-color: var(--primary);
@@ -118,6 +119,7 @@
   padding: calc(var(--sp-sm) + 2px);
   border: var(--border-w) solid var(--border);
   border-radius: var(--r);
+  overflow: hidden;
   transition: border-color var(--animation-d-lg);
 }
 
@@ -127,6 +129,15 @@
 
 .taskRow.flagged {
   border-left: 3px solid var(--accent);
+}
+
+.taskProgress {
+  position: absolute;
+  top: 0;
+  right: 0px;
+  bottom: 0;
+  width: 3px;
+  pointer-events: none;
 }
 
 .taskBody {

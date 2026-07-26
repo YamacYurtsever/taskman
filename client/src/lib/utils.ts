@@ -53,6 +53,22 @@ const stop = (fn: () => void) => (e: MouseEvent) => {
   fn();
 };
 
+const CHECKBOX_LINE = /^(\s*)-\s\[([ xX])\]\s(.*)$/;
+
+const checkboxProgress = (description: string): { done: number; total: number } | null => {
+  let done = 0;
+  let total = 0;
+
+  for (const line of description.split('\n')) {
+    const match = line.match(CHECKBOX_LINE);
+    if (!match) continue;
+    total += 1;
+    if (match[2].toLowerCase() === 'x') done += 1;
+  }
+
+  return total > 0 ? { done, total } : null;
+};
+
 const flaggedFirst = (tasks: Task[]) => [
   ...tasks.filter(t => t.flagged),
   ...tasks.filter(t => !t.flagged),
@@ -143,4 +159,6 @@ export {
   pendingFor,
   doneFor,
   formatDue,
+  CHECKBOX_LINE,
+  checkboxProgress,
 };

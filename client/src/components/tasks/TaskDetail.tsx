@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { API } from '../../lib/api';
 import type { Task, TaskList } from '../../lib/types';
-import { cx, formatDue } from '../../lib/utils';
+import { CHECKBOX_LINE, cx, formatDue } from '../../lib/utils';
 import type { Action } from './Tasks.shared';
 import dueStyles from './DueDate.module.css';
 import styles from './TaskDetail.module.css';
@@ -14,8 +14,6 @@ type TaskDetailProps = {
   act: Action;
   onClose: () => void;
 };
-
-const CHECKBOX_LINE = /^(\s*)-\s\[([ xX])\]\s(.*)$/;
 
 function renderLineWithLinks(line: string, lineIdx: number): ReactNode[] {
   const urlRegex = /https?:\/\/[^\s]+/g;

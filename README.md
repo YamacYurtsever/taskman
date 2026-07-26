@@ -101,6 +101,8 @@ Styling is split between:
 
 Click any task row to open a detail panel. The panel shows the task's list and due date, and provides a freeform text area for notes. Changes are auto-saved with a short debounce. Raw URLs in the description are rendered as clickable links.
 
+Lines written as GitHub-style checkboxes (`- [ ] buy milk` / `- [x] done thing`) render as live, clickable checkboxes in the read-only view — click one to check it off, which rewrites that line's `[ ]`/`[x]` in the underlying text and autosaves. Checkboxes only render outside edit mode; while the textarea is focused you see and edit the raw markdown. A task with checkboxes in its description shows a thin accent bar along the right edge of its row, filling bottom-to-top as more items are checked off.
+
 On wide screens the panel slides in alongside the task list. On mobile it replaces the main content. Press Escape or the ✕ button to close.
 
 ---
@@ -144,7 +146,9 @@ Example:
       "listId": "uuid",
       "due": "2026-04-30",
       "doneAt": "2026-04-26T04:32:05Z",
-      "description": ""
+      "description": "",
+      "flagged": false,
+      "recurIntervalDays": null
     }
   ],
   "daysheet": [

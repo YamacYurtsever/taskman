@@ -456,7 +456,24 @@ Updated task schema:
 - [x] `cd client && npm run build`
 - [ ] Manual: create a recurring task via batch mode's `∞`-style toggle, complete it, confirm it does NOT appear in the done list and instead a new pending task appears with due date rolled forward by the interval and a daysheet entry logged; confirm the repeat icon shows on the new occurrence; edit an existing task's interval via the edit row and confirm it takes effect on its next completion; duplicate a recurring task and confirm the copy keeps the interval; confirm two same-named tasks can each be completed independently on the same day; confirm the skip button only appears on recurring, non-done rows, confirms before acting, and advances the due date without logging a daysheet entry. (Not verified this session — the app requires real Google OAuth login with no local bypass, and no browser tool was available to drive it; needs a manual pass.)
 
+##### Milestone 12 — Description Checklists
+
+Markdown-style checkboxes inside a task's description, with a matching progress indicator on the task row. No schema change — descriptions remain a plain text field; checkbox state is encoded in the text itself as GitHub-style `- [ ]` / `- [x]` lines.
+
+###### Frontend
+
+- [x] `client/src/lib/utils.ts` — shared `CHECKBOX_LINE` regex (`- [ ] text` / `- [x] text`, case-insensitive mark, leading indentation captured) and `checkboxProgress(description)` helper returning `{ done, total } | null`.
+- [x] `client/src/components/tasks/TaskDetail.tsx` — the read-only description view (shown when not editing) renders checkbox lines as live `<input type="checkbox">` elements instead of plain text; clicking one flips `[ ]`/`[x]` in the underlying description text and saves through the existing 600ms-debounced autosave. Edit mode (the raw textarea) is unaffected — checkboxes only render in the read-only view, matching how URL-linkification already only applies there.
+- [x] `client/src/components/tasks/TaskRow.tsx` / `Tasks.module.css` — a task row whose description contains checkboxes shows a thin `--accent` bar flush against its right edge (mirroring the flagged left border), filling bottom-to-top proportional to checked/total via a hard-stop `linear-gradient`; `.taskRow` clips it (`overflow: hidden`) so it respects the row's rounded corners instead of overhanging them.
+
+###### Frontend — verification
+
+- [x] `cd client && npm run lint`
+- [x] `cd client && npm run build`
+- [ ] Manual: add `- [ ] ...` lines to a description, confirm they render as checkboxes only outside edit mode; click to check/uncheck and confirm the state persists after a refresh; confirm the row's right-edge progress bar fills correctly and stays clipped to the row's corners at 0%, partial, and 100% completion.
+
 ##### Future
 
 - Daysheet analytics
 - Turn a task description into an actionable checklist (AI)
+- Screen Mates

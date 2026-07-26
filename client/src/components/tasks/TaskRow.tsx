@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import { CheckIcon, ContinueIcon, DeleteIcon, DuplicateIcon, EditIcon, MoveIcon, NoteIcon, RepeatIcon, SkipIcon } from '../icons';
 import { API } from '../../lib/api';
-import { cx, formatDue, sortByName } from '../../lib/utils';
+import { checkboxProgress, cx, formatDue, sortByName } from '../../lib/utils';
 import dueStyles from './DueDate.module.css';
 import styles from './Tasks.module.css';
 import type { TaskRowProps } from './Tasks.shared';
@@ -37,6 +37,7 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
     setToggling(false);
   };
   const dueInfo = task.due ? formatDue(task.due, data.today) : null;
+  const progress = checkboxProgress(task.description);
   const flagColorVar =
     dueInfo?.cls === 'due-overdue'
       ? '--red'
@@ -232,6 +233,18 @@ export const TaskRow = ({ data, task, listName, act, openDetail }: TaskRowProps)
           </button>
         </div>
       </div>
+
+      {progress && (
+        <div
+          className={styles.taskProgress}
+          style={{
+            background: `linear-gradient(to top, var(--accent) 0%, var(--accent) ${
+              (progress.done / progress.total) * 100
+            }%, var(--border) ${(progress.done / progress.total) * 100}%, var(--border) 100%)`,
+          }}
+          title={`${progress.done}/${progress.total} subtasks done`}
+        />
+      )}
     </div>
   );
 };
