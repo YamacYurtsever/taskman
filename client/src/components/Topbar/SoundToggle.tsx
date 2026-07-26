@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { isMuted, setMuted } from '../lib/sound';
-import { SoundOffIcon, SoundOnIcon } from './icons';
+import { isMuted, setMuted } from '../../lib/sound';
+import { SoundOffIcon, SoundOnIcon } from '../icons';
 import styles from './ThemeToggle.module.css';
 
 const SoundToggle = () => {

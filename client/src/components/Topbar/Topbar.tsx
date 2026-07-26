@@ -1,8 +1,8 @@
 import { useLocation } from 'react-router-dom';
 import type { CSSProperties } from 'react';
-import type { TaskFilter } from '../lib/types';
+import type { TaskFilter } from '../../lib/types';
 import { AccentPicker } from './AccentPicker';
-import { MenuIcon, SignOutIcon } from './icons';
+import { MenuIcon, SignOutIcon } from '../icons';
 import { SettingsMenu } from './SettingsMenu';
 import { SoundToggle } from './SoundToggle';
 import { ThemeToggle } from './ThemeToggle';

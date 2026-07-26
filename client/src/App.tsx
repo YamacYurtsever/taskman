@@ -14,7 +14,7 @@ import styles from './App.module.css';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { TaskDetail } from './components/tasks/TaskDetail';
 import type { PanelSize } from './components/tasks/TaskDetail';
-import { Topbar } from './components/Topbar';
+import { Topbar } from './components/Topbar/Topbar';
 import { useAppData } from './hooks/useAppData';
 import { useIsMobile } from './hooks/useIsMobile';
 import { useIsNarrow } from './hooks/useIsNarrow';

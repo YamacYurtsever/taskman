@@ -66,10 +66,7 @@ taskman/
       components/       Reusable UI
         Sidebar/        Sidebar shell, nav, list/group rows, shared sidebar types
         tasks/          TaskRow, TaskCard, TaskDetail, AddTaskForm, shared task types/styles
-        Topbar.tsx      Filter pills, settings menu, and theme/sound toggle container
-        SettingsMenu.tsx Collapsible settings pill (sound/theme/logout) anchored top-right
-        ThemeToggle.tsx Theme switcher
-        SoundToggle.tsx Sound mute toggle
+        Topbar/         Topbar shell (filter pills), settings menu, theme/sound/accent toggles
         icons.tsx       Shared icon components
       hooks/            App-level React hooks (useAppData, useIsMobile, useIsNarrow)
       lib/              api.ts, types.ts, utils.ts, sound.ts
