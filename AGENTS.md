@@ -233,7 +233,7 @@ A list can be pinned so it always appears in the daysheet for the current day, e
 
 A task can be flagged as "planned for today" — a manual intent marker, independent of due date. Flagging is a plain boolean (`flagged`) that persists across days (no auto-clear); it is cleared automatically when the task is marked done. Flagged tasks sort to the top within their list/card in cards and focused views (existing relative order otherwise preserved), with a left border in `--accent-hl` as the visual indicator. The toggle is right-click on the task row (no dedicated button — the row has no spare space for one); right-click's default browser context menu is suppressed. `POST /api/flag-task` sets it; `GET /api/state` normalizes missing `flagged` to `false` for legacy records.
 
-- [ ] Manual: right-click a task in cards/focused view flags it (border appears, task moves to top of its list/card); right-click again unflags it; marking a flagged task done clears the flag.
+- [X] Manual: right-click a task in cards/focused view flags it (border appears, task moves to top of its list/card); right-click again unflags it; marking a flagged task done clears the flag.
 
 ##### Milestone 10 — Batch Task Addition
 
@@ -247,7 +247,7 @@ Generates a numbered series of tasks in one go — the motivating case is start-
 
 `add_task_series` in `server/services/tasks.py` builds the name sequence and due dates and writes all tasks in one `db.load`/`db.save`; `POST /api/add-series` exposes it. Frontend: `AddTaskForm.tsx` gains a `single`/`batch` mode toggle that reuses the name/date inputs and adds interval/count number inputs.
 
-- [ ] Manual: toggle batch mode, generate a series, confirm names/dates/count are correct; confirm the row wraps sensibly at normal width and at mobile width; confirm toggling back to single mode restores the normal add flow.
+- [X] Manual: toggle batch mode, generate a series, confirm names/dates/count are correct; confirm the row wraps sensibly at normal width and at mobile width; confirm toggling back to single mode restores the normal add flow.
 
 ##### Milestone 11 — Recurring Tasks
 
@@ -255,7 +255,7 @@ A task can recur: on completion it logs to the daysheet as usual, but it never e
 
 `add_task`/`edit_task`/`duplicate_task` gained `recurIntervalDays` handling; `done_task` and the new `skip_task` share a `_replace_with_next_occurrence` helper that deletes the completed/skipped row and spawns the next occurrence (due date rolled forward from the occurrence's own prior due date, not from today). `POST /api/skip-task` exposes skip. Frontend: `RepeatIcon` marks recurring tasks and toggles recurring mode in the batch-add row; `SkipIcon` is a third `taskLeft` button shown only on recurring, non-done rows, behind a `confirm()` dialog, using the default (non-colored) action-btn hover.
 
-- [ ] Manual: create a recurring task via batch mode's `∞`-style toggle, complete it, confirm it does NOT appear in the done list and instead a new pending task appears with due date rolled forward by the interval and a daysheet entry logged; confirm the repeat icon shows on the new occurrence; edit an existing task's interval via the edit row and confirm it takes effect on its next completion; duplicate a recurring task and confirm the copy keeps the interval; confirm two same-named tasks can each be completed independently on the same day; confirm the skip button only appears on recurring, non-done rows, confirms before acting, and advances the due date without logging a daysheet entry.
+- [X] Manual: create a recurring task via batch mode's `∞`-style toggle, complete it, confirm it does NOT appear in the done list and instead a new pending task appears with due date rolled forward by the interval and a daysheet entry logged; confirm the repeat icon shows on the new occurrence; edit an existing task's interval via the edit row and confirm it takes effect on its next completion; duplicate a recurring task and confirm the copy keeps the interval; confirm two same-named tasks can each be completed independently on the same day; confirm the skip button only appears on recurring, non-done rows, confirms before acting, and advances the due date without logging a daysheet entry.
 
 ##### Milestone 12 — Description Checklists
 
@@ -263,7 +263,7 @@ Markdown-style checkboxes inside a task's description, with a matching progress 
 
 `checkboxProgress()` / `CHECKBOX_LINE` in `client/src/lib/utils.ts` parse the description text; `TaskDetail.tsx`'s read-only view renders checkbox lines as live inputs (edit mode shows raw markdown); `TaskRow.tsx` shows a right-edge `--accent` fill bar proportional to checked/total.
 
-- [ ] Manual: add `- [ ] ...` lines to a description, confirm they render as checkboxes only outside edit mode; click to check/uncheck and confirm the state persists after a refresh; confirm the row's right-edge progress bar fills correctly and stays clipped to the row's corners at 0%, partial, and 100% completion.
+- [X] Manual: add `- [ ] ...` lines to a description, confirm they render as checkboxes only outside edit mode; click to check/uncheck and confirm the state persists after a refresh; confirm the row's right-edge progress bar fills correctly and stays clipped to the row's corners at 0%, partial, and 100% completion.
 
 ##### Future
 
