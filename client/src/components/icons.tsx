@@ -145,6 +145,13 @@ const RepeatIcon = (props: IconProps) => (
   </Icon>
 );
 
+const InfoIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <circle cx="8" cy="8" r="6" />
+    <path d="M8 7.3v4M8 5.1v.01" />
+  </Icon>
+);
+
 const SignOutIcon = (props: IconProps) => (
   <Icon {...props}>
     <path d="M6 3H4a1 1 0 00-1 1v8a1 1 0 001 1h2" />
@@ -178,6 +185,7 @@ export {
   LayersIcon,
   MenuIcon,
   NoteIcon,
+  InfoIcon,
   PinIcon,
   PinFilledIcon,
   SoundOnIcon,

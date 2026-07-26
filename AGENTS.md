@@ -272,11 +272,28 @@ The accent color is user-configurable and stored per-user on the server (`accent
 
 `GET /api/config` returns `accentColor`; `POST /api/config/accent-color` validates and persists a `#rrggbb` hex value, or clears it back to `null` when sent `null` (`require_hex_color` in `server/services/utils.py`). Frontend: `useAppData` fetches and exposes `accentColor` alongside `calendarUrl`, and a new `AccentPicker.tsx` (reusing `ThemeToggle.module.css`'s row styling) applies `--accent` / `--accent-bg` to `document.documentElement` (or clears the inline overrides on reset) and posts changes to the server.
 
-- [ ] Manual: open settings, click the new accent swatch, pick a color, confirm the UI's accent (focus outlines, flagged-task border, filter pill, etc.) updates immediately; refresh and confirm it persists; right-click the swatch and confirm it resets to the theme default and persists after refresh; log in from another browser/session for the same user and confirm the same accent color loads there.
+- [X] Manual: open settings, click the new accent swatch, pick a color, confirm the UI's accent (focus outlines, flagged-task border, filter pill, etc.) updates immediately; refresh and confirm it persists; right-click the swatch and confirm it resets to the theme default and persists after refresh; log in from another browser/session for the same user and confirm the same accent color loads there.
+
+##### Milestone 14 — Information Panel
+
+A settings-menu button (another full-width row in `SettingsMenu`, alongside theme/sound/accent/logout) opens a reference panel covering the app's philosophy, its 3 main views, the group/list × date-range design, and the batch-add/recurring/flagging feature cluster — static, author-written content, not user data, so no server/API involvement at all. It reuses the `Panel` shell extracted in the previous milestone rather than `TaskDetail`, since the content model (fixed reference text vs. one task's live-edited description) is fundamentally different.
+
+Content is a single scrollable panel, not true multi-page/tabbed navigation — the sections are independent reference topics (not a sequential narrative), so prev/next paging is the wrong metaphor, and separate mounted "pages" would add page-state for no real benefit. Instead, `renderMarkdown` (`client/src/lib/markdown.tsx`) gains two more constructs on top of the existing checkbox/raw-URL support: `#`/`##`/`###` headers (rendered as heading elements with a slugified `id`, doubling as anchor targets) and `[label](target)` links, where `target` starting with `#` triggers a `scrollIntoView` jump instead of the existing external-URL `<a target="_blank">` behavior. A sticky nav row of pills at the top of the panel is auto-generated from whichever header level is designated "section," so the nav and the content can't drift out of sync — no separately-authored nav data structure to maintain.
+
+Math/symbol needs are handled by typing the Unicode characters directly (∩, ∪, ∈, ≤, etc. all render fine with zero tooling) rather than adding a LaTeX renderer — real equation layout (fractions, integrals) was explicitly ruled out as disproportionate to the actual need (occasional symbols, not typeset math), consistent with the earlier decision to hand-roll markdown parsing instead of pulling in a library.
+
+Content lives in `client/src/content/information.md`, imported via Vite's `?raw` suffix (`import infoContent from '../content/information.md?raw'`) so it's an editable plain-text file in the repo rather than a JS string literal. The panel is read-only — no edit-mode toggle like `TaskDetail`, since this content isn't meant to be edited from the UI at all.
+
+Exact section list/copy is still TBD (to be supplied separately) before the header/anchor-nav work below.
+
+- [X] `InfoButton` row added to `SettingsMenu` (after `AccentPicker`, before logout), opening a new `InfoPanel` built on the `Panel` shell — verified in a real browser session (settings → Information opens/closes correctly, layout matches `TaskDetail`).
+- [ ] `renderMarkdown` gains `#`/`##`/`###` header parsing (slugified `id`s) and `[label](target)` link syntax (`#anchor` scrolls within the panel, external URLs keep opening in a new tab).
+- [ ] Auto-generated sticky nav-pill row at the top of the panel, built from the designated header level.
+- [ ] Actual section content written into `information.md`.
+- [ ] Manual: open the info panel from settings, click each nav pill and confirm it jumps to the right section; confirm external links still open in a new tab while `#anchor` links scroll within the panel; confirm the panel's own scrolling doesn't affect the rest of the page.
 
 ##### Future
 
-- Information page (maybe button in settings - opens a panel like note panel)
 - Daysheet analytics - skip days with no daysheet entry
 - Turn a task description into an actionable checklist (AI)
 - Screen mates - overlay at the bottom right corner - can be turned off from settings - get fed and grow/transform as we complete tasks - we need animations - avatar store in the future?

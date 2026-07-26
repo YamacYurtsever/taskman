@@ -11,8 +11,9 @@ import {
 } from 'react-router-dom';
 
 import styles from './App.module.css';
-import { Sidebar } from './components/Sidebar/Sidebar';
+import { InfoPanel } from './components/InfoPanel';
 import type { PanelSize } from './components/Panel';
+import { Sidebar } from './components/Sidebar/Sidebar';
 import { TaskDetail } from './components/tasks/TaskDetail';
 import { Topbar } from './components/Topbar/Topbar';
 import { useAppData } from './hooks/useAppData';
@@ -38,6 +39,8 @@ const loadStoredPanelSize = (): PanelSize => {
   const n = Number(raw);
   return Number.isFinite(n) ? n : null;
 };
+
+type SidePanel = { type: 'task'; taskId: string } | { type: 'info' } | null;
 
 type RouteProps = {
   data: StateResponse;
@@ -92,7 +95,7 @@ type AuthenticatedAppProps = {
 const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
   const [filter, setFilter] = useState<TaskFilter>('all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [sidePanel, setSidePanel] = useState<SidePanel>(null);
   const [panelSize, setPanelSize] = useState<PanelSize>(loadStoredPanelSize);
   const { data, calendarUrl, accentColor, setAccentColor, loading, act, refresh, logout } = useAppData();
   const isMobile = useIsMobile();
@@ -116,16 +119,18 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
     onLogout();
   }, [logout, onLogout]);
 
-  const selectedTask = selectedTaskId && data
-    ? (data.tasks.find(t => t.id === selectedTaskId) ?? null)
+  const selectedTask = sidePanel?.type === 'task' && data
+    ? (data.tasks.find(t => t.id === sidePanel.taskId) ?? null)
     : null;
   const selectedTaskList = selectedTask
     ? (data!.lists.find(l => l.id === selectedTask.listId) ?? null)
     : null;
-  const panelOpen = !!(selectedTask && selectedTaskList);
+  const showingInfo = sidePanel?.type === 'info';
+  const panelOpen = showingInfo || !!(selectedTask && selectedTaskList);
 
-  const openDetail = useCallback((task: Task) => setSelectedTaskId(task.id), []);
-  const closeDetail = useCallback(() => setSelectedTaskId(null), []);
+  const openDetail = useCallback((task: Task) => setSidePanel({ type: 'task', taskId: task.id }), []);
+  const openInfo = useCallback(() => setSidePanel({ type: 'info' }), []);
+  const closeDetail = useCallback(() => setSidePanel(null), []);
 
   const location = useLocation();
   const { pathname } = location;
@@ -173,6 +178,7 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
           onLogout={handleLogout}
           accentColor={accentColor}
           onAccentColorChange={setAccentColor}
+          onInfoClick={openInfo}
         />
         <main className={cx(styles.main, panelOpen && styles.mainWithPanel)}>
 
@@ -217,7 +223,16 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
             )}
           </div>
 
-          {panelOpen && (
+          {showingInfo && (
+            <InfoPanel
+              onClose={closeDetail}
+              panelSize={panelSize}
+              onResize={handlePanelResize}
+              resizable={!isNarrow}
+            />
+          )}
+
+          {!showingInfo && panelOpen && (
             <TaskDetail
               task={selectedTask!}
               list={selectedTaskList!}

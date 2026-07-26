@@ -2,6 +2,7 @@ import { useLocation } from 'react-router-dom';
 import type { CSSProperties } from 'react';
 import type { TaskFilter } from '../../lib/types';
 import { AccentPicker } from './AccentPicker';
+import { InfoButton } from './InfoButton';
 import { MenuIcon, SignOutIcon } from '../icons';
 import { SettingsMenu } from './SettingsMenu';
 import { SoundToggle } from './SoundToggle';
@@ -16,6 +17,7 @@ type TopbarProps = {
   onLogout?: () => void;
   accentColor?: string | null;
   onAccentColorChange?: (color: string | null) => void;
+  onInfoClick?: () => void;
 };
 
 const filters: TaskFilter[] = ['all', 'week', 'day'];
@@ -31,6 +33,7 @@ const Topbar = ({
   onLogout,
   accentColor,
   onAccentColorChange,
+  onInfoClick,
 }: TopbarProps) => {
   const { pathname } = useLocation();
   const activeIndex = filters.indexOf(filter);
@@ -72,6 +75,7 @@ const Topbar = ({
           {onAccentColorChange && (
             <AccentPicker accentColor={accentColor ?? null} onChange={onAccentColorChange} />
           )}
+          {onInfoClick && <InfoButton onClick={onInfoClick} />}
           {onLogout && (
             <button className={styles.logoutBtn} title="Sign out" onClick={onLogout}>
               <SignOutIcon size={14} />
