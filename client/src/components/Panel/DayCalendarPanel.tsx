@@ -1,5 +1,7 @@
 import styles from './DayCalendarPanel.module.css';
 
+const DayCalendarPanelHeader = () => <h2 className={styles.title}>Schedule</h2>;
+
 type DayCalendarPanelBodyProps = {
   calendarUrl: string;
   date: string;
@@ -31,4 +33,4 @@ const DayCalendarPanelBody = ({ calendarUrl, date }: DayCalendarPanelBodyProps) 
   );
 };
 
-export { DayCalendarPanelBody };
+export { DayCalendarPanelHeader, DayCalendarPanelBody };

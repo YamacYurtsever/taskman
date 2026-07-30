@@ -1,3 +1,9 @@
+.title {
+  margin-right: auto;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+
 .frameWrap {
   flex: 1;
   min-height: 0;
