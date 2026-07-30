@@ -10,14 +10,10 @@
 }
 
 .nav {
-  position: sticky;
-  top: 0;
-  z-index: 1;
+  flex-shrink: 0;
   display: flex;
   gap: var(--sp-sm);
   overflow-x: auto;
-  padding-bottom: var(--sp-sm);
-  background: var(--bg);
   scrollbar-width: none;
 }
 
