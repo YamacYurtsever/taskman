@@ -8,19 +8,38 @@
 .connectBtn {
   display: inline-flex;
   align-items: center;
-  gap: var(--sp);
-  padding: 12px 20px;
+  gap: var(--sp-sm);
+  padding: var(--sp) var(--sp-lg);
   border: var(--border-w) solid var(--border);
-  border-radius: var(--r-sm);
+  border-radius: var(--r);
   color: var(--text-2);
   background: var(--primary);
+  font: inherit;
   font-size: var(--fs);
+  font-weight: 500;
   cursor: pointer;
-  transition: background var(--animation-d-sm), border-color var(--animation-d-sm), color var(--animation-d-sm);
+  transition:
+    background var(--animation-d-sm),
+    border-color var(--animation-d-sm),
+    color var(--animation-d-sm),
+    transform var(--animation-d-sm);
+}
+
+.connectBtn svg {
+  transition: transform var(--animation-d-sm);
 }
 
 .connectBtn:hover {
   color: var(--accent);
   background: var(--accent-bg);
   border-color: var(--accent);
+  transform: translateY(var(--lift-sm));
+}
+
+.connectBtn:hover svg {
+  transform: scale(var(--icon-scale-hover));
+}
+
+.connectBtn:active {
+  transform: translateY(0) scale(0.97);
 }
