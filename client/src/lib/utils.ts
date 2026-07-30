@@ -20,7 +20,6 @@ const MSG = {
   tasks: 'Tasks',
   others: 'Others',
   calendar: 'Calendar',
-  noCalUrl: 'No calendars configured. Add a "calendars" array to ~/.taskman/users/<your-email>/config.json.',
 } as const;
 
 const localDateStr = (date: Date) => {

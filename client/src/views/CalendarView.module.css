@@ -1,0 +1,26 @@
+.wrap {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.connectBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp);
+  padding: 12px 20px;
+  border: var(--border-w) solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+  background: var(--primary);
+  font-size: var(--fs);
+  cursor: pointer;
+  transition: background var(--animation-d-sm), border-color var(--animation-d-sm), color var(--animation-d-sm);
+}
+
+.connectBtn:hover {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent);
+}

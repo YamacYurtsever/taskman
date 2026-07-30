@@ -4,7 +4,6 @@ import type { TaskFilter } from '../../lib/types';
 import { AccentPicker } from './AccentPicker';
 import { InfoButton } from './InfoButton';
 import { MenuIcon, SignOutIcon } from '../icons';
-import { ReconnectCalendarButton } from './ReconnectCalendarButton';
 import { SettingsMenu } from './SettingsMenu';
 import { SoundToggle } from './SoundToggle';
 import { ThemeToggle } from './ThemeToggle';
@@ -19,8 +18,6 @@ type TopbarProps = {
   accentColor?: string | null;
   onAccentColorChange?: (color: string | null) => void;
   onInfoClick?: () => void;
-  calendarAuthValid?: boolean;
-  onReconnectCalendar?: () => void;
 };
 
 const filters: TaskFilter[] = ['all', 'week', 'day'];
@@ -37,8 +34,6 @@ const Topbar = ({
   accentColor,
   onAccentColorChange,
   onInfoClick,
-  calendarAuthValid = true,
-  onReconnectCalendar,
 }: TopbarProps) => {
   const { pathname } = useLocation();
   const activeIndex = filters.indexOf(filter);
@@ -81,9 +76,6 @@ const Topbar = ({
             <AccentPicker accentColor={accentColor ?? null} onChange={onAccentColorChange} />
           )}
           {onInfoClick && <InfoButton onClick={onInfoClick} />}
-          {!calendarAuthValid && onReconnectCalendar && (
-            <ReconnectCalendarButton onClick={onReconnectCalendar} />
-          )}
           {onLogout && (
             <button className={styles.logoutBtn} title="Sign out" onClick={onLogout}>
               <SignOutIcon />

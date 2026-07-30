@@ -108,7 +108,6 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
   const {
     data,
     calendarUrl,
-    calendarAuthValid,
     accentColor,
     setAccentColor,
     loading,
@@ -240,8 +239,6 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
           accentColor={accentColor}
           onAccentColorChange={setAccentColor}
           onInfoClick={openInfo}
-          calendarAuthValid={calendarAuthValid}
-          onReconnectCalendar={reconnectCalendar}
         />
         <main className={cx(styles.main, panelMounted && styles.mainWithPanel)}>
 
@@ -255,7 +252,10 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
             <div hidden={!!showingCalendar}>
               <Routes>
                 <Route path="/" element={<Navigate to="/tasks" replace />} />
-                <Route path="/calendar" element={<CalendarView calendarUrl={calendarUrl} />} />
+                <Route
+                  path="/calendar"
+                  element={<CalendarView calendarUrl={calendarUrl} onConnect={reconnectCalendar} />}
+                />
                 <Route path="/daysheet" element={<DaysheetView data={data} act={act} refresh={refresh} />} />
                 <Route
                   path="/tasks"
