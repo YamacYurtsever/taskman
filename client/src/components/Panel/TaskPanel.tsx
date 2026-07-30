@@ -3,17 +3,17 @@ import { API } from '../../lib/api';
 import { CHECKBOX_LINE, renderMarkdown } from '../../lib/markdown';
 import type { Task, TaskList } from '../../lib/types';
 import { cx, formatDue } from '../../lib/utils';
-import type { Action } from './Tasks.shared';
-import dueStyles from './DueDate.module.css';
-import styles from './TaskDetail.module.css';
+import type { Action } from '../tasks/Tasks.shared';
+import dueStyles from '../tasks/DueDate.module.css';
+import styles from './TaskPanel.module.css';
 
-type TaskDetailHeaderProps = {
+type TaskPanelHeaderProps = {
   task: Task;
   list: TaskList;
   today: string;
 };
 
-const TaskDetailHeader = ({ task, list, today }: TaskDetailHeaderProps) => {
+const TaskPanelHeader = ({ task, list, today }: TaskPanelHeaderProps) => {
   const dueInfo = task.due ? formatDue(task.due, today) : null;
 
   return (
@@ -29,12 +29,12 @@ const TaskDetailHeader = ({ task, list, today }: TaskDetailHeaderProps) => {
   );
 };
 
-type TaskDetailBodyProps = {
+type TaskPanelBodyProps = {
   task: Task;
   act: Action;
 };
 
-const TaskDetailBody = ({ task, act }: TaskDetailBodyProps) => {
+const TaskPanelBody = ({ task, act }: TaskPanelBodyProps) => {
   const [prevTaskId, setPrevTaskId] = useState(task.id);
   const [isEditing, setIsEditing] = useState(false);
   const [localDesc, setLocalDesc] = useState(task.description);
@@ -115,4 +115,4 @@ const TaskDetailBody = ({ task, act }: TaskDetailBodyProps) => {
   );
 };
 
-export { TaskDetailHeader, TaskDetailBody };
+export { TaskPanelHeader, TaskPanelBody };

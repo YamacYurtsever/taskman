@@ -1,5 +1,5 @@
-import infoContent from '../content/information.md?raw';
-import { extractHeadings, renderMarkdown, scrollToAnchor } from '../lib/markdown';
+import infoContent from '../../content/information.md?raw';
+import { extractHeadings, renderMarkdown, scrollToAnchor } from '../../lib/markdown';
 import styles from './InfoPanel.module.css';
 
 const InfoPanelHeader = () => <h2 className={styles.title}>Information</h2>;

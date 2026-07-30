@@ -11,11 +11,11 @@ import {
 } from 'react-router-dom';
 
 import styles from './App.module.css';
-import { InfoPanelBody, InfoPanelHeader } from './components/InfoPanel';
-import { Panel } from './components/Panel';
-import type { PanelSize } from './components/Panel';
+import { InfoPanelBody, InfoPanelHeader } from './components/Panel/InfoPanel';
+import { Panel } from './components/Panel/Panel';
+import type { PanelSize } from './components/Panel/Panel';
+import { TaskPanelBody, TaskPanelHeader } from './components/Panel/TaskPanel';
 import { Sidebar } from './components/Sidebar/Sidebar';
-import { TaskDetailBody, TaskDetailHeader } from './components/tasks/TaskDetail';
 import { Topbar } from './components/Topbar/Topbar';
 import { useAppData } from './hooks/useAppData';
 import { useIsMobile } from './hooks/useIsMobile';
@@ -297,13 +297,13 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
                 showingInfo
                   ? <InfoPanelHeader />
                   : (displayedTask && displayedTaskList && (
-                      <TaskDetailHeader task={displayedTask} list={displayedTaskList} today={data!.today} />
+                      <TaskPanelHeader task={displayedTask} list={displayedTaskList} today={data!.today} />
                     ))
               }
             >
               {showingInfo
                 ? <InfoPanelBody />
-                : (displayedTask && <TaskDetailBody task={displayedTask} act={act} />)}
+                : (displayedTask && <TaskPanelBody task={displayedTask} act={act} />)}
             </Panel>
           )}
         </main>

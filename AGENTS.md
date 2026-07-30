@@ -63,11 +63,10 @@ taskman/
       main.tsx          React entry point, imports global styles
       views/            Route-level screens: CalendarView, DaysheetView, CardsView, FocusedView, LoginView
       components/       Reusable UI
+        Panel/          Panel.tsx shell + its two content providers: TaskPanel (task header/description), InfoPanel (reference content)
         Sidebar/        Sidebar shell, nav, list/group rows, shared sidebar types
-        tasks/          TaskRow, TaskCard, TaskDetail, AddTaskForm, shared task types/styles
+        tasks/          TaskRow, TaskCard, AddTaskForm, shared task types/styles
         Topbar/         Topbar shell (filter pills), settings menu, theme/sound/accent toggles
-        Panel.tsx       Generic resizable/closable side panel shell (used by TaskDetail, InfoPanel)
-        InfoPanel.tsx   Read-only reference panel rendering client/src/content/information.md
         icons.tsx       Shared icon components
       hooks/            App-level React hooks (useAppData, useIsMobile, useIsNarrow)
       lib/              api.ts, types.ts, utils.ts, sound.ts, markdown.tsx (hand-rolled description parser)
@@ -96,7 +95,7 @@ taskman/
 - Styles use CSS Modules for feature/component-local styling. Global tokens, layout, and shared utilities (including `.action-btn`, used as a plain global class name across components rather than a CSS Module import) live in `client/style.css`.
 - Repeated visual constants (animation durations, icon sizes, shadow color, hover-scale factor) are CSS custom properties in `client/style.css` rather than hardcoded per-component — e.g. `--animation-d-sm/md/lg`, `--shadow-color` (theme-aware, white shadows in dark mode), `--icon-scale-hover`.
 - Description-style text (task descriptions, and later the info panel) is parsed by a small hand-rolled subset parser in `client/src/lib/markdown.tsx` (`renderMarkdown`, `checkboxProgress`, `CHECKBOX_LINE`), not a markdown library — the content is always author-controlled and only needs a few constructs (checkboxes, raw-URL links), so a general CommonMark/remark pipeline would add significant dependency and bundle weight for no real benefit here.
-- `Panel.tsx` in `client/src/components/` is the generic resizable/closable side-panel shell (slide-in/slide-out animation, drag-to-resize with full-width snap, mobile/narrow full-takeover, Escape-to-close) shared by any panel-style UI. `App.tsx` renders a single, persistent `<Panel>` (not one per content type) and feeds it `TaskDetailHeader`/`TaskDetailBody` (`components/tasks/TaskDetail.tsx`) or `InfoPanelHeader`/`InfoPanelBody` (`components/InfoPanel.tsx`) as `header`/`children` depending on what's open — this way switching between task and info content never remounts the panel shell, so the entrance animation only plays on a genuine closed→open transition, never on a content swap while already open. Closing is a two-phase unmount: `App.tsx` tracks `panelMounted`/`panelClosing` (timed to `PANEL_EXIT_MS`, matching `--animation-d-lg`) so the panel keeps rendering its last content and playing the `panelSlideOut` animation for the exit duration before actually being removed, instead of vanishing instantly.
+- `components/Panel/` holds the generic resizable/closable side-panel shell (`Panel.tsx`: slide-in/slide-out animation, drag-to-resize with full-width snap, mobile/narrow full-takeover, Escape-to-close, fixed header + independently-scrolling content body) alongside its two content providers, `TaskPanel.tsx` (`TaskPanelHeader`/`TaskPanelBody`, task name/list/due + description) and `InfoPanel.tsx` (`InfoPanelHeader`/`InfoPanelBody`, the static reference content). Neither content provider renders `<Panel>` itself — `App.tsx` renders a single, persistent `<Panel>` (not one per content type) and feeds it whichever pair of `header`/`children` is active, so switching between task and info content never remounts the panel shell and the entrance animation only plays on a genuine closed→open transition, never on a content swap while already open. Closing is a two-phase unmount: `App.tsx` tracks `panelMounted`/`panelClosing` (timed to `PANEL_EXIT_MS`, matching `--animation-d-lg`) so the panel keeps rendering its last content and playing the `panelSlideOut` animation for the exit duration before actually being removed, instead of vanishing instantly.
 
 ---
 
@@ -262,7 +261,7 @@ A task can recur: on completion it logs to the daysheet as usual, but it never e
 
 Markdown-style checkboxes inside a task's description, with a matching progress indicator on the task row. No schema change — descriptions remain a plain text field; checkbox state is encoded in the text itself as GitHub-style `- [ ]` / `- [x]` lines.
 
-`checkboxProgress()` / `CHECKBOX_LINE` in `client/src/lib/utils.ts` parse the description text; `TaskDetail.tsx`'s read-only view renders checkbox lines as live inputs (edit mode shows raw markdown); `TaskRow.tsx` shows a right-edge `--accent` fill bar proportional to checked/total.
+`checkboxProgress()` / `CHECKBOX_LINE` in `client/src/lib/utils.ts` parse the description text; `TaskPanel.tsx`'s read-only view renders checkbox lines as live inputs (edit mode shows raw markdown); `TaskRow.tsx` shows a right-edge `--accent` fill bar proportional to checked/total.
 
 - [X] Manual: add `- [ ] ...` lines to a description, confirm they render as checkboxes only outside edit mode; click to check/uncheck and confirm the state persists after a refresh; confirm the row's right-edge progress bar fills correctly and stays clipped to the row's corners at 0%, partial, and 100% completion.
 
@@ -276,21 +275,20 @@ The accent color is user-configurable and stored per-user on the server (`accent
 
 ##### Milestone 14 — Information Panel
 
-A settings-menu button (another full-width row in `SettingsMenu`, alongside theme/sound/accent/logout) opens a reference panel covering the app's philosophy, its 3 main views, the group/list × date-range design, and the batch-add/recurring/flagging feature cluster — static, author-written content, not user data, so no server/API involvement at all. It reuses the `Panel` shell extracted in the previous milestone rather than `TaskDetail`, since the content model (fixed reference text vs. one task's live-edited description) is fundamentally different.
+A settings-menu button (another full-width row in `SettingsMenu`, alongside theme/sound/accent/logout) opens a reference panel covering the app's philosophy, its 3 main views, the group/list × date-range design, and the batch-add/recurring/flagging feature cluster — static, author-written content, not user data, so no server/API involvement at all. It reuses the `Panel` shell extracted in the previous milestone rather than `TaskPanel`, since the content model (fixed reference text vs. one task's live-edited description) is fundamentally different.
 
 Content is a single scrollable panel, not true multi-page/tabbed navigation — the sections are independent reference topics (not a sequential narrative), so prev/next paging is the wrong metaphor, and separate mounted "pages" would add page-state for no real benefit. Instead, `renderMarkdown` (`client/src/lib/markdown.tsx`) gains two more constructs on top of the existing checkbox/raw-URL support: `#`/`##`/`###` headers (rendered as heading elements with a slugified `id`, doubling as anchor targets) and `[label](target)` links, where `target` starting with `#` triggers a `scrollIntoView` jump instead of the existing external-URL `<a target="_blank">` behavior. A sticky nav row of pills at the top of the panel is auto-generated from whichever header level is designated "section," so the nav and the content can't drift out of sync — no separately-authored nav data structure to maintain.
 
 Math/symbol needs are handled by typing the Unicode characters directly (∩, ∪, ∈, ≤, etc. all render fine with zero tooling) rather than adding a LaTeX renderer — real equation layout (fractions, integrals) was explicitly ruled out as disproportionate to the actual need (occasional symbols, not typeset math), consistent with the earlier decision to hand-roll markdown parsing instead of pulling in a library.
 
-Content lives in `client/src/content/information.md`, imported via Vite's `?raw` suffix (`import infoContent from '../content/information.md?raw'`) so it's an editable plain-text file in the repo rather than a JS string literal. The panel is read-only — no edit-mode toggle like `TaskDetail`, since this content isn't meant to be edited from the UI at all.
+Content lives in `client/src/content/information.md`, imported via Vite's `?raw` suffix (`import infoContent from '../content/information.md?raw'`) so it's an editable plain-text file in the repo rather than a JS string literal. The panel is read-only — no edit-mode toggle like `TaskPanel`, since this content isn't meant to be edited from the UI at all.
 
 `#` (top-level) headers are the designated "section" level: `extractHeadings(text, 1)` in `client/src/lib/markdown.tsx` pulls their slugified id/label straight out of `information.md`, and `InfoPanelBody` renders one nav pill per section, sticky to the top of the panel's own scroll area.
 
-- [X] `InfoButton` row added to `SettingsMenu` (after `AccentPicker`, before logout), opening a new `InfoPanel` built on the `Panel` shell — verified in a real browser session (settings → Information opens/closes correctly, layout matches `TaskDetail`).
+- [X] `InfoButton` row added to `SettingsMenu` (after `AccentPicker`, before logout), opening a new `InfoPanel` built on the `Panel` shell — verified in a real browser session (settings → Information opens/closes correctly, layout matches `TaskPanel`).
 - [X] `renderMarkdown` gains `#`/`##`/`###` header parsing (slugified `id`s) and `[label](target)` link syntax (`#anchor` scrolls within the panel, external URLs keep opening in a new tab) — verified in a real browser session (headers render, in-panel anchor jump scrolls without touching the URL, external link still opens with `target="_blank"`).
 - [X] Auto-generated sticky nav-pill row at the top of the panel, built from the designated header level.
-- [X] Actual section content written into `information.md`.
-- [ ] Manual: open the info panel from settings, click each nav pill and confirm it jumps to the right section; confirm external links still open in a new tab while `#anchor` links scroll within the panel; confirm the panel's own scrolling doesn't affect the rest of the page.
+- [X] Manual: open the info panel from settings, click each nav pill and confirm it jumps to the right section; confirm external links still open in a new tab while `#anchor` links scroll within the panel; confirm the panel's own scrolling doesn't affect the rest of the page.
 
 ##### Milestone 15 — Next Event Pill
 

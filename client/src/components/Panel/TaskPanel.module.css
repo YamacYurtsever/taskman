@@ -30,7 +30,7 @@
 }
 
 .textarea {
-  composes: contentBox from '../Panel.module.css';
+  composes: contentBox from './Panel.module.css';
   border: var(--border-w) solid var(--border);
   font: inherit;
   outline: none;
@@ -43,7 +43,7 @@
 }
 
 .descView {
-  composes: contentBox from '../Panel.module.css';
+  composes: contentBox from './Panel.module.css';
   border: var(--border-w) solid transparent;
   cursor: text;
   transition: border-color var(--animation-d-sm);
