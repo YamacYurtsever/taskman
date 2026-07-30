@@ -26,6 +26,16 @@ const scrollToAnchor = (id: string) => {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
+// Pulls out headers at a given `#` depth (default 1, the top-level "section" headers)
+// so nav UI can be generated straight from the same headers renderMarkdown renders,
+// instead of maintaining a separate hand-authored nav list that could drift out of sync.
+const extractHeadings = (text: string, level = 1): { id: string; label: string }[] =>
+  text
+    .split('\n')
+    .map(line => line.match(HEADER_LINE))
+    .filter((match): match is RegExpMatchArray => !!match && match[1].length === level)
+    .map(match => ({ id: slugify(match[2]), label: match[2] }));
+
 const renderLineWithLinks = (line: string, lineIdx: number, linkClassName?: string): ReactNode[] => {
   LINK_TOKEN.lastIndex = 0;
   let lastIndex = 0;
@@ -126,4 +136,4 @@ const renderMarkdown = (text: string, options: RenderMarkdownOptions = {}): Reac
   return nodes;
 };
 
-export { CHECKBOX_LINE, checkboxProgress, renderMarkdown };
+export { CHECKBOX_LINE, checkboxProgress, extractHeadings, renderMarkdown, scrollToAnchor };

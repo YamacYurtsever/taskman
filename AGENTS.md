@@ -284,12 +284,12 @@ Math/symbol needs are handled by typing the Unicode characters directly (∩, �
 
 Content lives in `client/src/content/information.md`, imported via Vite's `?raw` suffix (`import infoContent from '../content/information.md?raw'`) so it's an editable plain-text file in the repo rather than a JS string literal. The panel is read-only — no edit-mode toggle like `TaskDetail`, since this content isn't meant to be edited from the UI at all.
 
-Exact section list/copy is still TBD (to be supplied separately) before the header/anchor-nav work below.
+`#` (top-level) headers are the designated "section" level: `extractHeadings(text, 1)` in `client/src/lib/markdown.tsx` pulls their slugified id/label straight out of `information.md`, and `InfoPanelBody` renders one nav pill per section, sticky to the top of the panel's own scroll area.
 
 - [X] `InfoButton` row added to `SettingsMenu` (after `AccentPicker`, before logout), opening a new `InfoPanel` built on the `Panel` shell — verified in a real browser session (settings → Information opens/closes correctly, layout matches `TaskDetail`).
 - [X] `renderMarkdown` gains `#`/`##`/`###` header parsing (slugified `id`s) and `[label](target)` link syntax (`#anchor` scrolls within the panel, external URLs keep opening in a new tab) — verified in a real browser session (headers render, in-panel anchor jump scrolls without touching the URL, external link still opens with `target="_blank"`).
-- [ ] Auto-generated sticky nav-pill row at the top of the panel, built from the designated header level.
-- [ ] Actual section content written into `information.md`.
+- [X] Auto-generated sticky nav-pill row at the top of the panel, built from the designated header level.
+- [X] Actual section content written into `information.md`.
 - [ ] Manual: open the info panel from settings, click each nav pill and confirm it jumps to the right section; confirm external links still open in a new tab while `#anchor` links scroll within the panel; confirm the panel's own scrolling doesn't affect the rest of the page.
 
 ##### Milestone 15 — Next Event Pill
