@@ -174,10 +174,10 @@ def effective_calendar_ids(calendars: list, user_calendars: list[dict]) -> list[
 EVENTS_LOOKAHEAD = 10
 
 
-def _local_12h_time(dt, tz_name: str) -> str:
+def _local_24h_time(dt, tz_name: str) -> str:
     return local_datetime_from_storage(
         dt.strftime(UTC_DATETIME_FORMAT), tz_name,
-    ).strftime("%I:%M %p").lstrip("0")
+    ).strftime("%H.%M")
 
 
 def fetch_next_event(refresh_token: str | None, calendar_ids: list[str], tz_name: str) -> dict | None:
@@ -218,8 +218,8 @@ def fetch_next_event(refresh_token: str | None, calendar_ids: list[str], tz_name
             "startIso": start_dt.strftime(UTC_DATETIME_FORMAT),
             "endIso": end_dt.strftime(UTC_DATETIME_FORMAT),
             "hasOverlap": has_overlap,
-            "startTime": _local_12h_time(start_dt, tz_name),
-            "endTime": _local_12h_time(end_dt, tz_name),
+            "startTime": _local_24h_time(start_dt, tz_name),
+            "endTime": _local_24h_time(end_dt, tz_name),
         }
     except RefreshError as e:
         raise CalendarAuthError from e

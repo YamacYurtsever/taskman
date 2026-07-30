@@ -516,9 +516,9 @@ class NextEventTest(unittest.TestCase):
 
         event = res.get_json()["event"]
         self.assertEqual(event["title"], "Standup")
-        self.assertIsNotNone(event["startTime"])
+        self.assertEqual(event["startTime"], "05.00")
+        self.assertEqual(event["endTime"], "05.30")
         self.assertIsNotNone(event["startIso"])
-        self.assertIsNotNone(event["endTime"])
         self.assertIsNotNone(event["endIso"])
         self.assertFalse(event["hasOverlap"])
 
