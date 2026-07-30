@@ -105,7 +105,18 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
   const [panelSize, setPanelSize] = useState<PanelSize>(loadStoredPanelSize);
   const panelCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wasPanelOpenRef = useRef(false);
-  const { data, calendarUrl, accentColor, setAccentColor, loading, act, refresh, logout } = useAppData();
+  const {
+    data,
+    calendarUrl,
+    calendarAuthValid,
+    accentColor,
+    setAccentColor,
+    loading,
+    act,
+    refresh,
+    logout,
+    reconnectCalendar,
+  } = useAppData();
   const isMobile = useIsMobile();
   const isNarrow = useIsNarrow();
 
@@ -229,6 +240,8 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
           accentColor={accentColor}
           onAccentColorChange={setAccentColor}
           onInfoClick={openInfo}
+          calendarAuthValid={calendarAuthValid}
+          onReconnectCalendar={reconnectCalendar}
         />
         <main className={cx(styles.main, panelMounted && styles.mainWithPanel)}>
 

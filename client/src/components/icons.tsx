@@ -152,6 +152,14 @@ const InfoIcon = (props: IconProps) => (
   </Icon>
 );
 
+const CalendarWarningIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <rect x="2" y="3" width="12" height="11" rx="1.5" />
+    <path d="M2 6.5h12" />
+    <path d="M8 8.5v2.4M8 12.9v.01" />
+  </Icon>
+);
+
 const SignOutIcon = (props: IconProps) => (
   <Icon {...props}>
     <path d="M6 3H4a1 1 0 00-1 1v8a1 1 0 001 1h2" />
@@ -193,4 +201,5 @@ export {
   RepeatIcon,
   SignOutIcon,
   GoogleLogoIcon,
+  CalendarWarningIcon,
 };

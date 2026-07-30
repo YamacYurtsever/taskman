@@ -1,5 +1,6 @@
 import os
 
+from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
@@ -7,6 +8,10 @@ from googleapiclient.discovery import build
 from server import config, db
 from server.constants import CALENDAR_PRESET_COLORS, DEV_API_BASE, FRONTEND_URL
 from server.services.utils import ServiceError
+
+
+class CalendarAuthError(Exception):
+    """Raised when the stored Google refresh token is invalid/revoked."""
 
 SCOPES = [
     "openid",
@@ -131,6 +136,8 @@ def fetch_user_calendars(refresh_token: str | None) -> list[dict]:
             {"id": c["id"], "summary": c.get("summary", "")}
             for c in result.get("items", [])
         ]
+    except RefreshError as e:
+        raise CalendarAuthError from e
     except Exception:
         return []
 

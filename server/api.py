@@ -136,6 +136,16 @@ def create_app(test_config=None):
                 session.get("code_verifier"),
             )
             session.pop("code_verifier", None)
+
+            if auth.is_authenticated(session) and session["email"] != result["email"]:
+                session.pop("oauth_state", None)
+                session.pop("frontend_url", None)
+                return fail(
+                    f"signed in as {session['email']}, but reconnected with "
+                    f"{result['email']} — please reconnect using the same Google account",
+                    400,
+                )
+
             auth.persist_user_auth(result["email"], result["refresh_token"])
             session["authenticated"] = True
             session["email"] = result["email"]
@@ -159,7 +169,14 @@ def create_app(test_config=None):
     def get_config():
         email = session["email"]
         cfg, tz_name = user_config_and_timezone(email)
-        user_calendars = auth.fetch_user_calendars(cfg.get("googleRefreshToken"))
+
+        try:
+            user_calendars = auth.fetch_user_calendars(cfg.get("googleRefreshToken"))
+            calendar_auth_valid = True
+        except auth.CalendarAuthError:
+            user_calendars = []
+            calendar_auth_valid = False
+
         calendar_url = auth.build_calendar_url(
             cfg.get("calendars") or [],
             tz_name,
@@ -171,6 +188,7 @@ def create_app(test_config=None):
             "calendarTimezone": tz_name,
             "userCalendars": user_calendars,
             "accentColor": cfg.get("accentColor"),
+            "calendarAuthValid": calendar_auth_valid,
         })
 
     @app.post("/api/config/timezone")

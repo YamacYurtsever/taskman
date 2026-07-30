@@ -7,6 +7,7 @@ import type { StateResponse } from '../lib/types';
 export const useAppData = () => {
   const [data, setData] = useState<StateResponse | null>(null);
   const [calendarUrl, setCalendarUrl] = useState('');
+  const [calendarAuthValid, setCalendarAuthValid] = useState(true);
   const [accentColor, setAccentColorState] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -41,6 +42,7 @@ export const useAppData = () => {
         }
 
         setCalendarUrl(config?.calendarUrl || '');
+        setCalendarAuthValid(config?.calendarAuthValid ?? true);
         setAccentColorState(config?.accentColor ?? null);
         setData(await api.state());
       } finally {
@@ -71,5 +73,23 @@ export const useAppData = () => {
     await api.logout();
   }, []);
 
-  return { data, calendarUrl, accentColor, setAccentColor, loading, act, refresh, logout };
+  const reconnectCalendar = useCallback(async () => {
+    const res = await api.oauthStart();
+    if (res?.url) {
+      window.location.href = res.url;
+    }
+  }, []);
+
+  return {
+    data,
+    calendarUrl,
+    calendarAuthValid,
+    accentColor,
+    setAccentColor,
+    loading,
+    act,
+    refresh,
+    logout,
+    reconnectCalendar,
+  };
 };

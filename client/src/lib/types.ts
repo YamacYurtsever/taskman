@@ -34,6 +34,7 @@ type ConfigResponse = {
   calendarUrl: string;
   calendarTimezone: string;
   accentColor: string | null;
+  calendarAuthValid: boolean;
 };
 
 type DaysheetEntry = {

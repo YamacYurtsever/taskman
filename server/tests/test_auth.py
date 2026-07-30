@@ -2,6 +2,8 @@ import os
 import unittest
 from unittest.mock import MagicMock, patch
 
+from google.auth.exceptions import RefreshError
+
 from server import create_app
 from server.config import DEFAULTS
 from server.constants import FRONTEND_URL
@@ -263,6 +265,52 @@ class OAuthCallbackTest(unittest.TestCase):
         with self.client.session_transaction() as sess:
             self.assertEqual(sess.get("email"), "user@gmail.com")
 
+    def test_reconnect_allows_same_account(self):
+        with self.client.session_transaction() as sess:
+            sess["oauth_state"] = "state-abc"
+            sess["authenticated"] = True
+            sess["email"] = "user@gmail.com"
+
+        with saved_config({**DEFAULTS}):
+            with (
+                patch.dict(os.environ, {
+                    "GOOGLE_CLIENT_ID": "cid",
+                    "GOOGLE_CLIENT_SECRET": "csec",
+                }),
+                patch("server.db.load", return_value=make_db()),
+                patch("server.services.auth.Flow") as MockFlow,
+                patch("server.services.auth.build", return_value=self._mock_userinfo_service(email="user@gmail.com")),
+            ):
+                MockFlow.from_client_config.return_value = self._mock_flow()
+                res = self.client.get("/api/oauth/callback?code=authcode&state=state-abc")
+
+        self.assertEqual(res.status_code, 302)
+
+    def test_reconnect_rejects_mismatched_account(self):
+        with self.client.session_transaction() as sess:
+            sess["oauth_state"] = "state-abc"
+            sess["authenticated"] = True
+            sess["email"] = "user@gmail.com"
+
+        with saved_config({**DEFAULTS}):
+            with (
+                patch.dict(os.environ, {
+                    "GOOGLE_CLIENT_ID": "cid",
+                    "GOOGLE_CLIENT_SECRET": "csec",
+                }),
+                patch("server.db.load", return_value=make_db()),
+                patch("server.services.auth.Flow") as MockFlow,
+                patch("server.services.auth.build", return_value=self._mock_userinfo_service(email="other@gmail.com")),
+            ):
+                MockFlow.from_client_config.return_value = self._mock_flow()
+                res = self.client.get("/api/oauth/callback?code=authcode&state=state-abc")
+
+        self.assertEqual(res.status_code, 400)
+        self.assertFalse(res.get_json()["ok"])
+
+        with self.client.session_transaction() as sess:
+            self.assertEqual(sess.get("email"), "user@gmail.com")
+
 
 class LogoutTest(unittest.TestCase):
 
@@ -350,6 +398,53 @@ class ConfigCalendarFetchTest(unittest.TestCase):
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.get_json()["userCalendars"], [])
+
+    def test_calendar_auth_valid_true_when_calendars_fetch_succeeds(self):
+        cfg = {**DEFAULTS, "googleRefreshToken": "reftok"}
+
+        mock_svc = MagicMock()
+        mock_svc.calendarList().list().execute.return_value = {"items": []}
+
+        with (
+            patch.dict(os.environ, {
+                "GOOGLE_CLIENT_ID": "cid",
+                "GOOGLE_CLIENT_SECRET": "csec",
+            }),
+            patch("server.config.load", return_value=cfg),
+            patch("server.services.auth.Credentials"),
+            patch("server.services.auth.build", return_value=mock_svc),
+        ):
+            res = self.client.get("/api/config")
+
+        self.assertTrue(res.get_json()["calendarAuthValid"])
+
+    def test_calendar_auth_invalid_when_refresh_token_revoked(self):
+        cfg = {**DEFAULTS, "googleRefreshToken": "reftok"}
+
+        mock_svc = MagicMock()
+        mock_svc.calendarList().list().execute.side_effect = RefreshError("invalid_grant")
+
+        with (
+            patch.dict(os.environ, {
+                "GOOGLE_CLIENT_ID": "cid",
+                "GOOGLE_CLIENT_SECRET": "csec",
+            }),
+            patch("server.config.load", return_value=cfg),
+            patch("server.services.auth.Credentials"),
+            patch("server.services.auth.build", return_value=mock_svc),
+        ):
+            res = self.client.get("/api/config")
+
+        self.assertEqual(res.status_code, 200)
+        self.assertFalse(res.get_json()["calendarAuthValid"])
+        self.assertEqual(res.get_json()["userCalendars"], [])
+        self.assertEqual(res.get_json()["calendarUrl"], "")
+
+    def test_calendar_auth_valid_true_without_refresh_token(self):
+        with patch("server.config.load", return_value={**DEFAULTS}):
+            res = self.client.get("/api/config")
+
+        self.assertTrue(res.get_json()["calendarAuthValid"])
 
 
 class OAuthUrlGenerationTest(unittest.TestCase):

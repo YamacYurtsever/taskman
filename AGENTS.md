@@ -292,8 +292,20 @@ Exact section list/copy is still TBD (to be supplied separately) before the head
 - [ ] Actual section content written into `information.md`.
 - [ ] Manual: open the info panel from settings, click each nav pill and confirm it jumps to the right section; confirm external links still open in a new tab while `#anchor` links scroll within the panel; confirm the panel's own scrolling doesn't affect the rest of the page.
 
+##### Milestone 15 — Next Event Pill
+
+A pill in the topbar shows the current user's next upcoming Google Calendar event. Requires server-side Calendar API access to query events (rather than just embedding the calendar iframe as today) — the OAuth refresh token already retrieved at login (Milestone 5) should be reusable for this, scoped per-user like the rest of the app's data.
+
+The pill shows exactly one of two things at a time, never both: the event's exact start time (e.g. "3:00 PM") normally, switching to a live countdown (e.g. "in 42 min") once the event is under an hour away.
+
+- [ ] Server: endpoint that fetches the authenticated user's next upcoming event from the Google Calendar API
+- [ ] Frontend: topbar pill rendering the next event's title + start time, switching to a live countdown display under the 1-hour threshold, refetched on interval/focus so it doesn't go stale
+- [ ] Manual: confirm the pill shows the exact time while the event is over an hour away, switches to a live-updating countdown once under an hour, updates after the current event passes, and degrades gracefully with no upcoming events or no calendar access
+
 ##### Future
 
+- Next event pill click-to-expand: open a `Panel` with a day-view Google Calendar iframe (reusing the existing embed approach from `CalendarView`, just a day-scoped view) rather than building a separate day-events list from the Calendar API
+- Native calendar (or at least a visual wrapper)
 - Daysheet analytics - skip days with no daysheet entry
 - Turn a task description into an actionable checklist (AI)
 - Screen mates - overlay at the bottom right corner - can be turned off from settings - get fed and grow/transform as we complete tasks - we need animations - avatar store in the future?
