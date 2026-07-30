@@ -44,11 +44,14 @@ const Topbar = ({
 
   return (
     <div className={styles.topbar}>
-      {showMenuButton && (
-        <button className={styles.menuBtn} title="Open navigation" onClick={onMenuClick}>
-          <MenuIcon size={14} />
-        </button>
-      )}
+      <div className={styles.leftControls}>
+        {showMenuButton && (
+          <button className={styles.menuBtn} title="Open navigation" onClick={onMenuClick}>
+            <MenuIcon size={14} />
+          </button>
+        )}
+        <NextEventPill />
+      </div>
 
       {showFilter && (
         <div
@@ -69,22 +72,19 @@ const Topbar = ({
         </div>
       )}
 
-      <div className={styles.rightControls}>
-        <NextEventPill />
-        <SettingsMenu>
-          <SoundToggle />
-          <ThemeToggle />
-          {onAccentColorChange && (
-            <AccentPicker accentColor={accentColor ?? null} onChange={onAccentColorChange} />
-          )}
-          {onInfoClick && <InfoButton onClick={onInfoClick} />}
-          {onLogout && (
-            <button className={styles.logoutBtn} title="Sign out" onClick={onLogout}>
-              <SignOutIcon />
-            </button>
-          )}
-        </SettingsMenu>
-      </div>
+      <SettingsMenu>
+        <SoundToggle />
+        <ThemeToggle />
+        {onAccentColorChange && (
+          <AccentPicker accentColor={accentColor ?? null} onChange={onAccentColorChange} />
+        )}
+        {onInfoClick && <InfoButton onClick={onInfoClick} />}
+        {onLogout && (
+          <button className={styles.logoutBtn} title="Sign out" onClick={onLogout}>
+            <SignOutIcon />
+          </button>
+        )}
+      </SettingsMenu>
     </div>
   );
 };
