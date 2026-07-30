@@ -521,6 +521,7 @@ class NextEventTest(unittest.TestCase):
         self.assertIsNotNone(event["startIso"])
         self.assertIsNotNone(event["endIso"])
         self.assertFalse(event["hasOverlap"])
+        self.assertEqual(event["date"], "2026-07-30")
 
     def test_returns_none_when_no_upcoming_events(self):
         cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}

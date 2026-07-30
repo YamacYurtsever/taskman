@@ -302,16 +302,18 @@ The pill shows exactly one of two things at a time, never both: the event's exac
 
 `fetch_next_event` keeps every timed event in its per-calendar lookahead (not just the first) so it can also report `hasOverlap`: true if any other candidate — same calendar or a different one — starts before the shown event's `endIso`. No details about the overlapping event are exposed, just the boolean; the frontend renders a second `CalendarIcon` behind the first, offset diagonally toward the bottom-right at reduced opacity (`.iconStack`/`.icon`/`.iconBehind` in `NextEventPill.module.css`), as a pure presence indicator.
 
+`fetch_next_event` also returns the event's local `date` (`YYYY-MM-DD`, via `local_date_from_storage`), which `NextEventPill` passes to an `onOpenDay` prop when clicked (the pill is a `<button>`). `App.tsx` wires that through `Topbar`'s `onOpenDayCalendar` into the same `sidePanel` state `TaskPanel`/`InfoPanel` already share, as a third variant (`{ type: 'day-calendar'; date }`) — so it reuses the one persistent `Panel` shell rather than mounting a separate one. `DayCalendarPanel.tsx` (`components/Panel/`) builds the iframe URL from the existing `calendarUrl` by swapping `mode=WEEK` for `mode=AGENDA` (Google's embed API has no true day mode — AGENDA is the closest, and already how this app renders the calendar on mobile) and appending a `dates=<date>/<date>` range to scope it to that single day.
+
 - [X] Server: endpoint that fetches the authenticated user's next upcoming event from the Google Calendar API
 - [X] Frontend: topbar pill rendering the next event's title + start time, switching to a live countdown display under the 1-hour threshold, refetched on interval/focus so it doesn't go stale
 - [X] Overlap detection: `hasOverlap` flag on the fetched event, surfaced as a second calendar icon offset behind the first (no event details exposed, just presence)
-- [ ] Manual: confirm the pill shows the exact time while the event is over an hour away, switches to a live-updating countdown once under an hour, updates after the current event passes, and degrades gracefully with no upcoming events or no calendar access
-- [ ] Click-to-expand: clicking the pill opens a `Panel` with a day-view Google Calendar iframe (reusing the existing embed approach from `CalendarView`, just a day-scoped view) rather than building a separate day-events list from the Calendar API
+- [X] Manual: confirm the pill shows the exact time while the event is over an hour away, switches to a live-updating countdown once under an hour, updates after the current event passes, and degrades gracefully with no upcoming events or no calendar access
+- [X] Click-to-expand: clicking the pill opens a `Panel` with a day-view Google Calendar iframe (reusing the existing embed approach from `CalendarView`, just a day-scoped view) rather than building a separate day-events list from the Calendar API
 
 ##### Future
 
 - Native calendar (or at least a visual wrapper)
 - Daysheet analytics - skip days with no daysheet entry
 - Turn a task description into an actionable checklist (AI)
-- Screen mates - overlay at the bottom right corner - can be turned off from settings - get fed and grow/transform as we complete tasks - we need animations - avatar store in the future?
-- Drag and drop to move in group view?
+- Screen mates - overlay at the bottom right corner - get fed and grow/transform as we complete tasks - need animations - avatar store in the future?
+- Drag and drop to move tasks in group view?

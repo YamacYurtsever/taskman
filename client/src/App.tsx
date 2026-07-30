@@ -11,6 +11,7 @@ import {
 } from 'react-router-dom';
 
 import styles from './App.module.css';
+import { DayCalendarPanelBody, DayCalendarPanelHeader } from './components/Panel/DayCalendarPanel';
 import { InfoPanelBody, InfoPanelHeader } from './components/Panel/InfoPanel';
 import { Panel } from './components/Panel/Panel';
 import type { PanelSize } from './components/Panel/Panel';
@@ -43,7 +44,11 @@ const loadStoredPanelSize = (): PanelSize => {
   return Number.isFinite(n) ? n : null;
 };
 
-type SidePanel = { type: 'task'; taskId: string } | { type: 'info' } | null;
+type SidePanel =
+  | { type: 'task'; taskId: string }
+  | { type: 'info' }
+  | { type: 'day-calendar'; date: string }
+  | null;
 
 type RouteProps = {
   data: StateResponse;
@@ -144,9 +149,10 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
     ? (data!.lists.find(l => l.id === currentTask.listId) ?? null)
     : null;
   const showingInfoNow = sidePanel?.type === 'info';
+  const showingDayCalendarNow = sidePanel?.type === 'day-calendar';
   // Whether the panel should be open right now — driven straight off sidePanel,
   // used only to decide the animation direction (see the effect below).
-  const targetOpen = showingInfoNow || !!(currentTask && currentTaskList);
+  const targetOpen = showingInfoNow || showingDayCalendarNow || !!(currentTask && currentTaskList);
 
   // The panel keeps rendering its last content while it fades out, since sidePanel
   // itself goes back to null immediately on close (before the exit animation ends).
@@ -187,9 +193,12 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
     ? (data!.lists.find(l => l.id === displayedTask.listId) ?? null)
     : null;
   const showingInfo = lastSidePanel?.type === 'info';
+  const displayedDayCalendarDate = lastSidePanel?.type === 'day-calendar' ? lastSidePanel.date : null;
+  const showingDayCalendar = !!displayedDayCalendarDate;
 
   const openDetail = useCallback((task: Task) => setSidePanel({ type: 'task', taskId: task.id }), []);
   const openInfo = useCallback(() => setSidePanel({ type: 'info' }), []);
+  const openDayCalendar = useCallback((date: string) => setSidePanel({ type: 'day-calendar', date }), []);
   const closeDetail = useCallback(() => setSidePanel(null), []);
 
   const location = useLocation();
@@ -239,6 +248,7 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
           accentColor={accentColor}
           onAccentColorChange={setAccentColor}
           onInfoClick={openInfo}
+          onOpenDayCalendar={openDayCalendar}
         />
         <main className={cx(styles.main, panelMounted && styles.mainWithPanel)}>
 
@@ -296,14 +306,18 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
               header={
                 showingInfo
                   ? <InfoPanelHeader />
-                  : (displayedTask && displayedTaskList && (
-                      <TaskPanelHeader task={displayedTask} list={displayedTaskList} today={data!.today} />
-                    ))
+                  : showingDayCalendar
+                    ? <DayCalendarPanelHeader date={displayedDayCalendarDate!} />
+                    : (displayedTask && displayedTaskList && (
+                        <TaskPanelHeader task={displayedTask} list={displayedTaskList} today={data!.today} />
+                      ))
               }
             >
               {showingInfo
                 ? <InfoPanelBody />
-                : (displayedTask && <TaskPanelBody task={displayedTask} act={act} />)}
+                : showingDayCalendar
+                  ? <DayCalendarPanelBody calendarUrl={calendarUrl} date={displayedDayCalendarDate!} />
+                  : (displayedTask && <TaskPanelBody task={displayedTask} act={act} />)}
             </Panel>
           )}
         </main>

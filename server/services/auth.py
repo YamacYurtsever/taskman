@@ -11,6 +11,7 @@ from server.constants import CALENDAR_PRESET_COLORS, DEV_API_BASE, FRONTEND_URL
 from server.services.utils import (
     UTC_DATETIME_FORMAT,
     ServiceError,
+    local_date_from_storage,
     local_datetime_from_storage,
     parse_utc_datetime,
     utc_now,
@@ -220,6 +221,7 @@ def fetch_next_event(refresh_token: str | None, calendar_ids: list[str], tz_name
             "hasOverlap": has_overlap,
             "startTime": _local_24h_time(start_dt, tz_name),
             "endTime": _local_24h_time(end_dt, tz_name),
+            "date": local_date_from_storage(start_dt.strftime(UTC_DATETIME_FORMAT), tz_name),
         }
     except RefreshError as e:
         raise CalendarAuthError from e

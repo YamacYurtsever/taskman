@@ -19,6 +19,7 @@ type TopbarProps = {
   accentColor?: string | null;
   onAccentColorChange?: (color: string | null) => void;
   onInfoClick?: () => void;
+  onOpenDayCalendar?: (date: string) => void;
 };
 
 const filters: TaskFilter[] = ['all', 'week', 'day'];
@@ -35,6 +36,7 @@ const Topbar = ({
   accentColor,
   onAccentColorChange,
   onInfoClick,
+  onOpenDayCalendar,
 }: TopbarProps) => {
   const { pathname } = useLocation();
   const activeIndex = filters.indexOf(filter);
@@ -50,7 +52,7 @@ const Topbar = ({
             <MenuIcon size={14} />
           </button>
         )}
-        <NextEventPill />
+        <NextEventPill onOpenDay={onOpenDayCalendar} />
       </div>
 
       {showFilter && (
@@ -73,12 +75,12 @@ const Topbar = ({
       )}
 
       <SettingsMenu>
+        {onInfoClick && <InfoButton onClick={onInfoClick} />}
         <SoundToggle />
         <ThemeToggle />
         {onAccentColorChange && (
           <AccentPicker accentColor={accentColor ?? null} onChange={onAccentColorChange} />
         )}
-        {onInfoClick && <InfoButton onClick={onInfoClick} />}
         {onLogout && (
           <button className={styles.logoutBtn} title="Sign out" onClick={onLogout}>
             <SignOutIcon />

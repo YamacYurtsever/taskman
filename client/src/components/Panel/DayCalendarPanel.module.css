@@ -1,0 +1,23 @@
+.title {
+  margin-right: auto;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+
+.frameWrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.frame {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: var(--r-lg);
+}
+
+:global([data-theme="dark"]) .frame {
+  filter: invert(1) hue-rotate(180deg);
+}

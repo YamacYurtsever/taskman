@@ -11,7 +11,11 @@ const COUNTDOWN_THRESHOLD_MS = 60 * 60 * 1000;
 
 const formatCountdown = (ms: number) => `${Math.max(1, Math.round(ms / 60_000))} min`;
 
-const NextEventPill = () => {
+type NextEventPillProps = {
+  onOpenDay?: (date: string) => void;
+};
+
+const NextEventPill = ({ onOpenDay }: NextEventPillProps) => {
   const [event, setEvent] = useState<NextEvent | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const eventTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -70,7 +74,7 @@ const NextEventPill = () => {
       : `${event.startTime} – ${event.endTime}`;
 
   return (
-    <div className={styles.pill} title={event.title}>
+    <button className={styles.pill} title={event.title} onClick={() => onOpenDay?.(event.date)}>
       <span className={styles.iconStack}>
         {event.hasOverlap && (
           <CalendarIcon
@@ -87,7 +91,7 @@ const NextEventPill = () => {
         <span className={styles.title}>{event.title}</span>
         <span className={isActive ? styles.timeActive : styles.time}>{label}</span>
       </span>
-    </div>
+    </button>
   );
 };
 

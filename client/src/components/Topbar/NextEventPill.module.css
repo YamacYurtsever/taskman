@@ -11,6 +11,14 @@
   border-radius: var(--r-lg);
   background: var(--primary);
   color: var(--text-2);
+  font: inherit;
+  cursor: pointer;
+  transition: background var(--animation-d-sm), border-color var(--animation-d-sm);
+}
+
+.pill:hover {
+  background: var(--primary-bg);
+  border-color: var(--accent);
 }
 
 .iconStack {
