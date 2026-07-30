@@ -111,6 +111,7 @@
 .contentBox h3,
 .contentBox h4 {
   margin: var(--sp) 0 var(--sp-sm);
+  scroll-margin-top: var(--sp-md);
   font-weight: 700;
   line-height: 1.3;
 }
