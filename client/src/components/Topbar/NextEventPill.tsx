@@ -8,7 +8,7 @@ const POLL_MS = 60_000;
 const TICK_MS = 30_000;
 const COUNTDOWN_THRESHOLD_MS = 60 * 60 * 1000;
 
-const formatCountdown = (ms: number) => `in ${Math.max(1, Math.round(ms / 60_000))} min`;
+const formatCountdown = (ms: number) => `${Math.max(1, Math.round(ms / 60_000))} min`;
 
 const NextEventPill = () => {
   const [event, setEvent] = useState<NextEvent | null>(null);
@@ -63,7 +63,7 @@ const NextEventPill = () => {
   const isActive = msUntilStart <= 0 && msUntilEnd > 0;
   const showCountdown = !isActive && msUntilStart > 0 && msUntilStart < COUNTDOWN_THRESHOLD_MS;
   const label = isActive
-    ? 'Active'
+    ? 'now'
     : showCountdown
       ? formatCountdown(msUntilStart)
       : `${event.startTime} – ${event.endTime}`;
