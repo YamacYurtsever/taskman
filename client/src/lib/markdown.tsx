@@ -136,4 +136,5 @@ const renderMarkdown = (text: string, options: RenderMarkdownOptions = {}): Reac
   return nodes;
 };
 
+export type { RenderMarkdownOptions };
 export { CHECKBOX_LINE, checkboxProgress, extractHeadings, renderMarkdown, scrollToAnchor };

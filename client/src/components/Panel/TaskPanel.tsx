@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { API } from '../../lib/api';
-import { CHECKBOX_LINE, renderMarkdown } from '../../lib/markdown';
+import { CHECKBOX_LINE } from '../../lib/markdown';
 import type { Task, TaskList } from '../../lib/types';
 import { cx, formatDue } from '../../lib/utils';
 import type { Action } from '../tasks/Tasks.shared';
 import dueStyles from '../tasks/DueDate.module.css';
+import { MarkdownSections } from './MarkdownSections';
 import styles from './TaskPanel.module.css';
 
 type TaskPanelHeaderProps = {
@@ -86,12 +87,6 @@ const TaskPanelBody = ({ task, act }: TaskPanelBodyProps) => {
     });
   }, [act]);
 
-  const descriptionNodes = renderMarkdown(localDesc, {
-    linkClassName: styles.link,
-    checkboxLineClassName: styles.checkboxLine,
-    onToggleCheckbox: toggleCheckbox,
-  });
-
   return (
     <div className={styles.descriptionArea}>
       {isEditing ? (
@@ -103,12 +98,21 @@ const TaskPanelBody = ({ task, act }: TaskPanelBodyProps) => {
           onBlur={() => setIsEditing(false)}
           placeholder="Add a description..."
         />
+      ) : localDesc ? (
+        <MarkdownSections
+          text={localDesc}
+          contentClassName={styles.descView}
+          contentProps={{ onClick: () => setIsEditing(true) }}
+          linkClassName={styles.link}
+          checkboxLineClassName={styles.checkboxLine}
+          onToggleCheckbox={toggleCheckbox}
+        />
       ) : (
         <div
-          className={cx(styles.descView, !localDesc && styles.descPlaceholder)}
+          className={cx(styles.descView, styles.descPlaceholder)}
           onClick={() => setIsEditing(true)}
         >
-          {localDesc ? descriptionNodes : 'Add a description...'}
+          Add a description...
         </div>
       )}
     </div>
