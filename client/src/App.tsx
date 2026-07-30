@@ -249,7 +249,7 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
             )}
             hidden={false}
           >
-            <div hidden={!!showingCalendar}>
+            <div className={styles.routeInner} hidden={!!showingCalendar}>
               <Routes>
                 <Route path="/" element={<Navigate to="/tasks" replace />} />
                 <Route

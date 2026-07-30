@@ -1,5 +1,6 @@
 .wrap {
-  min-height: 60vh;
+  flex: 1;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -25,21 +26,8 @@
     transform var(--animation-d-sm);
 }
 
-.connectBtn svg {
-  transition: transform var(--animation-d-sm);
-}
-
 .connectBtn:hover {
   color: var(--accent);
   background: var(--accent-bg);
   border-color: var(--accent);
-  transform: translateY(var(--lift-sm));
-}
-
-.connectBtn:hover svg {
-  transform: scale(var(--icon-scale-hover));
-}
-
-.connectBtn:active {
-  transform: translateY(0) scale(0.97);
 }
