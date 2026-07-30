@@ -71,6 +71,17 @@ type AuthStatusResponse = {
   authenticated: boolean;
 };
 
+type NextEvent = {
+  title: string;
+  startIso: string;
+  startTime: string | null;
+  allDay: boolean;
+};
+
+type NextEventResponse = {
+  event: NextEvent | null;
+};
+
 export type {
   TaskFilter,
   Group,
@@ -83,4 +94,6 @@ export type {
   DaysheetResponse,
   ApiResult,
   AuthStatusResponse,
+  NextEvent,
+  NextEventResponse,
 };

@@ -191,6 +191,27 @@ def create_app(test_config=None):
             "calendarAuthValid": calendar_auth_valid,
         })
 
+    @app.get("/api/next-event")
+    @require_auth
+    def get_next_event():
+        email = session["email"]
+        cfg, tz_name = user_config_and_timezone(email)
+        refresh_token = cfg.get("googleRefreshToken")
+
+        try:
+            user_calendars = auth.fetch_user_calendars(refresh_token)
+        except auth.CalendarAuthError:
+            return jsonify({"event": None})
+
+        calendar_ids = auth.effective_calendar_ids(cfg.get("calendars") or [], user_calendars)
+
+        try:
+            event = auth.fetch_next_event(refresh_token, calendar_ids, tz_name)
+        except auth.CalendarAuthError:
+            event = None
+
+        return jsonify({"event": event})
+
     @app.post("/api/config/timezone")
     @require_auth
     def set_timezone():

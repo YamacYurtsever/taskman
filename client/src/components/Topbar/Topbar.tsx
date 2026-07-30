@@ -4,6 +4,7 @@ import type { TaskFilter } from '../../lib/types';
 import { AccentPicker } from './AccentPicker';
 import { InfoButton } from './InfoButton';
 import { MenuIcon, SignOutIcon } from '../icons';
+import { NextEventPill } from './NextEventPill';
 import { SettingsMenu } from './SettingsMenu';
 import { SoundToggle } from './SoundToggle';
 import { ThemeToggle } from './ThemeToggle';
@@ -69,6 +70,7 @@ const Topbar = ({
       )}
 
       <div className={styles.rightControls}>
+        <NextEventPill />
         <SettingsMenu>
           <SoundToggle />
           <ThemeToggle />

@@ -8,7 +8,14 @@ from oauthlib.oauth2.rfc6749.errors import OAuth2Error
 
 from server import config, db
 from server.constants import CALENDAR_PRESET_COLORS, DEV_API_BASE, FRONTEND_URL
-from server.services.utils import ServiceError
+from server.services.utils import (
+    UTC_DATETIME_FORMAT,
+    ServiceError,
+    local_datetime_from_storage,
+    parse_utc_datetime,
+    storage_datetime_for_local_date,
+    utc_now,
+)
 
 # oauthlib raises a bare Warning (not caught by `except OAuth2Error`) when the
 # granted scope differs from the requested one — e.g. the user declines the
@@ -127,19 +134,22 @@ def persist_user_auth(email: str, refresh_token: str) -> None:
     db.load(email)
 
 
+def _credentials(refresh_token: str) -> Credentials:
+    return Credentials(
+        token=None,
+        refresh_token=refresh_token,
+        token_uri="https://oauth2.googleapis.com/token",
+        client_id=os.environ.get("GOOGLE_CLIENT_ID", ""),
+        client_secret=os.environ.get("GOOGLE_CLIENT_SECRET", ""),
+    )
+
+
 def fetch_user_calendars(refresh_token: str | None) -> list[dict]:
     if not refresh_token:
         return []
 
     try:
-        creds = Credentials(
-            token=None,
-            refresh_token=refresh_token,
-            token_uri="https://oauth2.googleapis.com/token",
-            client_id=os.environ.get("GOOGLE_CLIENT_ID", ""),
-            client_secret=os.environ.get("GOOGLE_CLIENT_SECRET", ""),
-        )
-        svc = build("calendar", "v3", credentials=creds)
+        svc = build("calendar", "v3", credentials=_credentials(refresh_token))
         result = svc.calendarList().list().execute()
         return [
             {"id": c["id"], "summary": c.get("summary", "")}
@@ -149,6 +159,62 @@ def fetch_user_calendars(refresh_token: str | None) -> list[dict]:
         raise CalendarAuthError from e
     except Exception:
         return []
+
+
+def effective_calendar_ids(calendars: list, user_calendars: list[dict]) -> list[str]:
+    ids = [c["id"] if isinstance(c, dict) else c for c in calendars]
+    if not ids and user_calendars:
+        ids = [c["id"] for c in user_calendars[:5]]
+    return ids
+
+
+def _event_start_utc(event: dict, tz_name: str):
+    start = event["start"]
+    if "dateTime" in start:
+        return parse_utc_datetime(start["dateTime"])
+    return parse_utc_datetime(storage_datetime_for_local_date(start["date"], tz_name, hour=0, minute=0))
+
+
+def fetch_next_event(refresh_token: str | None, calendar_ids: list[str], tz_name: str) -> dict | None:
+    if not refresh_token or not calendar_ids:
+        return None
+
+    try:
+        svc = build("calendar", "v3", credentials=_credentials(refresh_token))
+        now = utc_now()
+
+        candidates = []
+        for calendar_id in calendar_ids:
+            result = svc.events().list(
+                calendarId=calendar_id,
+                timeMin=now,
+                maxResults=1,
+                singleEvents=True,
+                orderBy="startTime",
+            ).execute()
+            items = result.get("items", [])
+            if items:
+                candidates.append(items[0])
+
+        if not candidates:
+            return None
+
+        earliest = min(candidates, key=lambda e: _event_start_utc(e, tz_name))
+        all_day = "date" in earliest["start"]
+        start_dt = _event_start_utc(earliest, tz_name)
+
+        return {
+            "title": earliest.get("summary") or "(No title)",
+            "startIso": start_dt.strftime(UTC_DATETIME_FORMAT),
+            "startTime": None if all_day else local_datetime_from_storage(
+                start_dt.strftime(UTC_DATETIME_FORMAT), tz_name,
+            ).strftime("%I:%M %p").lstrip("0"),
+            "allDay": all_day,
+        }
+    except RefreshError as e:
+        raise CalendarAuthError from e
+    except Exception:
+        return None
 
 
 def build_calendar_url(calendars, timezone: str, user_calendars: list[dict]) -> str:

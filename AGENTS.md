@@ -296,8 +296,12 @@ A pill in the topbar shows the current user's next upcoming Google Calendar even
 
 The pill shows exactly one of two things at a time, never both: the event's exact start time (e.g. "3:00 PM") normally, switching to a live countdown (e.g. "in 42 min") once the event is under an hour away.
 
-- [ ] Server: endpoint that fetches the authenticated user's next upcoming event from the Google Calendar API
-- [ ] Frontend: topbar pill rendering the next event's title + start time, switching to a live countdown display under the 1-hour threshold, refetched on interval/focus so it doesn't go stale
+`GET /api/next-event` (`server/api.py`) queries every calendar in the user's effective calendar list (`auth.effective_calendar_ids` — explicit `calendars` config, else the first 5 of `fetch_user_calendars`, matching `build_calendar_url`'s own fallback) via `events().list(singleEvents=True, orderBy="startTime", maxResults=1)`, picks the earliest across all of them, and returns `{title, startIso, startTime, allDay}` — `startTime` is a pre-localized `"3:00 PM"`-style string (server owns timezone math, per the rest of the app) and is `null` for all-day events; `startIso` is the raw UTC timestamp the frontend uses for countdown math. Any `RefreshError` (dead/revoked token) or missing refresh token/no events resolves to `{"event": null}` rather than an error, so the pill just doesn't render.
+
+`NextEventPill.tsx` (`client/src/components/Topbar/`) fetches independently of `useAppData`/`App.tsx` (self-contained, no props): polls every 60s, refetches on tab focus (`visibilitychange`), and schedules a one-off `setTimeout` fired exactly at the event's `startIso` so the pill advances to whatever's next the moment the current one starts, rather than waiting out the poll interval. Countdown display (`in 42 min`) only kicks in under the 1-hour threshold and only for timed (non-all-day) events; a 30s tick re-renders the countdown text without re-fetching.
+
+- [X] Server: endpoint that fetches the authenticated user's next upcoming event from the Google Calendar API
+- [X] Frontend: topbar pill rendering the next event's title + start time, switching to a live countdown display under the 1-hour threshold, refetched on interval/focus so it doesn't go stale
 - [ ] Manual: confirm the pill shows the exact time while the event is over an hour away, switches to a live-updating countdown once under an hour, updates after the current event passes, and degrades gracefully with no upcoming events or no calendar access
 
 ##### Future

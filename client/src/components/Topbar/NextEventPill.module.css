@@ -1,0 +1,36 @@
+.pill {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+  min-width: 0;
+  max-width: 220px;
+  padding: var(--sp-xs) var(--sp-md);
+  border: var(--border-w) solid var(--border);
+  border-radius: var(--r-full);
+  background: var(--primary);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+
+.pill svg {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.time {
+  flex-shrink: 0;
+  color: var(--text-3);
+}
+
+@media (max-width: 780px) {
+  .pill {
+    max-width: 140px;
+  }
+}

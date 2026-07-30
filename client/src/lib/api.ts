@@ -3,6 +3,7 @@ import type {
   AuthStatusResponse,
   ConfigResponse,
   DaysheetResponse,
+  NextEventResponse,
   StateResponse,
 } from './types';
 
@@ -16,6 +17,7 @@ const API = {
   configAccentColor: '/api/config/accent-color',
   state: '/api/state',
   daysheet: '/api/daysheet',
+  nextEvent: '/api/next-event',
 
   add: '/api/add',
   addSeries: '/api/add-series',
@@ -95,6 +97,7 @@ const api = {
   state: () => request<StateResponse>('GET', API.state),
   daysheet: (date: string) =>
     request<DaysheetResponse>('GET', `${API.daysheet}?date=${encodeURIComponent(date)}`),
+  nextEvent: () => request<NextEventResponse>('GET', API.nextEvent),
   post: (path: string, body: unknown) => request<ApiResult>('POST', path, body),
 };
 

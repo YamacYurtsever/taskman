@@ -470,6 +470,136 @@ class ConfigCalendarFetchTest(unittest.TestCase):
         self.assertTrue(res.get_json()["calendarAuthValid"])
 
 
+class NextEventTest(unittest.TestCase):
+
+    def setUp(self):
+        self.app = create_app(TEST_CONFIG)
+        self.client = self.app.test_client()
+
+        with self.client.session_transaction() as sess:
+            sess["authenticated"] = True
+            sess["email"] = "user@gmail.com"
+
+    def _mock_svc(self, calendars=None, **event_kwargs):
+        mock_svc = MagicMock()
+        mock_svc.calendarList().list().execute.return_value = {"items": calendars or []}
+        if event_kwargs.get("side_effect") is not None:
+            mock_svc.events().list().execute.side_effect = event_kwargs["side_effect"]
+        else:
+            mock_svc.events().list().execute.return_value = event_kwargs.get("return_value", {"items": []})
+        return mock_svc
+
+    def test_returns_none_without_refresh_token(self):
+        with patch("server.config.load", return_value={**DEFAULTS}):
+            res = self.client.get("/api/next-event")
+
+        self.assertEqual(res.status_code, 200)
+        self.assertIsNone(res.get_json()["event"])
+
+    def test_returns_next_timed_event(self):
+        cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
+        mock_svc = self._mock_svc(return_value={
+            "items": [{"summary": "Standup", "start": {"dateTime": "2026-07-30T15:00:00+10:00"}}],
+        })
+
+        with (
+            patch.dict(os.environ, {"GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "csec"}),
+            patch("server.config.load", return_value=cfg),
+            patch("server.services.auth.Credentials"),
+            patch("server.services.auth.build", return_value=mock_svc),
+        ):
+            res = self.client.get("/api/next-event")
+
+        event = res.get_json()["event"]
+        self.assertEqual(event["title"], "Standup")
+        self.assertFalse(event["allDay"])
+        self.assertIsNotNone(event["startTime"])
+        self.assertIsNotNone(event["startIso"])
+
+    def test_returns_none_when_no_upcoming_events(self):
+        cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
+        mock_svc = self._mock_svc()
+
+        with (
+            patch.dict(os.environ, {"GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "csec"}),
+            patch("server.config.load", return_value=cfg),
+            patch("server.services.auth.Credentials"),
+            patch("server.services.auth.build", return_value=mock_svc),
+        ):
+            res = self.client.get("/api/next-event")
+
+        self.assertIsNone(res.get_json()["event"])
+
+    def test_picks_earliest_across_multiple_calendars(self):
+        cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}, {"id": "cal-2"}]}
+        mock_svc = self._mock_svc(side_effect=[
+            {"items": [{"summary": "Later", "start": {"dateTime": "2026-07-30T18:00:00+10:00"}}]},
+            {"items": [{"summary": "Sooner", "start": {"dateTime": "2026-07-30T14:00:00+10:00"}}]},
+        ])
+
+        with (
+            patch.dict(os.environ, {"GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "csec"}),
+            patch("server.config.load", return_value=cfg),
+            patch("server.services.auth.Credentials"),
+            patch("server.services.auth.build", return_value=mock_svc),
+        ):
+            res = self.client.get("/api/next-event")
+
+        self.assertEqual(res.get_json()["event"]["title"], "Sooner")
+
+    def test_handles_all_day_event(self):
+        cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
+        mock_svc = self._mock_svc(return_value={
+            "items": [{"summary": "Holiday", "start": {"date": "2026-08-01"}}],
+        })
+
+        with (
+            patch.dict(os.environ, {"GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "csec"}),
+            patch("server.config.load", return_value=cfg),
+            patch("server.services.auth.Credentials"),
+            patch("server.services.auth.build", return_value=mock_svc),
+        ):
+            res = self.client.get("/api/next-event")
+
+        event = res.get_json()["event"]
+        self.assertTrue(event["allDay"])
+        self.assertIsNone(event["startTime"])
+        self.assertIsNotNone(event["startIso"])
+
+    def test_returns_none_on_revoked_refresh_token(self):
+        cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
+        mock_svc = self._mock_svc()
+        mock_svc.events().list().execute.side_effect = RefreshError("invalid_grant")
+
+        with (
+            patch.dict(os.environ, {"GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "csec"}),
+            patch("server.config.load", return_value=cfg),
+            patch("server.services.auth.Credentials"),
+            patch("server.services.auth.build", return_value=mock_svc),
+        ):
+            res = self.client.get("/api/next-event")
+
+        self.assertEqual(res.status_code, 200)
+        self.assertIsNone(res.get_json()["event"])
+
+    def test_falls_back_to_user_calendars_when_none_configured(self):
+        cfg = {**DEFAULTS, "googleRefreshToken": "reftok"}
+        mock_svc = self._mock_svc(
+            calendars=[{"id": "a@gmail.com", "summary": "Personal"}],
+            return_value={"items": [{"summary": "Dentist", "start": {"dateTime": "2026-07-30T09:00:00+10:00"}}]},
+        )
+
+        with (
+            patch.dict(os.environ, {"GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "csec"}),
+            patch("server.config.load", return_value=cfg),
+            patch("server.services.auth.Credentials"),
+            patch("server.services.auth.build", return_value=mock_svc),
+        ):
+            res = self.client.get("/api/next-event")
+
+        self.assertEqual(res.get_json()["event"]["title"], "Dentist")
+
+
 class OAuthUrlGenerationTest(unittest.TestCase):
 
     def test_redirect_uri_uses_taskman_base_url(self):
