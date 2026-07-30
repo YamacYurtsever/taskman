@@ -86,7 +86,7 @@
   justify-self: end;
   display: flex;
   align-items: center;
-  gap: var(--sp-sm);
+  gap: var(--sp-md);
   min-width: 0;
 }
 

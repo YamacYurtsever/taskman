@@ -49,7 +49,7 @@ const NextEventPill = () => {
   }, [event, refresh]);
 
   useEffect(() => {
-    if (!event || event.allDay) return undefined;
+    if (!event) return undefined;
     const tick = setInterval(() => setNow(Date.now()), TICK_MS);
     return () => clearInterval(tick);
   }, [event]);
@@ -57,8 +57,8 @@ const NextEventPill = () => {
   if (!event) return null;
 
   const msUntilStart = new Date(event.startIso).getTime() - now;
-  const showCountdown = !event.allDay && msUntilStart > 0 && msUntilStart < COUNTDOWN_THRESHOLD_MS;
-  const label = event.allDay ? 'All day' : showCountdown ? formatCountdown(msUntilStart) : event.startTime;
+  const showCountdown = msUntilStart > 0 && msUntilStart < COUNTDOWN_THRESHOLD_MS;
+  const label = showCountdown ? formatCountdown(msUntilStart) : event.startTime;
 
   return (
     <div className={styles.pill} title={event.title}>

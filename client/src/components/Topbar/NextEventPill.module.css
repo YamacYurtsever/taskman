@@ -2,11 +2,10 @@
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  gap: var(--sp-xs);
+  gap: var(--sp-md);
   height: var(--theme-w);
   min-width: 0;
-  max-width: 180px;
-  margin-right: var(--sp-lg);
+  max-width: 200px;
   padding: 0 var(--sp-md);
   border: var(--border-w) solid var(--border);
   border-radius: var(--r-lg);

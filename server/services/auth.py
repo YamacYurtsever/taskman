@@ -13,7 +13,6 @@ from server.services.utils import (
     ServiceError,
     local_datetime_from_storage,
     parse_utc_datetime,
-    storage_datetime_for_local_date,
     utc_now,
 )
 
@@ -168,11 +167,11 @@ def effective_calendar_ids(calendars: list, user_calendars: list[dict]) -> list[
     return ids
 
 
-def _event_start_utc(event: dict, tz_name: str):
-    start = event["start"]
-    if "dateTime" in start:
-        return parse_utc_datetime(start["dateTime"])
-    return parse_utc_datetime(storage_datetime_for_local_date(start["date"], tz_name, hour=0, minute=0))
+# Per-calendar lookahead when scanning for the next *timed* event — all-day
+# events are skipped entirely, so a small buffer covers a calendar whose
+# next couple of entries happen to be all-day (e.g. a holiday) before a
+# real timed event shows up.
+EVENTS_LOOKAHEAD = 10
 
 
 def fetch_next_event(refresh_token: str | None, calendar_ids: list[str], tz_name: str) -> dict | None:
@@ -188,28 +187,29 @@ def fetch_next_event(refresh_token: str | None, calendar_ids: list[str], tz_name
             result = svc.events().list(
                 calendarId=calendar_id,
                 timeMin=now,
-                maxResults=1,
+                maxResults=EVENTS_LOOKAHEAD,
                 singleEvents=True,
                 orderBy="startTime",
             ).execute()
-            items = result.get("items", [])
-            if items:
-                candidates.append(items[0])
+            timed_event = next(
+                (e for e in result.get("items", []) if "dateTime" in e["start"]),
+                None,
+            )
+            if timed_event:
+                candidates.append(timed_event)
 
         if not candidates:
             return None
 
-        earliest = min(candidates, key=lambda e: _event_start_utc(e, tz_name))
-        all_day = "date" in earliest["start"]
-        start_dt = _event_start_utc(earliest, tz_name)
+        earliest = min(candidates, key=lambda e: parse_utc_datetime(e["start"]["dateTime"]))
+        start_dt = parse_utc_datetime(earliest["start"]["dateTime"])
 
         return {
             "title": earliest.get("summary") or "(No title)",
             "startIso": start_dt.strftime(UTC_DATETIME_FORMAT),
-            "startTime": None if all_day else local_datetime_from_storage(
+            "startTime": local_datetime_from_storage(
                 start_dt.strftime(UTC_DATETIME_FORMAT), tz_name,
             ).strftime("%I:%M %p").lstrip("0"),
-            "allDay": all_day,
         }
     except RefreshError as e:
         raise CalendarAuthError from e

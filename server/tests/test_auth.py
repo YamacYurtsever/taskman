@@ -512,7 +512,6 @@ class NextEventTest(unittest.TestCase):
 
         event = res.get_json()["event"]
         self.assertEqual(event["title"], "Standup")
-        self.assertFalse(event["allDay"])
         self.assertIsNotNone(event["startTime"])
         self.assertIsNotNone(event["startIso"])
 
@@ -547,7 +546,7 @@ class NextEventTest(unittest.TestCase):
 
         self.assertEqual(res.get_json()["event"]["title"], "Sooner")
 
-    def test_handles_all_day_event(self):
+    def test_ignores_all_day_events_entirely(self):
         cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
         mock_svc = self._mock_svc(return_value={
             "items": [{"summary": "Holiday", "start": {"date": "2026-08-01"}}],
@@ -561,10 +560,27 @@ class NextEventTest(unittest.TestCase):
         ):
             res = self.client.get("/api/next-event")
 
+        self.assertIsNone(res.get_json()["event"])
+
+    def test_skips_leading_all_day_events_to_find_next_timed_event(self):
+        cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
+        mock_svc = self._mock_svc(return_value={
+            "items": [
+                {"summary": "Holiday", "start": {"date": "2026-07-30"}},
+                {"summary": "Standup", "start": {"dateTime": "2026-07-30T15:00:00+10:00"}},
+            ],
+        })
+
+        with (
+            patch.dict(os.environ, {"GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "csec"}),
+            patch("server.config.load", return_value=cfg),
+            patch("server.services.auth.Credentials"),
+            patch("server.services.auth.build", return_value=mock_svc),
+        ):
+            res = self.client.get("/api/next-event")
+
         event = res.get_json()["event"]
-        self.assertTrue(event["allDay"])
-        self.assertIsNone(event["startTime"])
-        self.assertIsNotNone(event["startIso"])
+        self.assertEqual(event["title"], "Standup")
 
     def test_returns_none_on_revoked_refresh_token(self):
         cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
