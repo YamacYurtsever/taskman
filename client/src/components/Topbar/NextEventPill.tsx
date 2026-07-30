@@ -69,7 +69,7 @@ const NextEventPill = ({ onOpenDay }: NextEventPillProps) => {
   const showCountdown = !isActive && msUntilStart > 0 && msUntilStart < COUNTDOWN_THRESHOLD_MS;
   const dayPrefix = event.dayLabel ? `${event.dayLabel} ` : '';
   const label = isActive
-    ? 'now'
+    ? 'Now'
     : showCountdown
       ? `${dayPrefix}${formatCountdown(msUntilStart)}`
       : `${dayPrefix}${event.startTime} – ${event.endTime}`;

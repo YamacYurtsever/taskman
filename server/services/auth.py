@@ -183,18 +183,24 @@ def _local_24h_time(dt, tz_name: str) -> str:
     ).strftime("%H.%M")
 
 
-def _day_label(event_date: str, tz_name: str) -> str | None:
+# Events more than this many days out aren't shown at all (see _days_away's
+# use as a filter in fetch_next_event), so _day_label only ever needs to
+# distinguish today / tomorrow / a weekday within that window.
+MAX_DAYS_AWAY = 6
+
+
+def _days_away(event_date: str, tz_name: str) -> int:
     dt = datetime.strptime(event_date, DATE_FORMAT)
     today_dt = datetime.strptime(today_in_timezone(tz_name), DATE_FORMAT)
-    days_away = (dt - today_dt).days
+    return (dt - today_dt).days
 
+
+def _day_label(event_date: str, days_away: int) -> str | None:
     if days_away <= 0:
         return None
     if days_away == 1:
         return "Tmr"
-    if days_away <= 6:
-        return dt.strftime("%a")
-    return f"{dt.strftime('%b')} {dt.day}"
+    return datetime.strptime(event_date, DATE_FORMAT).strftime("%a")
 
 
 def fetch_next_event(refresh_token: str | None, calendar_ids: list[str], tz_name: str) -> dict | None:
@@ -207,7 +213,8 @@ def fetch_next_event(refresh_token: str | None, calendar_ids: list[str], tz_name
 
         # Keep every timed event in the lookahead window (not just the first per
         # calendar) so overlap can be detected both across calendars and within
-        # the same one.
+        # the same one. Events more than MAX_DAYS_AWAY out are dropped entirely
+        # — the pill only ever surfaces something within the coming week.
         candidates = []
         for calendar_id in calendar_ids:
             result = svc.events().list(
@@ -217,7 +224,13 @@ def fetch_next_event(refresh_token: str | None, calendar_ids: list[str], tz_name
                 singleEvents=True,
                 orderBy="startTime",
             ).execute()
-            candidates.extend(e for e in result.get("items", []) if "dateTime" in e["start"])
+            for e in result.get("items", []):
+                if "dateTime" not in e["start"]:
+                    continue
+                event_date = local_date_from_storage(e["start"]["dateTime"], tz_name)
+                if _days_away(event_date, tz_name) > MAX_DAYS_AWAY:
+                    continue
+                candidates.append(e)
 
         if not candidates:
             return None
@@ -240,7 +253,7 @@ def fetch_next_event(refresh_token: str | None, calendar_ids: list[str], tz_name
             "startTime": _local_24h_time(start_dt, tz_name),
             "endTime": _local_24h_time(end_dt, tz_name),
             "date": event_date,
-            "dayLabel": _day_label(event_date, tz_name),
+            "dayLabel": _day_label(event_date, _days_away(event_date, tz_name)),
         }
     except RefreshError as e:
         raise CalendarAuthError from e

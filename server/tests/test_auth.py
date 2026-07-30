@@ -507,8 +507,8 @@ class NextEventTest(unittest.TestCase):
         mock_svc = self._mock_svc(return_value={
             "items": [{
                 "summary": "Standup",
-                "start": {"dateTime": "2026-07-30T15:00:00+10:00"},
-                "end": {"dateTime": "2026-07-30T15:30:00+10:00"},
+                "start": {"dateTime": "2026-04-27T15:00:00+10:00"},
+                "end": {"dateTime": "2026-04-27T15:30:00+10:00"},
             }],
         })
 
@@ -527,8 +527,8 @@ class NextEventTest(unittest.TestCase):
         self.assertIsNotNone(event["startIso"])
         self.assertIsNotNone(event["endIso"])
         self.assertFalse(event["hasOverlap"])
-        self.assertEqual(event["date"], "2026-07-30")
-        self.assertEqual(event["dayLabel"], "Jul 30")
+        self.assertEqual(event["date"], "2026-04-27")
+        self.assertEqual(event["dayLabel"], "Tmr")
 
     def test_day_label_is_none_for_today(self):
         cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
@@ -591,7 +591,7 @@ class NextEventTest(unittest.TestCase):
 
         self.assertEqual(res.get_json()["event"]["dayLabel"], "Wed")
 
-    def test_day_label_is_full_date_beyond_this_week(self):
+    def test_filters_out_events_more_than_a_week_away(self):
         cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
         mock_svc = self._mock_svc(return_value={
             "items": [{
@@ -609,7 +609,36 @@ class NextEventTest(unittest.TestCase):
         ):
             res = self.client.get("/api/next-event")
 
-        self.assertEqual(res.get_json()["event"]["dayLabel"], "May 18")
+        self.assertIsNone(res.get_json()["event"])
+
+    def test_surfaces_within_week_event_even_when_a_farther_one_sorts_first_in_feed(self):
+        cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
+        mock_svc = self._mock_svc(return_value={
+            "items": [
+                {
+                    "summary": "TooFarOut",
+                    "start": {"dateTime": "2026-05-18T15:00:00Z"},
+                    "end": {"dateTime": "2026-05-18T15:30:00Z"},
+                },
+                {
+                    "summary": "WithinWeek",
+                    "start": {"dateTime": "2026-04-29T15:00:00Z"},
+                    "end": {"dateTime": "2026-04-29T15:30:00Z"},
+                },
+            ],
+        })
+
+        with (
+            patch.dict(os.environ, {"GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "csec"}),
+            patch("server.config.load", return_value=cfg),
+            patch("server.services.auth.Credentials"),
+            patch("server.services.auth.build", return_value=mock_svc),
+        ):
+            res = self.client.get("/api/next-event")
+
+        event = res.get_json()["event"]
+        self.assertEqual(event["title"], "WithinWeek")
+        self.assertEqual(event["dayLabel"], "Wed")
 
     def test_returns_none_when_no_upcoming_events(self):
         cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
@@ -630,13 +659,13 @@ class NextEventTest(unittest.TestCase):
         mock_svc = self._mock_svc(side_effect=[
             {"items": [{
                 "summary": "Later",
-                "start": {"dateTime": "2026-07-30T18:00:00+10:00"},
-                "end": {"dateTime": "2026-07-30T18:30:00+10:00"},
+                "start": {"dateTime": "2026-04-27T18:00:00+10:00"},
+                "end": {"dateTime": "2026-04-27T18:30:00+10:00"},
             }]},
             {"items": [{
                 "summary": "Sooner",
-                "start": {"dateTime": "2026-07-30T14:00:00+10:00"},
-                "end": {"dateTime": "2026-07-30T14:30:00+10:00"},
+                "start": {"dateTime": "2026-04-27T14:00:00+10:00"},
+                "end": {"dateTime": "2026-04-27T14:30:00+10:00"},
             }]},
         ])
 
@@ -656,13 +685,13 @@ class NextEventTest(unittest.TestCase):
             "items": [
                 {
                     "summary": "Standup",
-                    "start": {"dateTime": "2026-07-30T15:00:00+10:00"},
-                    "end": {"dateTime": "2026-07-30T15:30:00+10:00"},
+                    "start": {"dateTime": "2026-04-27T15:00:00+10:00"},
+                    "end": {"dateTime": "2026-04-27T15:30:00+10:00"},
                 },
                 {
                     "summary": "Overlapping",
-                    "start": {"dateTime": "2026-07-30T15:15:00+10:00"},
-                    "end": {"dateTime": "2026-07-30T16:00:00+10:00"},
+                    "start": {"dateTime": "2026-04-27T15:15:00+10:00"},
+                    "end": {"dateTime": "2026-04-27T16:00:00+10:00"},
                 },
             ],
         })
@@ -684,13 +713,13 @@ class NextEventTest(unittest.TestCase):
         mock_svc = self._mock_svc(side_effect=[
             {"items": [{
                 "summary": "Standup",
-                "start": {"dateTime": "2026-07-30T15:00:00+10:00"},
-                "end": {"dateTime": "2026-07-30T15:30:00+10:00"},
+                "start": {"dateTime": "2026-04-27T15:00:00+10:00"},
+                "end": {"dateTime": "2026-04-27T15:30:00+10:00"},
             }]},
             {"items": [{
                 "summary": "Overlapping",
-                "start": {"dateTime": "2026-07-30T15:15:00+10:00"},
-                "end": {"dateTime": "2026-07-30T16:00:00+10:00"},
+                "start": {"dateTime": "2026-04-27T15:15:00+10:00"},
+                "end": {"dateTime": "2026-04-27T16:00:00+10:00"},
             }]},
         ])
 
@@ -712,13 +741,13 @@ class NextEventTest(unittest.TestCase):
             "items": [
                 {
                     "summary": "Standup",
-                    "start": {"dateTime": "2026-07-30T15:00:00+10:00"},
-                    "end": {"dateTime": "2026-07-30T15:30:00+10:00"},
+                    "start": {"dateTime": "2026-04-27T15:00:00+10:00"},
+                    "end": {"dateTime": "2026-04-27T15:30:00+10:00"},
                 },
                 {
                     "summary": "Later",
-                    "start": {"dateTime": "2026-07-30T16:00:00+10:00"},
-                    "end": {"dateTime": "2026-07-30T16:30:00+10:00"},
+                    "start": {"dateTime": "2026-04-27T16:00:00+10:00"},
+                    "end": {"dateTime": "2026-04-27T16:30:00+10:00"},
                 },
             ],
         })
@@ -753,11 +782,11 @@ class NextEventTest(unittest.TestCase):
         cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
         mock_svc = self._mock_svc(return_value={
             "items": [
-                {"summary": "Holiday", "start": {"date": "2026-07-30"}},
+                {"summary": "Holiday", "start": {"date": "2026-04-27"}},
                 {
                     "summary": "Standup",
-                    "start": {"dateTime": "2026-07-30T15:00:00+10:00"},
-                    "end": {"dateTime": "2026-07-30T15:30:00+10:00"},
+                    "start": {"dateTime": "2026-04-27T15:00:00+10:00"},
+                    "end": {"dateTime": "2026-04-27T15:30:00+10:00"},
                 },
             ],
         })
@@ -795,8 +824,8 @@ class NextEventTest(unittest.TestCase):
             calendars=[{"id": "a@gmail.com", "summary": "Personal"}],
             return_value={"items": [{
                 "summary": "Dentist",
-                "start": {"dateTime": "2026-07-30T09:00:00+10:00"},
-                "end": {"dateTime": "2026-07-30T09:30:00+10:00"},
+                "start": {"dateTime": "2026-04-27T09:00:00+10:00"},
+                "end": {"dateTime": "2026-04-27T09:30:00+10:00"},
             }]},
         )
 
