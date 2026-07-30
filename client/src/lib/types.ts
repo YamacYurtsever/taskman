@@ -77,6 +77,7 @@ type NextEvent = {
   endIso: string;
   startTime: string;
   endTime: string;
+  hasOverlap: boolean;
 };
 
 type NextEventResponse = {

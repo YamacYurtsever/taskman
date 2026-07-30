@@ -520,6 +520,7 @@ class NextEventTest(unittest.TestCase):
         self.assertIsNotNone(event["startIso"])
         self.assertIsNotNone(event["endTime"])
         self.assertIsNotNone(event["endIso"])
+        self.assertFalse(event["hasOverlap"])
 
     def test_returns_none_when_no_upcoming_events(self):
         cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
@@ -559,6 +560,89 @@ class NextEventTest(unittest.TestCase):
             res = self.client.get("/api/next-event")
 
         self.assertEqual(res.get_json()["event"]["title"], "Sooner")
+
+    def test_detects_overlap_within_same_calendar(self):
+        cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
+        mock_svc = self._mock_svc(return_value={
+            "items": [
+                {
+                    "summary": "Standup",
+                    "start": {"dateTime": "2026-07-30T15:00:00+10:00"},
+                    "end": {"dateTime": "2026-07-30T15:30:00+10:00"},
+                },
+                {
+                    "summary": "Overlapping",
+                    "start": {"dateTime": "2026-07-30T15:15:00+10:00"},
+                    "end": {"dateTime": "2026-07-30T16:00:00+10:00"},
+                },
+            ],
+        })
+
+        with (
+            patch.dict(os.environ, {"GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "csec"}),
+            patch("server.config.load", return_value=cfg),
+            patch("server.services.auth.Credentials"),
+            patch("server.services.auth.build", return_value=mock_svc),
+        ):
+            res = self.client.get("/api/next-event")
+
+        event = res.get_json()["event"]
+        self.assertEqual(event["title"], "Standup")
+        self.assertTrue(event["hasOverlap"])
+
+    def test_detects_overlap_across_calendars(self):
+        cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}, {"id": "cal-2"}]}
+        mock_svc = self._mock_svc(side_effect=[
+            {"items": [{
+                "summary": "Standup",
+                "start": {"dateTime": "2026-07-30T15:00:00+10:00"},
+                "end": {"dateTime": "2026-07-30T15:30:00+10:00"},
+            }]},
+            {"items": [{
+                "summary": "Overlapping",
+                "start": {"dateTime": "2026-07-30T15:15:00+10:00"},
+                "end": {"dateTime": "2026-07-30T16:00:00+10:00"},
+            }]},
+        ])
+
+        with (
+            patch.dict(os.environ, {"GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "csec"}),
+            patch("server.config.load", return_value=cfg),
+            patch("server.services.auth.Credentials"),
+            patch("server.services.auth.build", return_value=mock_svc),
+        ):
+            res = self.client.get("/api/next-event")
+
+        event = res.get_json()["event"]
+        self.assertEqual(event["title"], "Standup")
+        self.assertTrue(event["hasOverlap"])
+
+    def test_no_overlap_when_next_event_starts_after_current_one_ends(self):
+        cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
+        mock_svc = self._mock_svc(return_value={
+            "items": [
+                {
+                    "summary": "Standup",
+                    "start": {"dateTime": "2026-07-30T15:00:00+10:00"},
+                    "end": {"dateTime": "2026-07-30T15:30:00+10:00"},
+                },
+                {
+                    "summary": "Later",
+                    "start": {"dateTime": "2026-07-30T16:00:00+10:00"},
+                    "end": {"dateTime": "2026-07-30T16:30:00+10:00"},
+                },
+            ],
+        })
+
+        with (
+            patch.dict(os.environ, {"GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "csec"}),
+            patch("server.config.load", return_value=cfg),
+            patch("server.services.auth.Credentials"),
+            patch("server.services.auth.build", return_value=mock_svc),
+        ):
+            res = self.client.get("/api/next-event")
+
+        self.assertFalse(res.get_json()["event"]["hasOverlap"])
 
     def test_ignores_all_day_events_entirely(self):
         cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}

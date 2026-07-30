@@ -188,6 +188,9 @@ def fetch_next_event(refresh_token: str | None, calendar_ids: list[str], tz_name
         svc = build("calendar", "v3", credentials=_credentials(refresh_token))
         now = utc_now()
 
+        # Keep every timed event in the lookahead window (not just the first per
+        # calendar) so overlap can be detected both across calendars and within
+        # the same one.
         candidates = []
         for calendar_id in calendar_ids:
             result = svc.events().list(
@@ -197,12 +200,7 @@ def fetch_next_event(refresh_token: str | None, calendar_ids: list[str], tz_name
                 singleEvents=True,
                 orderBy="startTime",
             ).execute()
-            timed_event = next(
-                (e for e in result.get("items", []) if "dateTime" in e["start"]),
-                None,
-            )
-            if timed_event:
-                candidates.append(timed_event)
+            candidates.extend(e for e in result.get("items", []) if "dateTime" in e["start"])
 
         if not candidates:
             return None
@@ -210,11 +208,16 @@ def fetch_next_event(refresh_token: str | None, calendar_ids: list[str], tz_name
         earliest = min(candidates, key=lambda e: parse_utc_datetime(e["start"]["dateTime"]))
         start_dt = parse_utc_datetime(earliest["start"]["dateTime"])
         end_dt = parse_utc_datetime(earliest["end"]["dateTime"])
+        has_overlap = any(
+            e is not earliest and parse_utc_datetime(e["start"]["dateTime"]) < end_dt
+            for e in candidates
+        )
 
         return {
             "title": earliest.get("summary") or "(No title)",
             "startIso": start_dt.strftime(UTC_DATETIME_FORMAT),
             "endIso": end_dt.strftime(UTC_DATETIME_FORMAT),
+            "hasOverlap": has_overlap,
             "startTime": _local_12h_time(start_dt, tz_name),
             "endTime": _local_12h_time(end_dt, tz_name),
         }

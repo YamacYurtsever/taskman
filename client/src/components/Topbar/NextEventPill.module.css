@@ -13,13 +13,32 @@
   color: var(--text-2);
 }
 
-.pill svg {
+.iconStack {
+  position: relative;
   flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.pill svg {
   color: var(--accent);
 }
 
 .pill svg.iconActive {
   color: var(--pink);
+}
+
+.icon {
+  position: relative;
+  z-index: 1;
+}
+
+.iconBehind {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 0;
+  opacity: 0.5;
 }
 
 .text {

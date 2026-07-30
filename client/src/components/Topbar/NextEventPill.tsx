@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../../lib/api';
 import type { NextEvent } from '../../lib/types';
+import { cx } from '../../lib/utils';
 import { CalendarIcon } from '../icons';
 import styles from './NextEventPill.module.css';
 
@@ -70,7 +71,18 @@ const NextEventPill = () => {
 
   return (
     <div className={styles.pill} title={event.title}>
-      <CalendarIcon size={14} className={isActive ? styles.iconActive : undefined} />
+      <span className={styles.iconStack}>
+        {event.hasOverlap && (
+          <CalendarIcon
+            size={14}
+            className={cx(styles.iconBehind, isActive && styles.iconActive)}
+          />
+        )}
+        <CalendarIcon
+          size={14}
+          className={cx(styles.icon, isActive && styles.iconActive)}
+        />
+      </span>
       <span className={styles.text}>
         <span className={styles.title}>{event.title}</span>
         <span className={isActive ? styles.timeActive : styles.time}>{label}</span>
