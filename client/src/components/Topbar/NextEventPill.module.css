@@ -18,7 +18,6 @@
 
 .pill:hover {
   background: var(--primary-bg);
-  border-color: var(--accent);
 }
 
 .iconStack {
