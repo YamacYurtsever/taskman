@@ -93,7 +93,7 @@ const Panel = ({
         {header}
         <button className={styles.closeBtn} onClick={onClose} title="Close (Esc)">✕</button>
       </div>
-      {children}
+      <div className={styles.body}>{children}</div>
     </div>
   );
 };
