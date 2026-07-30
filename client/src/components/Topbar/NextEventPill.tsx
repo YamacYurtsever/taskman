@@ -70,7 +70,7 @@ const NextEventPill = () => {
 
   return (
     <div className={styles.pill} title={event.title}>
-      <CalendarIcon size={14} />
+      <CalendarIcon size={14} className={isActive ? styles.iconActive : undefined} />
       <span className={styles.text}>
         <span className={styles.title}>{event.title}</span>
         <span className={isActive ? styles.timeActive : styles.time}>{label}</span>

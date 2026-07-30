@@ -18,6 +18,10 @@
   color: var(--accent);
 }
 
+.iconActive {
+  color: var(--pink);
+}
+
 .text {
   display: flex;
   flex-direction: column;
