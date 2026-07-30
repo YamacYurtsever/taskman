@@ -18,7 +18,7 @@ const MarkdownSections = ({ text, contentClassName, contentProps, ...options }: 
 
   return (
     <>
-      {sections.length > 1 && (
+      {sections.length > 0 && (
         <nav className={styles.nav}>
           {sections.map(section => (
             <button
