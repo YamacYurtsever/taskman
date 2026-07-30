@@ -63,8 +63,10 @@ const NextEventPill = () => {
   return (
     <div className={styles.pill} title={event.title}>
       <CalendarIcon size={14} />
-      <span className={styles.title}>{event.title}</span>
-      <span className={styles.time}>{label}</span>
+      <span className={styles.text}>
+        <span className={styles.title}>{event.title}</span>
+        <span className={styles.time}>{label}</span>
+      </span>
     </div>
   );
 };

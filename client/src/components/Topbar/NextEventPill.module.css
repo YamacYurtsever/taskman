@@ -1,15 +1,17 @@
 .pill {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: var(--sp-xs);
+  height: var(--theme-w);
   min-width: 0;
-  max-width: 220px;
-  padding: var(--sp-xs) var(--sp-md);
+  max-width: 180px;
+  margin-right: var(--sp-lg);
+  padding: 0 var(--sp-md);
   border: var(--border-w) solid var(--border);
-  border-radius: var(--r-full);
+  border-radius: var(--r-lg);
   background: var(--primary);
   color: var(--text-2);
-  font-size: var(--fs-sm);
 }
 
 .pill svg {
@@ -17,20 +19,31 @@
   color: var(--accent);
 }
 
-.title {
+.text {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
+  line-height: 1.25;
+}
+
+.title {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: var(--fs-sm);
+  color: var(--text-1);
 }
 
 .time {
-  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-xs);
   color: var(--text-3);
 }
 
 @media (max-width: 780px) {
   .pill {
-    max-width: 140px;
+    max-width: 130px;
   }
 }
