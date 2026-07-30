@@ -201,6 +201,17 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
   const openDayCalendar = useCallback((date: string) => setSidePanel({ type: 'day-calendar', date }), []);
   const closeDetail = useCallback(() => setSidePanel(null), []);
 
+  // Route changes should reset the panel outright, not play its slide-out
+  // animation over whatever view we just navigated to.
+  const closeDetailImmediate = useCallback(() => {
+    if (panelCloseTimerRef.current) clearTimeout(panelCloseTimerRef.current);
+    wasPanelOpenRef.current = false;
+    setSidePanel(null);
+    setLastSidePanel(null);
+    setPanelClosing(false);
+    setPanelMounted(false);
+  }, []);
+
   const location = useLocation();
   const { pathname } = location;
   const showingCalendar = pathname === '/calendar' && calendarUrl;
@@ -216,8 +227,8 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
 
   useEffect(() => {
     setSidebarOpen(false);
-    closeDetail();
-  }, [location, closeDetail]);
+    closeDetailImmediate();
+  }, [location, closeDetailImmediate]);
 
   return (
     <>
