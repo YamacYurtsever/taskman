@@ -67,11 +67,12 @@ const NextEventPill = ({ onOpenDay }: NextEventPillProps) => {
   const msUntilEnd = new Date(event.endIso).getTime() - now;
   const isActive = msUntilStart <= 0 && msUntilEnd > 0;
   const showCountdown = !isActive && msUntilStart > 0 && msUntilStart < COUNTDOWN_THRESHOLD_MS;
+  const dayPrefix = event.dayLabel ? `${event.dayLabel} ` : '';
   const label = isActive
     ? 'now'
     : showCountdown
-      ? formatCountdown(msUntilStart)
-      : `${event.startTime} – ${event.endTime}`;
+      ? `${dayPrefix}${formatCountdown(msUntilStart)}`
+      : `${dayPrefix}${event.startTime} – ${event.endTime}`;
 
   return (
     <button className={styles.pill} title={event.title} onClick={() => onOpenDay?.(event.date)}>

@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
@@ -7,13 +8,14 @@ from googleapiclient.discovery import build
 from oauthlib.oauth2.rfc6749.errors import OAuth2Error
 
 from server import config, db
-from server.constants import CALENDAR_PRESET_COLORS, DEV_API_BASE, FRONTEND_URL
+from server.constants import CALENDAR_PRESET_COLORS, DATE_FORMAT, DEV_API_BASE, FRONTEND_URL
 from server.services.utils import (
     UTC_DATETIME_FORMAT,
     ServiceError,
     local_date_from_storage,
     local_datetime_from_storage,
     parse_utc_datetime,
+    today_in_timezone,
     utc_now,
 )
 
@@ -181,6 +183,20 @@ def _local_24h_time(dt, tz_name: str) -> str:
     ).strftime("%H.%M")
 
 
+def _day_label(event_date: str, tz_name: str) -> str | None:
+    dt = datetime.strptime(event_date, DATE_FORMAT)
+    today_dt = datetime.strptime(today_in_timezone(tz_name), DATE_FORMAT)
+    days_away = (dt - today_dt).days
+
+    if days_away <= 0:
+        return None
+    if days_away == 1:
+        return "Tmr"
+    if days_away <= 6:
+        return dt.strftime("%a")
+    return f"{dt.strftime('%b')} {dt.day}"
+
+
 def fetch_next_event(refresh_token: str | None, calendar_ids: list[str], tz_name: str) -> dict | None:
     if not refresh_token or not calendar_ids:
         return None
@@ -214,6 +230,8 @@ def fetch_next_event(refresh_token: str | None, calendar_ids: list[str], tz_name
             for e in candidates
         )
 
+        event_date = local_date_from_storage(start_dt.strftime(UTC_DATETIME_FORMAT), tz_name)
+
         return {
             "title": earliest.get("summary") or "(No title)",
             "startIso": start_dt.strftime(UTC_DATETIME_FORMAT),
@@ -221,7 +239,8 @@ def fetch_next_event(refresh_token: str | None, calendar_ids: list[str], tz_name
             "hasOverlap": has_overlap,
             "startTime": _local_24h_time(start_dt, tz_name),
             "endTime": _local_24h_time(end_dt, tz_name),
-            "date": local_date_from_storage(start_dt.strftime(UTC_DATETIME_FORMAT), tz_name),
+            "date": event_date,
+            "dayLabel": _day_label(event_date, tz_name),
         }
     except RefreshError as e:
         raise CalendarAuthError from e

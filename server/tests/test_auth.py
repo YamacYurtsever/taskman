@@ -8,7 +8,7 @@ from oauthlib.oauth2.rfc6749.errors import AccessDeniedError
 from server import create_app
 from server.config import DEFAULTS
 from server.constants import FRONTEND_URL
-from server.tests.utils import TEST_CONFIG, make_db, saved_config
+from server.tests.utils import TEST_CONFIG, TODAY, make_db, saved_config
 
 
 class AuthStatusTest(unittest.TestCase):
@@ -480,6 +480,12 @@ class NextEventTest(unittest.TestCase):
             sess["authenticated"] = True
             sess["email"] = "user@gmail.com"
 
+        self.today_patcher = patch("server.services.auth.today_in_timezone", return_value=TODAY)
+        self.today_patcher.start()
+
+    def tearDown(self):
+        self.today_patcher.stop()
+
     def _mock_svc(self, calendars=None, **event_kwargs):
         mock_svc = MagicMock()
         mock_svc.calendarList().list().execute.return_value = {"items": calendars or []}
@@ -522,6 +528,88 @@ class NextEventTest(unittest.TestCase):
         self.assertIsNotNone(event["endIso"])
         self.assertFalse(event["hasOverlap"])
         self.assertEqual(event["date"], "2026-07-30")
+        self.assertEqual(event["dayLabel"], "Jul 30")
+
+    def test_day_label_is_none_for_today(self):
+        cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
+        mock_svc = self._mock_svc(return_value={
+            "items": [{
+                "summary": "Standup",
+                "start": {"dateTime": f"{TODAY}T15:00:00Z"},
+                "end": {"dateTime": f"{TODAY}T15:30:00Z"},
+            }],
+        })
+
+        with (
+            patch.dict(os.environ, {"GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "csec"}),
+            patch("server.config.load", return_value=cfg),
+            patch("server.services.auth.Credentials"),
+            patch("server.services.auth.build", return_value=mock_svc),
+        ):
+            res = self.client.get("/api/next-event")
+
+        self.assertIsNone(res.get_json()["event"]["dayLabel"])
+
+    def test_day_label_is_tmr_for_tomorrow(self):
+        cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
+        mock_svc = self._mock_svc(return_value={
+            "items": [{
+                "summary": "Standup",
+                "start": {"dateTime": "2026-04-27T15:00:00Z"},
+                "end": {"dateTime": "2026-04-27T15:30:00Z"},
+            }],
+        })
+
+        with (
+            patch.dict(os.environ, {"GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "csec"}),
+            patch("server.config.load", return_value=cfg),
+            patch("server.services.auth.Credentials"),
+            patch("server.services.auth.build", return_value=mock_svc),
+        ):
+            res = self.client.get("/api/next-event")
+
+        self.assertEqual(res.get_json()["event"]["dayLabel"], "Tmr")
+
+    def test_day_label_is_weekday_within_this_week(self):
+        # TODAY is 2026-04-26 (a Sunday); 3 days out is 2026-04-29 (Wednesday).
+        cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
+        mock_svc = self._mock_svc(return_value={
+            "items": [{
+                "summary": "Standup",
+                "start": {"dateTime": "2026-04-29T15:00:00Z"},
+                "end": {"dateTime": "2026-04-29T15:30:00Z"},
+            }],
+        })
+
+        with (
+            patch.dict(os.environ, {"GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "csec"}),
+            patch("server.config.load", return_value=cfg),
+            patch("server.services.auth.Credentials"),
+            patch("server.services.auth.build", return_value=mock_svc),
+        ):
+            res = self.client.get("/api/next-event")
+
+        self.assertEqual(res.get_json()["event"]["dayLabel"], "Wed")
+
+    def test_day_label_is_full_date_beyond_this_week(self):
+        cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
+        mock_svc = self._mock_svc(return_value={
+            "items": [{
+                "summary": "Standup",
+                "start": {"dateTime": "2026-05-18T15:00:00Z"},
+                "end": {"dateTime": "2026-05-18T15:30:00Z"},
+            }],
+        })
+
+        with (
+            patch.dict(os.environ, {"GOOGLE_CLIENT_ID": "cid", "GOOGLE_CLIENT_SECRET": "csec"}),
+            patch("server.config.load", return_value=cfg),
+            patch("server.services.auth.Credentials"),
+            patch("server.services.auth.build", return_value=mock_svc),
+        ):
+            res = self.client.get("/api/next-event")
+
+        self.assertEqual(res.get_json()["event"]["dayLabel"], "May 18")
 
     def test_returns_none_when_no_upcoming_events(self):
         cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
