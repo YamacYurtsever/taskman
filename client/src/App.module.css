@@ -47,6 +47,10 @@
   flex-direction: column;
 }
 
+.routeInner[hidden] {
+  display: none;
+}
+
 .calendarFrame {
   flex: 1;
   width: 100%;
