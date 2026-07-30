@@ -38,7 +38,15 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: var(--fs-xs);
-  color: var(--text-3);
+  color: var(--accent);
+}
+
+.timeActive {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-xs);
+  color: var(--pink);
 }
 
 @media (max-width: 780px) {

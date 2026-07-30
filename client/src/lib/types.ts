@@ -74,7 +74,9 @@ type AuthStatusResponse = {
 type NextEvent = {
   title: string;
   startIso: string;
+  endIso: string;
   startTime: string;
+  endTime: string;
 };
 
 type NextEventResponse = {

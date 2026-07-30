@@ -174,6 +174,12 @@ def effective_calendar_ids(calendars: list, user_calendars: list[dict]) -> list[
 EVENTS_LOOKAHEAD = 10
 
 
+def _local_12h_time(dt, tz_name: str) -> str:
+    return local_datetime_from_storage(
+        dt.strftime(UTC_DATETIME_FORMAT), tz_name,
+    ).strftime("%I:%M %p").lstrip("0")
+
+
 def fetch_next_event(refresh_token: str | None, calendar_ids: list[str], tz_name: str) -> dict | None:
     if not refresh_token or not calendar_ids:
         return None
@@ -203,13 +209,14 @@ def fetch_next_event(refresh_token: str | None, calendar_ids: list[str], tz_name
 
         earliest = min(candidates, key=lambda e: parse_utc_datetime(e["start"]["dateTime"]))
         start_dt = parse_utc_datetime(earliest["start"]["dateTime"])
+        end_dt = parse_utc_datetime(earliest["end"]["dateTime"])
 
         return {
             "title": earliest.get("summary") or "(No title)",
             "startIso": start_dt.strftime(UTC_DATETIME_FORMAT),
-            "startTime": local_datetime_from_storage(
-                start_dt.strftime(UTC_DATETIME_FORMAT), tz_name,
-            ).strftime("%I:%M %p").lstrip("0"),
+            "endIso": end_dt.strftime(UTC_DATETIME_FORMAT),
+            "startTime": _local_12h_time(start_dt, tz_name),
+            "endTime": _local_12h_time(end_dt, tz_name),
         }
     except RefreshError as e:
         raise CalendarAuthError from e

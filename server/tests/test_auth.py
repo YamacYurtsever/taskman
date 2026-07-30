@@ -499,7 +499,11 @@ class NextEventTest(unittest.TestCase):
     def test_returns_next_timed_event(self):
         cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
         mock_svc = self._mock_svc(return_value={
-            "items": [{"summary": "Standup", "start": {"dateTime": "2026-07-30T15:00:00+10:00"}}],
+            "items": [{
+                "summary": "Standup",
+                "start": {"dateTime": "2026-07-30T15:00:00+10:00"},
+                "end": {"dateTime": "2026-07-30T15:30:00+10:00"},
+            }],
         })
 
         with (
@@ -514,6 +518,8 @@ class NextEventTest(unittest.TestCase):
         self.assertEqual(event["title"], "Standup")
         self.assertIsNotNone(event["startTime"])
         self.assertIsNotNone(event["startIso"])
+        self.assertIsNotNone(event["endTime"])
+        self.assertIsNotNone(event["endIso"])
 
     def test_returns_none_when_no_upcoming_events(self):
         cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}]}
@@ -532,8 +538,16 @@ class NextEventTest(unittest.TestCase):
     def test_picks_earliest_across_multiple_calendars(self):
         cfg = {**DEFAULTS, "googleRefreshToken": "reftok", "calendars": [{"id": "cal-1"}, {"id": "cal-2"}]}
         mock_svc = self._mock_svc(side_effect=[
-            {"items": [{"summary": "Later", "start": {"dateTime": "2026-07-30T18:00:00+10:00"}}]},
-            {"items": [{"summary": "Sooner", "start": {"dateTime": "2026-07-30T14:00:00+10:00"}}]},
+            {"items": [{
+                "summary": "Later",
+                "start": {"dateTime": "2026-07-30T18:00:00+10:00"},
+                "end": {"dateTime": "2026-07-30T18:30:00+10:00"},
+            }]},
+            {"items": [{
+                "summary": "Sooner",
+                "start": {"dateTime": "2026-07-30T14:00:00+10:00"},
+                "end": {"dateTime": "2026-07-30T14:30:00+10:00"},
+            }]},
         ])
 
         with (
@@ -567,7 +581,11 @@ class NextEventTest(unittest.TestCase):
         mock_svc = self._mock_svc(return_value={
             "items": [
                 {"summary": "Holiday", "start": {"date": "2026-07-30"}},
-                {"summary": "Standup", "start": {"dateTime": "2026-07-30T15:00:00+10:00"}},
+                {
+                    "summary": "Standup",
+                    "start": {"dateTime": "2026-07-30T15:00:00+10:00"},
+                    "end": {"dateTime": "2026-07-30T15:30:00+10:00"},
+                },
             ],
         })
 
@@ -602,7 +620,11 @@ class NextEventTest(unittest.TestCase):
         cfg = {**DEFAULTS, "googleRefreshToken": "reftok"}
         mock_svc = self._mock_svc(
             calendars=[{"id": "a@gmail.com", "summary": "Personal"}],
-            return_value={"items": [{"summary": "Dentist", "start": {"dateTime": "2026-07-30T09:00:00+10:00"}}]},
+            return_value={"items": [{
+                "summary": "Dentist",
+                "start": {"dateTime": "2026-07-30T09:00:00+10:00"},
+                "end": {"dateTime": "2026-07-30T09:30:00+10:00"},
+            }]},
         )
 
         with (
