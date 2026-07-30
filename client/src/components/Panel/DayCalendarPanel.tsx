@@ -22,12 +22,14 @@ type DayCalendarPanelBodyProps = {
   date: string;
 };
 
-// Google's embed API has no true single-day mode (only AGENDA/WEEK/MONTH) —
-// AGENDA scoped to a one-day `dates` range is the closest match, and AGENDA
-// is already the mode this app swaps to for the mobile calendar view.
+// Google's embed API has no true single-day mode (only AGENDA/WEEK/MONTH), and
+// combining AGENDA with a `dates` range renders a blank iframe rather than an
+// error. Keeping the existing (already-working) mode=WEEK URL and just adding
+// a `dates` range to jump it to the event's day is the reliable option, even
+// though it shows that whole week rather than a single day.
 const buildDayUrl = (calendarUrl: string, date: string) => {
   const compact = date.replace(/-/g, '');
-  return `${calendarUrl.replace('mode=WEEK', 'mode=AGENDA')}&dates=${compact}/${compact}`;
+  return `${calendarUrl}&dates=${compact}/${compact}`;
 };
 
 const DayCalendarPanelBody = ({ calendarUrl, date }: DayCalendarPanelBodyProps) => {
