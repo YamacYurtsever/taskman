@@ -11,7 +11,7 @@ import {
 } from 'react-router-dom';
 
 import styles from './App.module.css';
-import { DayCalendarPanelBody, DayCalendarPanelHeader } from './components/Panel/DayCalendarPanel';
+import { DayCalendarPanelBody } from './components/Panel/DayCalendarPanel';
 import { InfoPanelBody, InfoPanelHeader } from './components/Panel/InfoPanel';
 import { Panel } from './components/Panel/Panel';
 import type { PanelSize } from './components/Panel/Panel';
@@ -317,11 +317,9 @@ const AuthenticatedApp = ({ onLogout }: AuthenticatedAppProps) => {
               header={
                 showingInfo
                   ? <InfoPanelHeader />
-                  : showingDayCalendar
-                    ? <DayCalendarPanelHeader date={displayedDayCalendarDate!} />
-                    : (displayedTask && displayedTaskList && (
-                        <TaskPanelHeader task={displayedTask} list={displayedTaskList} today={data!.today} />
-                      ))
+                  : !showingDayCalendar && displayedTask && displayedTaskList && (
+                      <TaskPanelHeader task={displayedTask} list={displayedTaskList} today={data!.today} />
+                    )
               }
             >
               {showingInfo

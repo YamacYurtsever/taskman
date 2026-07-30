@@ -1,35 +1,24 @@
 import styles from './DayCalendarPanel.module.css';
 
-type DayCalendarPanelHeaderProps = {
-  date: string;
-};
-
-const formatHeaderDate = (date: string) => {
-  const [year, month, day] = date.split('-').map(Number);
-  return new Date(year, month - 1, day).toLocaleDateString(undefined, {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
-};
-
-const DayCalendarPanelHeader = ({ date }: DayCalendarPanelHeaderProps) => (
-  <h2 className={styles.title}>{formatHeaderDate(date)}</h2>
-);
-
 type DayCalendarPanelBodyProps = {
   calendarUrl: string;
   date: string;
 };
 
-// Google's embed API has no true single-day mode (only AGENDA/WEEK/MONTH), and
-// combining AGENDA with a `dates` range renders a blank iframe rather than an
-// error. Keeping the existing (already-working) mode=WEEK URL and just adding
-// a `dates` range to jump it to the event's day is the reliable option, even
-// though it shows that whole week rather than a single day.
+const nextDateCompact = (date: string) => {
+  const [year, month, day] = date.split('-').map(Number);
+  const next = new Date(year, month - 1, day + 1);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${next.getFullYear()}${pad(next.getMonth() + 1)}${pad(next.getDate())}`;
+};
+
+// Google's embed API has no true single-day mode — AGENDA (labeled "Schedule"
+// in Google Calendar's own UI) scoped to a one-day range is the closest match.
+// A zero-length range (date/date) renders a blank iframe, so this spans a real
+// day (date to the following date) instead.
 const buildDayUrl = (calendarUrl: string, date: string) => {
   const compact = date.replace(/-/g, '');
-  return `${calendarUrl}&dates=${compact}/${compact}`;
+  return `${calendarUrl.replace('mode=WEEK', 'mode=AGENDA')}&dates=${compact}/${nextDateCompact(date)}`;
 };
 
 const DayCalendarPanelBody = ({ calendarUrl, date }: DayCalendarPanelBodyProps) => {
@@ -42,4 +31,4 @@ const DayCalendarPanelBody = ({ calendarUrl, date }: DayCalendarPanelBodyProps) 
   );
 };
 
-export { DayCalendarPanelHeader, DayCalendarPanelBody };
+export { DayCalendarPanelBody };
