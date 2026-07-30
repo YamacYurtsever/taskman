@@ -3,6 +3,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from google.auth.exceptions import RefreshError
+from oauthlib.oauth2.rfc6749.errors import AccessDeniedError
 
 from server import create_app
 from server.config import DEFAULTS
@@ -180,6 +181,28 @@ class OAuthCallbackTest(unittest.TestCase):
         kwargs = mock_flow.fetch_token.call_args.kwargs
         self.assertIn("authorization_response", kwargs)
         self.assertIn("code=authcode", kwargs["authorization_response"])
+
+    def test_handles_user_denying_consent(self):
+        with self.client.session_transaction() as sess:
+            sess["oauth_state"] = "state-abc"
+
+        mock_flow = self._mock_flow()
+        mock_flow.fetch_token.side_effect = AccessDeniedError()
+
+        with (
+            patch.dict(os.environ, {
+                "GOOGLE_CLIENT_ID": "cid",
+                "GOOGLE_CLIENT_SECRET": "csec",
+            }),
+            patch("server.services.auth.Flow") as MockFlow,
+        ):
+            MockFlow.from_client_config.return_value = mock_flow
+            res = self.client.get(
+                "/api/oauth/callback?error=access_denied&state=state-abc"
+            )
+
+        self.assertEqual(res.status_code, 400)
+        self.assertFalse(res.get_json()["ok"])
 
     def test_rejects_missing_refresh_token(self):
         with self.client.session_transaction() as sess:

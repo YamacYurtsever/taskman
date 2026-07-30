@@ -4,10 +4,16 @@ from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
+from oauthlib.oauth2.rfc6749.errors import OAuth2Error
 
 from server import config, db
 from server.constants import CALENDAR_PRESET_COLORS, DEV_API_BASE, FRONTEND_URL
 from server.services.utils import ServiceError
+
+# oauthlib raises a bare Warning (not caught by `except OAuth2Error`) when the
+# granted scope differs from the requested one — e.g. the user declines the
+# calendar scope while still approving sign-in. This makes that non-fatal.
+os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
 
 
 class CalendarAuthError(Exception):
@@ -85,7 +91,10 @@ def complete_oauth(request_url: str, expected_state: str | None, received_state:
         code_verifier=code_verifier,
     )
     flow.redirect_uri = _redirect_uri()
-    flow.fetch_token(authorization_response=request_url)
+    try:
+        flow.fetch_token(authorization_response=request_url)
+    except OAuth2Error as e:
+        raise ServiceError("Google sign-in was cancelled or denied") from e
 
     credentials = flow.credentials
     if not credentials.refresh_token:
